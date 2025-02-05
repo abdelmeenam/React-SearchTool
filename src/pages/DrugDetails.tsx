@@ -24,47 +24,62 @@ export const DrugDetails: React.FC = () => {
 
   useEffect(() => {
     const fetchDrugDetails = async () => {
-      if (!drugId || !ndcCode) return;
+      if (!ndcCode || !insuranceId) {
+      }
 
       try {
+        var response2;
         //http://localhost:5107/drug/SearchByIdNdc?id=2445&ndc=69367024516
-
-        const response = await axios.get(
-          `http://localhost:5107/drug/SearchByNdc?ndc=${ndcCode}`
-        );
-        const drugData = response.data;
-        console.log("here : ", response.data);
-        setDrug(drugData);
-        console.log(drugData.id, insuranceId);
-        const response2 = await axios.get(
-          `http://localhost:5107/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
-        );
-        console.log("here 2 : ", response2.data);
-        setDrugDetail(response2.data);
-        console.log("temp : ", drugData.classId);
-        const response3 = await axios.get(
-          `http://localhost:5107/drug/GetClassById?id=${drugData?.classId}`
-        );
-        setClassName(response3.data.name);
-        console.log("here3 : ", response3.data.name);
-        // Sort alternatives by net price ascending
-        // const sorted = [...drugData.alternatives].sort((a, b) => a.netPrice - b.netPrice);
-        // setSortedAlternatives(sorted);
-        if (response2.data && className != "other") {
-          const response4 = await axios.get(
-            `http://localhost:5107/drug/GetAltrantives?className=${response3.data.name}&insuranceId=${insuranceId}`
+        if (!ndcCode || !insuranceId) {
+          const response = await axios.get(
+            `http://localhost:5107/drug/GetDrugById?id=${drugId}`
           );
-          console.log(response4.data);
-          const list = response4.data.filter(
-            (item) => item.drugName !== response2.data.drugName
+          setDrug(response.data);
+          console.log(response.data);
+          response2 = await axios.get(
+            `http://localhost:5107/drug/GetAllDrugs?classId=${response.data.classId}`
           );
-          setSortedAlternatives(list);
+          setSortedAlternatives(response2.data);
+          console.log("sdsad", response2.data);
+          const response3 = await axios.get(
+            `http://localhost:5107/drug/GetClassById?id=${response.data.classId}`
+          );
+          setClassName(response3.data.name);
         } else {
-          const response5 = await axios.get(
-            `http://localhost:5107/drug/GetDrugsByClass?classId=${drugData?.classId}`
+          const response = await axios.get(
+            `http://localhost:5107/drug/SearchByNdc?ndc=${ndcCode}`
           );
-          console.log(response5.data);
-          setOtherDrugs(response5.data);
+          const drugData = response.data;
+          console.log("here : ", response.data);
+          setDrug(drugData);
+          console.log(drugData.id, insuranceId);
+          response2 = await axios.get(
+            `http://localhost:5107/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
+          );
+          console.log("here 2 : ", response2.data);
+          setDrugDetail(response2.data);
+          console.log("temp : ", drugData.classId);
+          const response3 = await axios.get(
+            `http://localhost:5107/drug/GetClassById?id=${drugData?.classId}`
+          );
+          setClassName(response3.data.name);
+          console.log("here3 : ", response3.data.name);
+          if (response2.data && className != "other") {
+            const response4 = await axios.get(
+              `http://localhost:5107/drug/GetAltrantives?className=${response3.data.name}&insuranceId=${insuranceId}`
+            );
+            console.log(response4.data);
+            const list = response4.data.filter(
+              (item) => item.drugName !== response2.data.drugName
+            );
+            setSortedAlternatives(list);
+          } else {
+            const response5 = await axios.get(
+              `http://localhost:5107/drug/GetDrugsByClass?classId=${drugData?.classId}`
+            );
+            console.log(response5.data);
+            setOtherDrugs(response5.data);
+          }
         }
       } catch (err) {
         setError("Failed to load drug details");
@@ -105,7 +120,7 @@ export const DrugDetails: React.FC = () => {
             <Pill className="h-8 w-8" />
             <div>
               <h1 className="text-2xl font-bold">{drug.name}</h1>
-              <p className="text-blue-100">NDC: {ndcCode}</p>
+              <p className="text-blue-100">NDC: {drug.ndc}</p>
             </div>
           </div>
         </div>
@@ -117,7 +132,7 @@ export const DrugDetails: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Drug Information
             </h2>
-            {!drugDetial ? (
+            {!drugDetial  ? (
               <>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -137,7 +152,7 @@ export const DrugDetails: React.FC = () => {
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">AWP</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{drug.awp}</dd>
+                      <dd className="mt-1 text-sm text-gray-900">${drug.awp}</dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">
@@ -158,9 +173,9 @@ export const DrugDetails: React.FC = () => {
                   </dl>
                 </div>
                 <div className="text-center text-2xl font-bold my-4">
-                  Other Drugs 
+                  Other Drugs
                 </div>{" "}
-                <div className="overflow-x-auto pt-9">
+                {/* <div className="overflow-x-auto pt-9">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -204,14 +219,14 @@ export const DrugDetails: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
-                              {alt.strength?alt.strength:"NA"}
+                              {alt.strength ? alt.strength : "NA"}
                             </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </div> */}
               </>
             ) : (
               <div className="bg-gray-50 p-4 rounded-lg">
@@ -274,42 +289,7 @@ export const DrugDetails: React.FC = () => {
               </div>
             )}
           </section>
-          {/* <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Insurance Coverage</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Insurance
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Coverage Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Patient Copay
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {Object.entries(drug.classId).map(([insuranceId, pricing]) => (
-                    <tr key={insuranceId}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {insuranceId}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${pricing.insuranceCoverage.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${pricing.patientPay.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section> */}
-          {/* Alternatives */}
+       
           {sortedAlternatives.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-4">
@@ -339,6 +319,9 @@ export const DrugDetails: React.FC = () => {
                         NDC Codes
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Insurance
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Net Price
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -349,9 +332,6 @@ export const DrugDetails: React.FC = () => {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Quantity
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Rxcui
                       </th>
                     </tr>
                   </thead>
@@ -365,12 +345,17 @@ export const DrugDetails: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">
-                            {alt.drugClass}
+                            {className}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-500">
                             <div>{alt.ndcCode}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-500">
+                            <div>{alt.insuranceName??"NA"}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -385,7 +370,7 @@ export const DrugDetails: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            ${alt.patientPayment.toFixed(2)}
+                            {alt.insurancePayment?"$"+alt.patientPayment.toFixed(2):"NA"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -393,11 +378,7 @@ export const DrugDetails: React.FC = () => {
                             ${alt.quantity}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {alt.rxCui}
-                          </div>
-                        </td>
+
                       </tr>
                     ))}
                   </tbody>

@@ -22,6 +22,7 @@ export interface Prescription {
   quantity: number;
   acquisitionCost: number;
   rxCui: number;
+  insuranceName: string;
   discount: number;
   insurancePayment: number;
   patientPayment: number;

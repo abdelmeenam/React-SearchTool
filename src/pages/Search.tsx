@@ -5,7 +5,39 @@ import debounce from "debounce";
 import { api } from "../api/api";
 import { Drug, Insurance } from "../types";
 import axios from "axios";
-
+const insurance_mapping = {
+  AL: "Aetna (AL)",
+  BW: "aetna (BW)",
+  AD: "Aetna Medicare (AD)",
+  AF: "Anthem BCBS (AF)",
+  DS: "Blue Cross Blue Shield (DS)",
+  CA: "blue shield medicare (CA)",
+  FQ: "Capital Rx (FQ)",
+  BF: "Caremark (BF)",
+  ED: "CatalystRx (ED)",
+  AM: "Cigna (AM)",
+  BO: "Default Claim Format (BO)",
+  AP: "Envision Rx Options (AP)",
+  CG: "Express Scripts (CG)",
+  BI: "Horizon (BI)",
+  AJ: "Humana Medicare (AJ)",
+  BP: "informedRx (BP)",
+  AO: "MEDCO HEALTH (AO)",
+  AC: "MEDCO MEDICARE PART D (AC)",
+  AQ: "MEDGR (AQ)",
+  CC: "MY HEALTH LA (CC)",
+  AG: "Navitus Health Solutions (AG)",
+  AH: "OptumRx (AH)",
+  AS: "PACIFICARE LIFE AND H (AS)",
+  FJ: "Paramount Rx (FJ)",
+  "X ": "PF - DEFAULT (X )",
+  EA: "Pharmacy Data Management (EA)",
+  DW: "phcs (DW)",
+  AX: "PINNACLE (AX)",
+  BN: "Prescription Solutions (BN)",
+  AA: "Tri-Care Express Scripts (AA)",
+  AI: "United Healthcare (AI)",
+};
 export const Search: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,15 +82,14 @@ export const Search: React.FC = () => {
   };
 
   const handleSearch = async () => {
-    if (selectedDrug && selectedNdc) {
-      navigate(
-        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${selectedInsurance?.id}`
-      );
+      if (selectedDrug) {
+        navigate(
+          `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${selectedInsurance?.id}`
+        );
+      }
       return;
-    }
 
     try {
-      //const results = await api.searchDrugs(searchQuery);
       const results = await axios.get(
         `http://localhost:5107/drug/searchByName?name=${searchQuery}`
       );
@@ -202,7 +233,7 @@ export const Search: React.FC = () => {
                       value={insurance.id}
                       className="bg-white text-gray-900 hover:bg-gray-100"
                     >
-                      {insurance.name}
+                      {insurance_mapping[insurance.name] || insurance.name}
                     </option>
                   ))}
               </select>
