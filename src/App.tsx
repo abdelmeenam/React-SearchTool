@@ -9,6 +9,10 @@ import { DrugDetails } from './pages/DrugDetails';
 import { Dashboard } from './pages/Dashboard';
 import { Home } from './pages/Home';
 import { LogsPage } from './pages/Logs';
+import {Services} from './pages/Services';
+import { AboutUs } from './pages/about';
+import { ContactUs } from './pages/Contact';
+import { FAQPage } from './pages/FACQ';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -64,6 +68,30 @@ function App() {
                         } 
                         //element={<ProfilePage />}
                          />  
+                            <Route
+              path="services"
+              element={
+                  <Services />
+              }
+            />
+                        <Route
+              path="about"
+              element={
+                  <AboutUs />
+              }
+            />
+                   <Route
+              path="contact"
+              element={
+                  <ContactUs />
+              }
+            />
+                <Route
+              path="faq"
+              element={
+                  <FAQPage />
+              }
+            />
 </Route>                        
         </Routes>
       </BrowserRouter>

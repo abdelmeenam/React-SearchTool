@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Pill, AlertCircle, Repeat, ArrowUpDown } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { api } from '../api/api';
 import { Drug } from '../types';
 
@@ -51,41 +52,68 @@ export const DrugDetails: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {/* Header */}
-        <div className="bg-blue-600 p-6 text-white">
-          <div className="flex items-center space-x-4">
-            <Pill className="h-8 w-8" />
-            <div>
-              <h1 className="text-2xl font-bold">{drug.name}</h1>
-              <p className="text-blue-100">NDC: {ndcCode}</p>
-            </div>
-          </div>
+    <motion.div 
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg"
+    >
+      <div className="bg-blue-600 p-6 text-white rounded-t-lg flex items-center space-x-4">
+        <Pill className="h-8 w-8" />
+        <div>
+          <h1 className="text-2xl font-bold">{drug.name}</h1>
+          <p className="text-blue-200">NDC: {ndcCode}</p>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Drug Information */}
+      <div className="p-6 space-y-6">
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-200">Drug Information</h2>
+          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Class Name</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">{drug.className}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Price</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">${drug.netPrice.toFixed(2)}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">{drug.description}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        {sortedAlternatives.length > 0 && (
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Drug Information</h2>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Class Name</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{drug.className}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Net Price</dt>
-                  <dd className="mt-1 text-sm text-gray-900">${drug.netPrice.toFixed(2)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Description</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{drug.description}</dd>
-                </div>
-              </dl>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-200 flex items-center">
+              <Repeat className="h-5 w-5 mr-2" /> Alternative Medications
+            </h2>
+            <div className="overflow-x-auto bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+              <table className="min-w-full text-gray-900 dark:text-gray-100">
+                <thead className="bg-gray-200 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Name</th>
+                    <th className="px-4 py-2 text-left">Class</th>
+                    <th className="px-4 py-2 text-left">Net Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedAlternatives.map((alt) => (
+                    <tr key={alt.id} className="border-b dark:border-gray-700">
+                      <td className="px-4 py-2">{alt.name}</td>
+                      <td className="px-4 py-2">{alt.className}</td>
+                      <td className="px-4 py-2">${alt.netPrice.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </section>
+        )}
 
           {/* Insurance Coverage */}
           <section>
@@ -199,8 +227,7 @@ export const DrugDetails: React.FC = () => {
               </div>
             </section>
           )}
-        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

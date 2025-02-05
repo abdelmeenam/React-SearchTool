@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Pill, Search, LogOut, BarChart2, Upload, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-//import { LogOut } from 'lucide-react';
 
 export const Layout: React.FC = () => {
   const navigate = useNavigate();
@@ -25,59 +24,61 @@ export const Layout: React.FC = () => {
                 <span className="text-xl font-bold text-gray-900 dark:text-white">MedSearch</span>
               </Link>
             </div>
-            {isLoggedIn && (
-              <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
                   <Link
-                  to="/"
-                  className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <Search className="h-5 w-5" />
-                  <span>Home</span>
-                </Link>
-
+                    to="/search"
+                    className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    <Search className="h-5 w-5" />
+                    <span>Search</span>
+                  </Link>
+                  <Link
+                    to="/upload"
+                    className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    <Upload className="h-5 w-5" />
+                    <span>Upload</span>
+                  </Link>
+                  <Link
+                    to="/logs"
+                    className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    <Upload className="h-5 w-5" />
+                    <span>Logs</span>
+                  </Link>
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center space-x-1 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    <BarChart2 className="h-5 w-5" />
+                    <span>Dashboard</span>
+                  </Link>
+                  <button
+                    onClick={toggleTheme}
+                    className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
                 <Link
-                  to="/search"
-                  className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <Search className="h-5 w-5" />
-                  <span>Search</span>
-                </Link>
-                <Link
-                  to="/upload"
+                  to="/login"
                   className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 >
                   <Upload className="h-5 w-5" />
-                  <span>Upload</span>
+                  <span>Log In</span>
                 </Link>
-                <Link
-                  to="/logs"
-                  className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <Upload className="h-5 w-5" />
-                  <span>Logs</span>
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <BarChart2 className="h-5 w-5" />
-                  <span>Dashboard</span>
-                </Link>
-                <button
-                  onClick={toggleTheme}
-                  className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span>Logout</span>
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </nav>
