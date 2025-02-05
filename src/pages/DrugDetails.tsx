@@ -360,22 +360,22 @@ export const DrugDetails: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            ${alt.net.toFixed(2)}
+                            {alt.insuranceName?"$"+alt.net.toFixed(2):"NA"}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="space-y-1">
-                            ${alt.insurancePayment.toFixed(2)}
+                          {alt.insuranceName?"$"+alt.insurancePayment.toFixed(2):"NA"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {alt.insurancePayment?"$"+alt.patientPayment.toFixed(2):"NA"}
+                          {alt.insuranceName?"$"+alt.patientPayment.toFixed(2):"NA"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            ${alt.quantity}
+                            {alt.insuranceName?alt.quantity:"NA"}
                           </div>
                         </td>
 
