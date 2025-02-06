@@ -74,13 +74,14 @@ export const Dashboard: React.FC = () => {
       };
       
       
-      // 🔹 Step 2: Filter out records with empty insurance names
-      const filteredData = latestScript.filter(item => item.insurance?.trim() && item.drugClass?.trim());
+      //  Step 2: Filter out records with empty insurance names
+      //const filteredData = latestScript.filter(item => item.insurance?.trim() && item.drugClass?.trim());
 
       // drop duplicates based on combination of drugNdc and insurance
-      const uniqueData = filteredData.filter((item, index, self) => self.findIndex(t => t.ndcCode === item.ndcCode && t.insurance === item.insurance) === index);
+      //const uniqueData = filteredData.filter((item, index, self) => self.findIndex(t => t.ndcCode === item.ndcCode && t.insurance === item.insurance) === index);
 
-      const grouped = uniqueData.reduce((acc, item) => {
+
+      const grouped = latestScript.reduce((acc, item) => {
         const key = `${item.drugClass}-${item.insurance}`;
         if (!acc[key]) acc[key] = { highestNet: 0, highestNdc: "", highestDrug: "", records: [] };
 
@@ -210,7 +211,13 @@ export const Dashboard: React.FC = () => {
           <tbody className="bg-white divide-y divide-gray-250">
             {currentRecords.map((item, index) => (
               <tr key={index}>
-                <td className="px-2 py-2 text-sm text-gray-900">{item.date}</td>
+                <td className="px-2 py-2 text-sm text-gray-900">
+                {(() => {
+                    const [datePart] = item.date.split(' ');
+                    const [month, day, year] = datePart.split('/');
+                    return `${day}/${month}/${year}`;
+                  })()}                
+                  </td>
                 <td className="px-2 py-2 text-sm text-gray-900">{item.scriptCode}</td>
                 <td className="px-2 py-2 text-sm text-gray-900">{item.insuranceName}</td>
                 <td className="px-2 py-2 text-sm text-gray-900">{item.drugClass}</td>
@@ -227,8 +234,6 @@ export const Dashboard: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-
  {/* 🔹 Pagination Controls */}
       <div className="flex justify-between items-center mt-4">
         <button

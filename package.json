@@ -20,6 +20,7 @@
     "date-fns": "^4.1.0",
     "debounce": "^2.0.0",
     "electron": "^34.0.2",
+    "framer-motion": "^12.4.0",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
