@@ -24,9 +24,9 @@ export const Home: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
         {[ 
           { to: '/services', title: 'Our Services', text: 'Explore the services we offer to make healthcare more accessible.', color: 'text-blue-600', bg: 'hover:bg-blue-100' },
-          { to: '/about', title: 'About Us', text: 'Learn more about our mission and how we help patients every day.', color: 'text-green-600', bg: 'hover:bg-green-100' },
+          { to: '/about', title: 'About Us', text: 'Learn more about our mission and how we help patients every day.', color: 'text-blue-600', bg: 'hover:bg-green-100' },
           { to: '/contact', title: 'Contact Us', text: 'Get in touch with our team for support and inquiries.', color: 'text-teal-600', bg: 'hover:bg-teal-100' },
-          { to: '/faq', title: 'FAQs', text: 'Find answers to the most frequently asked questions.', color: 'text-red-600', bg: 'hover:bg-red-100' }
+          { to: '/faq', title: 'FAQs', text: 'Find answers to the most frequently asked questions.', color: 'text-teal-600', bg: 'hover:bg-red-100' }
         ].map((item, index) => (
           <motion.div 
             key={item.to} 
