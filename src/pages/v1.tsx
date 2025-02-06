@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { BarChart3, AlertTriangle, PieChart, Pill, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
-import { useQuery } from '@tanstack/react-query';
+import {
+  useQuery,
+} from '@tanstack/react-query'
+
 
 export const Dashboard: React.FC = () => {
   const [sales, setSales] = useState<PharmacySale[]>([]);
@@ -16,10 +19,13 @@ export const Dashboard: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10; // Number of records per page
 
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const result = await axios.get("http://localhost:5107/drug/GetAllLatest");
+
         setLatestScript(result.data);
       } catch (error) {
         console.error("Error fetching data", error);
@@ -28,8 +34,11 @@ export const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
+
+
   useEffect(() => {
     if (latestScript.length > 0) {
+
       const insuranceMapping = {
         'AL': 'Aetna (AL)',
         'BW': 'aetna (BW)',
@@ -63,6 +72,14 @@ export const Dashboard: React.FC = () => {
         'AA': 'Tri-Care Express Scripts (AA)',
         'AI': 'United Healthcare (AI)'
       };
+      
+      
+      //  Step 2: Filter out records with empty insurance names
+      //const filteredData = latestScript.filter(item => item.insurance?.trim() && item.drugClass?.trim());
+
+      // drop duplicates based on combination of drugNdc and insurance
+      //const uniqueData = filteredData.filter((item, index, self) => self.findIndex(t => t.ndcCode === item.ndcCode && t.insurance === item.insurance) === index);
+
 
       const grouped = latestScript.reduce((acc, item) => {
         const key = `${item.drugClass}-${item.insurance}`;
@@ -95,67 +112,31 @@ export const Dashboard: React.FC = () => {
       const totalRevenue = processed.reduce((acc, entry) => acc + entry.highestNet, 0);
       setTotalRevenue(totalRevenue);
 
+
+
       const belowNetPriceCount = processed.filter(item => item.netProfit < item.highestNet).length;
       setBelowNetPriceCount(belowNetPriceCount);
 
+      // calculate the Highest Net Profit
+
       setGroupedData(processed);
+
     }
   }, [latestScript]);
 
   const belowNetPriceSales = sales.filter(sale => sale.salePrice < sale.netPrice);
+  // 🔹 Calculate Pagination
   const totalPages = Math.ceil(groupedData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
   const currentRecords = groupedData.slice(startIndex, endIndex);
 
-  const normalizePrescriber = (prescriber) => {
-    const [lastName, firstName] = prescriber.split(', ');
-    return `${lastName} ${firstName.charAt(0)}.`;
-  };
-
-  const downloadCSV = () => {
-    const headers = [
-      "Date", "Script", "Insurance", "Drug Class", "Drug Name", "NDC Code", "Prescriber", "Net Profit", "Highest Net", "Difference", "Highest NDC", "Highest Drug"
-    ];
-    const rows = groupedData.map(item => [
-      (() => {
-        const [datePart] = item.date.split(' ');
-        const [day, month, year] = datePart.split('/');
-        return `${month}/${day}/${year}`;
-      })(),
-      item.scriptCode,
-      item.insuranceName,
-      item.drugClass,
-      item.drugName,
-      item.ndcCode,
-      normalizePrescriber(item.prescriber),
-      item.netProfit.toFixed(2),
-      item.highestNet,
-      item.difference.toFixed(2),
-      item.highestNdc,
-      item.highestDrug
-    ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map(row => row.join(","))
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "audit_report.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   return (
+
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-4xl font-bold text-gray-900 mb-6 text-center">Pharmacy Dashboard</h1>
-
+    
       {/* Analytics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-6">
@@ -166,7 +147,7 @@ export const Dashboard: React.FC = () => {
             </div>
             <Pill className="h-10 w-10" />
           </div>
-        </div>
+        </div>        
 
         <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
@@ -201,89 +182,86 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Processed Data Table */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Audit Report</h2>
-        <button
-          onClick={downloadCSV}
-          className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Download CSV
-        </button>
-        {/* 🔹 Table with Pagination */}
-        <div className="overflow-x-auto">
-          <table className="table-auto min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Date</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Script</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Insurance</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Drug Class</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Drug Name</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">NDC Code</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Prescriber</th>
-                <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Net Profit</th>
-                <th className="px-2 py-2 text-sm text-blue-600 font-bold">Highest Net</th>
-                <th className="px-2 py-2 text-sm text-red-600">Difference</th>
-                <th className="px-2 py-2 text-sm text-blue-600 font-bold">Highest NDC</th>
-                <th className="px-2 py-2 text-sm text-blue-600 font-bold">Highest Drug</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-250">
-              {currentRecords.map((item, index) => (
-                <tr key={index}>
-                  <td className="px-2 py-2 text-sm text-gray-900">
-                    {(() => {
-                      const [datePart] = item.date.split(' ');
-                      const [day, month, year] = datePart.split('/');
-                      return `${month}/${day}/${year}`;
-                    })()}
+  {/* Processed Data Table */}
+
+    
+
+  <div className="mt-8">
+      <h2 className="text-2xl font-semibold text-gray-900 mb-4">Audit Report</h2>
+     {/* 🔹 Table with Pagination */}
+     <div className="overflow-x-auto">
+        <table className="table-auto min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+            <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Date</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Script</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Insurance</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Drug Class</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Drug Name</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">NDC Code</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Prescriber</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Net Profit</th>
+              <th className="px-2 py-2 text-sm text-blue-600 font-bold">Highest Net</th>
+              <th className="px-2 py-2 text-sm text-red-600">Difference</th>
+              <th className="px-2 py-2 text-sm text-blue-600 font-bold">Highest NDC</th>
+              <th className="px-2 py-2 text-sm text-blue-600 font-bold">Highest Drug</th>
+
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-250">
+            {currentRecords.map((item, index) => (
+              <tr key={index}>
+                <td className="px-2 py-2 text-sm text-gray-900">
+                {(() => {
+                    const [datePart] = item.date.split(' ');
+                    const [month, day, year] = datePart.split('/');
+                    return `${day}/${month}/${year}`;
+                  })()}                
                   </td>
-                  <td className="px-2 py-2 text-sm text-gray-900">{item.scriptCode}</td>
-                  <td className="px-2 py-2 text-sm text-gray-900">{item.insuranceName}</td>
-                  <td className="px-2 py-2 text-sm text-gray-900">{item.drugClass}</td>
-                  <td className="px-2 py-2 text-sm text-gray-900">{item.drugName}</td>
-                  <td className="px-2 py-2 text-sm text-gray-900">{item.ndcCode}</td>
-                  <td className="px-2 py-2 text-sm text-gray-900">{normalizePrescriber(item.prescriber)}</td>
-                  <td className="px-2 py-2 text-sm text-gray-900">${item.netProfit.toFixed(2)}</td>
-                  <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.highestNet}</td>
-                  <td className="px-2 py-2 text-sm text-red-600">${item.difference.toFixed(2)}</td>
-                  <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.highestNdc}</td>
-                  <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.highestDrug}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* 🔹 Pagination Controls */}
-        <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 bg-gray-200 text-gray-700 rounded-md ${
-              currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"
-            }`}
-          >
-            <ChevronLeft className="inline-block w-4 h-4 mr-1" /> Previous
-          </button>
+                <td className="px-2 py-2 text-sm text-gray-900">{item.scriptCode}</td>
+                <td className="px-2 py-2 text-sm text-gray-900">{item.insuranceName}</td>
+                <td className="px-2 py-2 text-sm text-gray-900">{item.drugClass}</td>
+                <td className="px-2 py-2 text-sm text-gray-900">{item.drugName}</td>
+                <td className="px-2 py-2 text-sm text-gray-900">{item.ndcCode}</td>
+                <td className="px-2 py-2 text-sm text-gray-900">{item.prescriber}</td>
+                <td className="px-2 py-2 text-sm text-gray-900">${item.netProfit.toFixed(2)}</td>
+                <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.highestNet}</td>
+                <td className="px-2 py-2 text-sm text-red-600">${item.difference.toFixed(2)}</td>
+                <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.highestNdc}</td>
+                <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.highestDrug}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+ {/* 🔹 Pagination Controls */}
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 bg-gray-200 text-gray-700 rounded-md ${
+            currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"
+          }`}
+        >
+          <ChevronLeft className="inline-block w-4 h-4 mr-1" /> Previous
+        </button>
 
-          <p className="text-sm text-gray-700">
-            Page {currentPage} of {totalPages}
-          </p>
+        <p className="text-sm text-gray-700">
+          Page {currentPage} of {totalPages}
+        </p>
 
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 bg-gray-200 text-gray-700 rounded-md ${
-              currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"
-            }`}
-          >
-            Next <ChevronRight className="inline-block w-4 h-4 ml-1" />
-          </button>
-        </div>
+        <button
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 bg-gray-200 text-gray-700 rounded-md ${
+            currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"
+          }`}
+        >
+          Next <ChevronRight className="inline-block w-4 h-4 ml-1" />
+        </button>
+      </div>
+
       </div>
     </div>
   );
 };
-
-export default Dashboard;
