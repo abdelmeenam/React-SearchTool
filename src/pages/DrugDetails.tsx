@@ -196,12 +196,20 @@ export const DrugDetails: React.FC = () => {
                           <div className="text-sm text-gray-500">{alt.className}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500">
-                            {alt.ndc.map((code) => (
-                              <div key={code}>{code}</div>
-                            ))}
-                          </div>
-                        </td>
+  <div className="text-sm text-gray-500">
+    {alt.ndc.map((code) => (
+      <a
+        key={code}
+        href={`https://ndclist.com/ndc/${code}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:underline"
+      >
+        {code}
+      </a>
+    ))}
+  </div>
+</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             ${alt.netPrice.toFixed(2)}

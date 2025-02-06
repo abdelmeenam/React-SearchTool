@@ -5,11 +5,11 @@
   "type": "module",
   "main": "main.ts",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node init && vite",
+    "build": "node init && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build-ts": "tsc -b",
+    "build-ts": "node init && tsc -b",
     "electron": "npm run build-ts && electron ./main.cjs"
   },
   "dependencies": {

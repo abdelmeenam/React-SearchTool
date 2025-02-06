@@ -21,14 +21,14 @@ export const Services: React.FC = () => {
       to: '/upload',
       title: 'Upload Prescriptions',
       text: 'Securely upload your prescription to find compatible drugs and services.',
-      color: 'text-green-600',
+      color: 'text-blue-600',
       bg: 'hover:bg-green-100',
     },
     {
       to: '/dashboard',
       title: 'Dashboard',
       text: 'Manage your profile, view saved searches, and access your history.',
-      color: 'text-purple-600',
+      color: 'text-blue-600',
       bg: 'hover:bg-purple-100',
     },
   ];
