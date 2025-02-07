@@ -21,7 +21,12 @@ export const DrugDetails: React.FC = () => {
   const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
     []
   );
+  const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
 
+  const toggleOtherAlternatives = () => {
+    setShowOtherAlternatives(!showOtherAlternatives);
+  };
+  const [selectedInsurance, setSelectedInsurance] = useState<string>("");
   useEffect(() => {
     const fetchDrugDetails = async () => {
       if (!ndcCode || !insuranceId) {
@@ -32,41 +37,41 @@ export const DrugDetails: React.FC = () => {
         //http://localhost:5107/drug/SearchByIdNdc?id=2445&ndc=69367024516
         if (!ndcCode || !insuranceId) {
           const response = await axios.get(
-            `http://localhost:5107/drug/GetDrugById?id=${drugId}`
+            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetDrugById?id=${drugId}`
           );
           setDrug(response.data);
           console.log(response.data);
           response2 = await axios.get(
-            `http://localhost:5107/drug/GetAllDrugs?classId=${response.data.classId}`
+            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetAllDrugs?classId=${response.data.classId}`
           );
           setSortedAlternatives(response2.data);
           console.log("sdsad", response2.data);
           const response3 = await axios.get(
-            `http://localhost:5107/drug/GetClassById?id=${response.data.classId}`
+            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetClassById?id=${response.data.classId}`
           );
           setClassName(response3.data.name);
         } else {
           const response = await axios.get(
-            `http://localhost:5107/drug/SearchByNdc?ndc=${ndcCode}`
+            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/SearchByNdc?ndc=${ndcCode}`
           );
           const drugData = response.data;
           console.log("here : ", response.data);
           setDrug(drugData);
           console.log(drugData.id, insuranceId);
           response2 = await axios.get(
-            `http://localhost:5107/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
+            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
           );
           console.log("here 2 : ", response2.data);
           setDrugDetail(response2.data);
           console.log("temp : ", drugData.classId);
           const response3 = await axios.get(
-            `http://localhost:5107/drug/GetClassById?id=${drugData?.classId}`
+            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetClassById?id=${drugData?.classId}`
           );
           setClassName(response3.data.name);
           console.log("here3 : ", response3.data.name);
           if (response2.data && className != "other") {
             const response4 = await axios.get(
-              `http://localhost:5107/drug/GetAltrantives?className=${response3.data.name}&insuranceId=${insuranceId}`
+              `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetAltrantives?className=${response3.data.name}&insuranceId=${insuranceId}`
             );
             console.log(response4.data);
             const list = response4.data.filter(
@@ -75,7 +80,7 @@ export const DrugDetails: React.FC = () => {
             setSortedAlternatives(list);
           } else {
             const response5 = await axios.get(
-              `http://localhost:5107/drug/GetDrugsByClass?classId=${drugData?.classId}`
+              `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetDrugsByClass?classId=${drugData?.classId}`
             );
             console.log(response5.data);
             setOtherDrugs(response5.data);
@@ -111,6 +116,20 @@ export const DrugDetails: React.FC = () => {
     const sorted = [...sortedAlternatives].sort((a, b) => b.net - a.net);
     setSortedAlternatives(sorted);
   };
+  const handleInsuranceFilterChange = (event) => {
+    setSelectedInsurance(event.target.value);
+  };
+
+  const alternativesWithInsurance = sortedAlternatives.filter(
+    (alt) => alt.insuranceName
+  );
+  const uniqueInsuranceNames = [
+    ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
+  ];
+  const alternativesWithoutInsurance = sortedAlternatives.filter(
+    (alt) => !alt.insuranceName
+  );
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -132,7 +151,7 @@ export const DrugDetails: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Drug Information
             </h2>
-            {!drugDetial  ? (
+            {!drugDetial ? (
               <>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -152,7 +171,9 @@ export const DrugDetails: React.FC = () => {
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">AWP</dt>
-                      <dd className="mt-1 text-sm text-gray-900">${drug.awp}</dd>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        ${drug.awp}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-sm font-medium text-gray-500">
@@ -289,102 +310,190 @@ export const DrugDetails: React.FC = () => {
               </div>
             )}
           </section>
-       
-          {sortedAlternatives.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <Repeat className="h-5 w-5 mr-2" />
-                  Alternative Medications
-                </h2>
-                <div
-                  className="flex items-center text-sm text-gray-500"
-                  onClick={handleSort}
-                >
-                  <ArrowUpDown className="h-4 w-4 mr-1" />
-                  Sorted by Net Price
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Class
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        NDC Codes
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Insurance
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Net Price
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Insurance Coverage
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        patientPay
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Quantity
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {sortedAlternatives.map((alt) => (
-                      <tr key={alt.ndcCode} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {alt.drugName}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
-                            {className}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500">
-                            <div>{alt.ndcCode}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500">
-                            <div>{alt.insuranceName??"NA"}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {alt.insuranceName?"$"+alt.net.toFixed(2):"NA"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                          {alt.insuranceName?"$"+alt.insurancePayment.toFixed(2):"NA"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                          {alt.insuranceName?"$"+alt.patientPayment.toFixed(2):"NA"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {alt.insuranceName?alt.quantity:"NA"}
-                          </div>
-                        </td>
 
-                      </tr>
+          {sortedAlternatives.length > 0 && (
+            <>
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                    <Repeat className="h-5 w-5 mr-2" />
+                    Alternative Medications with Insurance
+                  </h2>
+                  <div
+                    className="flex items-center text-sm text-gray-500"
+                    onClick={handleSort}
+                  >
+                    <ArrowUpDown className="h-4 w-4 mr-1" />
+                    Sorted by Net Price
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label
+                    htmlFor="insuranceFilter"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Filter by Insurance Name
+                  </label>
+                  <select
+                    id="insuranceFilter"
+                    value={selectedInsurance}
+                    onChange={handleInsuranceFilterChange}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  >
+                    <option value="">All</option>
+                    {uniqueInsuranceNames.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                  </select>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Class
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          NDC Codes
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Insurance
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Net Price
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Insurance Coverage
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Patient Pay
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Quantity
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {alternativesWithInsurance
+                        .filter(
+                          (alt) =>
+                            !selectedInsurance ||
+                            alt.insuranceName === selectedInsurance
+                        )
+                        .map((alt) => (
+                          <tr key={alt.ndcCode} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {alt.drugName}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">
+                                {className}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-500">
+                                <div>{alt.ndcCode}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-500">
+                                <div>{alt.insuranceName ?? "NA"}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {alt.insuranceName
+                                  ? "$" + alt.net.toFixed(2)
+                                  : "NA"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="space-y-1">
+                                {alt.insuranceName
+                                  ? "$" + alt.insurancePayment.toFixed(2)
+                                  : "NA"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {alt.insuranceName
+                                  ? "$" + alt.patientPayment.toFixed(2)
+                                  : "NA"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {alt.insuranceName ? alt.quantity : "NA"}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <button
+                onClick={toggleOtherAlternatives}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+              >
+                {showOtherAlternatives
+                  ? "Hide Other Alternatives"
+                  : "Show Other Alternatives"}
+              </button>
+              {showOtherAlternatives && (
+                <section className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Alternative Medications without Insurance
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Class
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            NDC Codes
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {alternativesWithoutInsurance.map((alt) => (
+                          <tr key={alt.ndcCode} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {alt.drugName}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">
+                                {className}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-500">
+                                <div>{alt.ndcCode}</div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+            </>
           )}
         </div>
       </div>

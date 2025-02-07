@@ -11,6 +11,7 @@ export interface Drug {
   rxcui: number;
 }
 export interface Prescription {
+  netProfit: any;
   insuranceId: number;
   drugId: number;
   ndcCode: string;

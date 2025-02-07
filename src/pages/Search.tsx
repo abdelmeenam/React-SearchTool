@@ -60,7 +60,7 @@ export const Search: React.FC = () => {
         //const results = await api.searchDrugsSuggestions(query);
         try {
           const results = await axios.get(
-            `http://localhost:5107/drug/searchByName?name=${query}`
+            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/searchByName?name=${query}`
           );
           setSuggestions(results.data);
           setShowSuggestions(true);
@@ -91,7 +91,7 @@ export const Search: React.FC = () => {
 
     try {
       const results = await axios.get(
-        `http://localhost:5107/drug/searchByName?name=${searchQuery}`
+        `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/searchByName?name=${searchQuery}`
       );
       setDrugs(results.data);
       setSelectedDrug(null);
@@ -118,12 +118,12 @@ export const Search: React.FC = () => {
       //http://localhost:5107/drug/getDrugInsurances?name=CLINDAMYCIN%20%20SOL%201%25
 
       const insuranceList = await axios.get(
-        `http://localhost:5107/drug/getDrugInsurances?name=${drug.name}`
+        `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/getDrugInsurances?name=${drug.name}`
       );
       //http://localhost:5107/drug/getDrugNDCsByNameInsuance?drugName=METHOTREXATE%20TAB%202.5MG&insurnaceId=6
 
       const ndcList = await axios.get(
-        `http://localhost:5107/drug/getDrugNDCs?name=${drug.name}`
+        `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/getDrugNDCs?name=${drug.name}`
       );
       console.log(insuranceList.data);
       console.log(ndcList.data);
