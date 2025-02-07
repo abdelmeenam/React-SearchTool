@@ -6,7 +6,7 @@ const API_BASE_URL = 'http://localhost:5107/';
 
 export const api = {
   login: async (email: string, password: string) => {
-    if (email === 'test@example.com' && password === 'Test123!') {
+    if (email === 'User1@mail.com' && password === 'Test123!') {
       return { token: 'mock-jwt-token' };
     }
     throw new Error('Invalid credentials');
