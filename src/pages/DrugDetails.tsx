@@ -23,7 +23,9 @@ export const DrugDetails: React.FC = () => {
     []
   );
   const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
-
+  function padCode(code) {
+    return code.padStart(11, "0");
+  }
   const toggleOtherAlternatives = () => {
     setShowOtherAlternatives(!showOtherAlternatives);
   };
@@ -133,7 +135,7 @@ export const DrugDetails: React.FC = () => {
 
   return (
     <motion.div>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
           <div className="bg-blue-600 p-6 text-white">
@@ -141,7 +143,7 @@ export const DrugDetails: React.FC = () => {
               <Pill className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold">{drug.name}</h1>
-                <p className="text-blue-100">NDC: {drug.ndc}</p>
+                <p className="text-blue-100">NDC: {padCode(drug.ndc)}</p>
               </div>
             </div>
           </div>
@@ -315,7 +317,8 @@ export const DrugDetails: React.FC = () => {
                       <dd className="mt-1 text-sm text-gray-900">
                         {drugDetial.quantity}
                       </dd>
-                    </div>
+                      </div>
+                      
                   </dl>
                 </div>
               )}
@@ -386,6 +389,9 @@ export const DrugDetails: React.FC = () => {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Quantity
                           </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            ACQ
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -399,7 +405,12 @@ export const DrugDetails: React.FC = () => {
                             <tr key={alt.ndcCode} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {alt.drugName}
+                                  <a
+                                    href={`/drug/${alt.drugId}`}
+                                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                                  >
+                                    {alt.drugName}
+                                  </a>
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -409,7 +420,16 @@ export const DrugDetails: React.FC = () => {
                               </td>
                               <td className="px-6 py-4">
                                 <div className="text-sm text-gray-500">
-                                  <div>{alt.ndcCode}</div>
+                                  <a
+                                    href={`https://ndclist.com/ndc/${padCode(
+                                      alt.ndcCode
+                                    )}`}
+                                    className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {padCode(alt.ndcCode)}
+                                  </a>
                                 </div>
                               </td>
                               <td className="px-6 py-4">
@@ -441,6 +461,11 @@ export const DrugDetails: React.FC = () => {
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
                                   {alt.insuranceName ? alt.quantity : "NA"}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {alt.acquisitionCost }
                                 </div>
                               </td>
                             </tr>
@@ -476,6 +501,9 @@ export const DrugDetails: React.FC = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               NDC Codes
                             </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              ACQ
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -483,7 +511,12 @@ export const DrugDetails: React.FC = () => {
                             <tr key={alt.ndcCode} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {alt.drugName}
+                                  <a
+                                    href={`/drug/${alt.drugId}`}
+                                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                                  >
+                                    {alt.drugName}
+                                  </a>
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -493,7 +526,21 @@ export const DrugDetails: React.FC = () => {
                               </td>
                               <td className="px-6 py-4">
                                 <div className="text-sm text-gray-500">
-                                  <div>{alt.ndcCode}</div>
+                                  <a
+                                    href={`https://ndclist.com/ndc/${padCode(
+                                      alt.ndcCode
+                                    )}`}
+                                    className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {padCode(alt.ndcCode)}
+                                  </a>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500">
+                                  {alt.acquisitionCost}
                                 </div>
                               </td>
                             </tr>
