@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
       console.log(response.user);
       window.location.reload();  // Force a full page reload
 
-      navigate('/login');  // Navigate to home page
+      navigate('/');  // Navigate to home page
     } catch (err) {
       setError('Invalid credentials');
     }
