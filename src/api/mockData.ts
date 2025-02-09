@@ -164,7 +164,7 @@ function generateRandomUser() {
   };
 }
 
-export const mockUsers: User[] = [
+export const mockUsers = [
   {
     id: "u1",
     name: "admin",
@@ -172,5 +172,39 @@ export const mockUsers: User[] = [
     password: "admin",
     role: "admin",
   },
-  ...Array.from({ length: 5 }, generateRandomUser),
+  {
+    id: uuidv4(),
+    name: "John Doe",
+    email: "john.doe@gmail.com",
+    password: "password123",
+    role: "pharmacist",
+  },
+  {
+    id: uuidv4(),
+    name: "Alice Smith",
+    email: "alice.smith@gmail.com",
+    password: "password123",
+    role: "pharmacist",
+  },
+  {
+    id: uuidv4(),
+    name: "Bob Johnson",
+    email: "bob.johnson@gmail.com",
+    password: "password123",
+    role: "pharmacist",
+  },
+  {
+    id: uuidv4(),
+    name: "Charlie Brown",
+    email: "charlie.brown@gmail.com",
+    password: "password123",
+    role: "pharmacist",
+  },
+  {
+    id: uuidv4(),
+    name: "Eve Davis",
+    email: "eve.davis@gmail.com",
+    password: "password123",
+    role: "pharmacist",
+  },
 ];

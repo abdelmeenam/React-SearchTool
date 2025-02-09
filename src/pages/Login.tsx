@@ -17,9 +17,8 @@ export const Login: React.FC = () => {
       localStorage.setItem('role', response.user.role);
       localStorage.setItem('email', response.user.email);
       console.log(response.user);
-      window.location.reload();  // Force a full page reload
 
-      navigate('/');  // Navigate to home page
+      navigate('/'); 
     } catch (err) {
       setError('Invalid credentials');
     }
