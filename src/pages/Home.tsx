@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-
+const isAuthenticated = localStorage.getItem("role");
 export const Home: React.FC = () => {
   return (
     <motion.div>
@@ -38,25 +38,30 @@ export const Home: React.FC = () => {
             </p>
           </Link>
 
-          <Link
-            to="/dashboard"
-            className="block bg-white text-purple-600 rounded-lg shadow-lg p-6 hover:bg-purple-100 transition-transform transform hover:-translate-y-1"
-          >
-            <h2 className="text-2xl font-bold mb-2">Dashboard</h2>
-            <p className="text-gray-700">
-              Manage your profile, view saved searches, and access your history.
-            </p>
-          </Link>
+          {isAuthenticated==="admin" && (
+            <Link
+              to="/dashboard"
+              className="block bg-white text-purple-600 rounded-lg shadow-lg p-6 hover:bg-purple-100 transition-transform transform hover:-translate-y-1"
+            >
+              <h2 className="text-2xl font-bold mb-2">Dashboard</h2>
+              <p className="text-gray-700">
+                Manage your profile, view saved searches, and access your
+                history.
+              </p>
+            </Link>
+          )}
 
-          <Link
-            to="/login"
-            className="block bg-white text-red-600 rounded-lg shadow-lg p-6 hover:bg-red-100 transition-transform transform hover:-translate-y-1"
-          >
-            <h2 className="text-2xl font-bold mb-2">Login</h2>
-            <p className="text-gray-700">
-              Access your account to unlock personalized features.
-            </p>
-          </Link>
+          {!isAuthenticated && (
+            <Link
+              to="/login"
+              className="block bg-white text-red-600 rounded-lg shadow-lg p-6 hover:bg-red-100 transition-transform transform hover:-translate-y-1"
+            >
+              <h2 className="text-2xl font-bold mb-2">Login</h2>
+              <p className="text-gray-700">
+                Access your account to unlock personalized features.
+              </p>
+            </Link>
+          )}
         </div>
 
         <footer className="mt-12 text-center">

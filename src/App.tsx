@@ -1,20 +1,41 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext';
-import { Layout } from './components/Layout';
-import { Login } from './pages/Login';
-import { Search } from './pages/Search';
-import { Upload } from './pages/Upload';
-import { DrugDetails } from './pages/DrugDetails';
-import { Dashboard } from './pages/Dashboard';
-import { Home } from './pages/Home';
-import { LogsPage } from './pages/Logs';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
+import { Layout } from "./components/Layout";
+import { Login } from "./pages/Login";
+import { Search } from "./pages/Search";
+import { Upload } from "./pages/Upload";
+import { DrugDetails } from "./pages/DrugDetails";
+import { Dashboard } from "./pages/Dashboard";
+import { Home } from "./pages/Home";
+import { LogsPage } from "./pages/Logs";
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem('token');
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+const PrivateRoute: React.FC<{
+  children: React.ReactNode;
+  isAdmin?: boolean;
+}> = ({ children, isAdmin = false }) => {
+  const role = localStorage.getItem("role");
+
+  if (!role) {
+    // If not authenticated, redirect to login
+    return <Navigate to="/login" />;
+  }
+
+  // If isAdmin is true, check if the user is admin
+  if (isAdmin && role !== "admin") {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
 };
-
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isAuthenticated = localStorage.getItem("role");
+  if (isAuthenticated) {
+    // Redirect to the dashboard if the user is already logged in
+    return <Navigate to="/" />;
+  }
+  return <>{children}</>;
+};
 function App() {
   return (
     <ThemeProvider>
@@ -22,7 +43,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} /> {/* Default Home Page */}
-            <Route path="login" element={<Login />} />
+            <Route
+              path="login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />{" "}
             <Route
               path="search"
               element={
@@ -39,32 +67,31 @@ function App() {
                 </PrivateRoute>
               }
             />
-           
             <Route
               path="dashboard"
               element={
-                <PrivateRoute>
+                <PrivateRoute isAdmin={true}>
                   <Dashboard />
                 </PrivateRoute>
               }
             />
-          <Route
+            <Route
               path="logs"
               element={
-                <PrivateRoute>
+                <PrivateRoute isAdmin={true}>
                   <LogsPage />
                 </PrivateRoute>
               }
             />
-              <Route path="drug/:drugId"
+            <Route
+              path="drug/:drugId"
               element={
-                          <PrivateRoute>
-                            <DrugDetails />
-                          </PrivateRoute>
-                        } 
-                        //element={<ProfilePage />}
-                         />  
-</Route>                        
+                <PrivateRoute>
+                  <DrugDetails />
+                </PrivateRoute>
+              }
+            />
+          </Route>
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

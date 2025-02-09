@@ -13,8 +13,13 @@ export const Login: React.FC = () => {
     e.preventDefault();
     try {
       const response = await api.login(email, password);
-      localStorage.setItem('token', response.token);
-      navigate('/search');
+
+      localStorage.setItem('role', response.user.role);
+      localStorage.setItem('email', response.user.email);
+      console.log(response.user);
+      window.location.reload();  // Force a full page reload
+
+      navigate('/login');  // Navigate to home page
     } catch (err) {
       setError('Invalid credentials');
     }
