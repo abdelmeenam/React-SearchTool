@@ -60,20 +60,20 @@ export const Layout: React.FC = () => {
                     <Search className="h-5 w-5" />{" "}
                     <span className="font-medium">Search</span>
                   </Link>
-                  <Link
+                  {/* <Link
                     to="/upload"
                     className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400 transition-transform"
                   >
                     <Upload className="h-5 w-5" />{" "}
                     <span className="font-medium">Upload</span>
-                  </Link>
-                  <Link
+                  </Link> */}
+                  {/* <Link
                     to="/logs"
                     className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 transition-transform"
                   >
                     <FileText className="h-5 w-5" />{" "}
                     <span className="font-medium">Logs</span>
-                  </Link>
+                  </Link> */}
                   {isLoggedIn === "admin" && (
                     <Link
                       to="/dashboard"

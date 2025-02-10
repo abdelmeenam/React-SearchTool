@@ -27,7 +27,7 @@ export const Home: React.FC = () => {
             </p>
           </Link>
 
-          <Link
+          {/* <Link
             to="/upload"
             className="block bg-white text-green-600 rounded-lg shadow-lg p-6 hover:bg-green-100 transition-transform transform hover:-translate-y-1"
           >
@@ -36,7 +36,7 @@ export const Home: React.FC = () => {
               Securely upload your prescription to find compatible drugs and
               services.
             </p>
-          </Link>
+          </Link> */}
 
           {isAuthenticated==="admin" && (
             <Link
