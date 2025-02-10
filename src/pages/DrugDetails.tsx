@@ -126,9 +126,96 @@ export const DrugDetails: React.FC = () => {
   const alternativesWithInsurance = sortedAlternatives.filter(
     (alt) => alt.insuranceName
   );
-  const uniqueInsuranceNames = [
-    ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
-  ];
+  const uniqueInsuranceNames: string[] = [
+    ...new Set([
+      ...alternativesWithInsurance.map((alt) => alt.insuranceName),
+      "AA",
+      "AB",
+      "AC",
+      "AD",
+      "AF",
+      "AG",
+      "AH",
+      "AI",
+      "AJ",
+      "AL",
+      "AM",
+      "AO",
+      "AQ",
+      "AS",
+      "AT",
+      "AU",
+      "AV",
+      "AX",
+      "BE",
+      "BF",
+      "BI",
+      "BL",
+      "BM",
+      "BN",
+      "BO",
+      "BP",
+      "BR",
+      "BU",
+      "BW",
+      "CA",
+      "CC",
+      "CE",
+      "CG",
+      "CJ",
+      "CK",
+      "CL",
+      "CM",
+      "CO",
+      "CQ",
+      "CR",
+      "CU",
+      "CY",
+      "DJ",
+      "DQ",
+      "DS",
+      "DW",
+      "EA",
+      "EB",
+      "ED",
+      "EH",
+      "EJ",
+      "EO",
+      "EP",
+      "EQ",
+      "ER",
+      "ET",
+      "EW",
+      "EY",
+      "FA",
+      "FF",
+      "FG",
+      "FJ",
+      "FQ",
+      "FS",
+      "FT",
+      "GA",
+      "GC",
+      "GE",
+      "GF",
+      "GH",
+      "GI",
+      "GJ",
+      "GM",
+      "GO",
+      "GQ",
+      "GS",
+      "GT",
+      "GV",
+      "GX",
+      "GY",
+      "GZ",
+      "HB",
+      "HE",
+      "X ",
+    ]),
+  ].sort();
+
   const alternativesWithoutInsurance = sortedAlternatives.filter(
     (alt) => !alt.insuranceName
   );
@@ -143,7 +230,12 @@ export const DrugDetails: React.FC = () => {
               <Pill className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold">{drug.name}</h1>
-                <p className="text-blue-100">NDC: {padCode(drug.ndc)}</p>
+                <a
+                  href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
+                  className="text-blue-100"
+                >
+                  NDC: {padCode(drug.ndc)}
+                </a>
               </div>
             </div>
           </div>
@@ -165,14 +257,6 @@ export const DrugDetails: React.FC = () => {
                         </dt>
                         <dd className="mt-1 text-sm text-gray-900">
                           {className}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-medium text-gray-500">
-                          ACQ
-                        </dt>
-                        <dd className="mt-1 text-sm text-gray-900">
-                          ${drug.acq.toFixed(2)}
                         </dd>
                       </div>
                       <div>
@@ -317,8 +401,7 @@ export const DrugDetails: React.FC = () => {
                       <dd className="mt-1 text-sm text-gray-900">
                         {drugDetial.quantity}
                       </dd>
-                      </div>
-                      
+                    </div>
                   </dl>
                 </div>
               )}
@@ -395,81 +478,100 @@ export const DrugDetails: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {alternativesWithInsurance
-                          .filter(
-                            (alt) =>
-                              !selectedInsurance ||
-                              alt.insuranceName === selectedInsurance
-                          )
-                          .map((alt) => (
-                            <tr key={alt.ndcCode} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  <a
-                                    href={`/drug/${alt.drugId}`}
-                                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                                  >
-                                    {alt.drugName}
-                                  </a>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-500">
-                                  {className}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="text-sm text-gray-500">
-                                  <a
-                                    href={`https://ndclist.com/ndc/${padCode(
-                                      alt.ndcCode
-                                    )}`}
-                                    className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    {padCode(alt.ndcCode)}
-                                  </a>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="text-sm text-gray-500">
-                                  <div>{alt.insuranceName ?? "NA"}</div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {alt.insuranceName
-                                    ? "$" + alt.net.toFixed(2)
-                                    : "NA"}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="space-y-1">
-                                  {alt.insuranceName
-                                    ? "$" + alt.insurancePayment.toFixed(2)
-                                    : "NA"}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {alt.insuranceName
-                                    ? "$" + alt.patientPayment.toFixed(2)
-                                    : "NA"}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {alt.insuranceName ? alt.quantity : "NA"}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {alt.acquisitionCost }
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                        {alternativesWithInsurance.filter(
+                          (alt) =>
+                            !selectedInsurance ||
+                            alt.insuranceName === selectedInsurance
+                        ).length > 0 ? (
+                          alternativesWithInsurance
+                            .filter(
+                              (alt) =>
+                                !selectedInsurance ||
+                                alt.insuranceName === selectedInsurance
+                            )
+                            .map((alt) => (
+                              <tr
+                                key={alt.ndcCode}
+                                className="hover:bg-gray-50"
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    <a
+                                      href={`/drug/${alt.drugId}`}
+                                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                                    >
+                                      {alt.drugName}
+                                    </a>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500">
+                                    {className}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="text-sm text-gray-500">
+                                    <a
+                                      href={`https://ndclist.com/ndc/${padCode(
+                                        alt.ndcCode
+                                      )}`}
+                                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      {padCode(alt.ndcCode)}
+                                    </a>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="text-sm text-gray-500">
+                                    <div>{alt.insuranceName ?? "NA"}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.insuranceName
+                                      ? "$" + alt.net.toFixed(2)
+                                      : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="space-y-1">
+                                    {alt.insuranceName
+                                      ? "$" + alt.insurancePayment.toFixed(2)
+                                      : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.insuranceName
+                                      ? "$" + alt.patientPayment.toFixed(2)
+                                      : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.insuranceName ? alt.quantity : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.acquisitionCost}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                        ) : (
+                          // عرض رسالة "No insurance found" إذا لم يكن هناك بيانات متاحة بعد التصفية
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="px-6 py-4 text-center text-sm text-gray-500"
+                            >
+                              No insurance found
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
