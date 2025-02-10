@@ -37,7 +37,7 @@ export const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const result = await axios.get(
-          "http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetAllLatestScripts"
+          "https://api.medisearchtool.com/drug/GetAllLatestScripts"
         );
         setLatestScript(result.data);
       } catch (error) {

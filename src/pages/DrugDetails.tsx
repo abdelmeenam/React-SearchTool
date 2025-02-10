@@ -40,41 +40,41 @@ export const DrugDetails: React.FC = () => {
         //http://localhost:5107/drug/SearchByIdNdc?id=2445&ndc=69367024516
         if (!ndcCode || !insuranceId) {
           const response = await axios.get(
-            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetDrugById?id=${drugId}`
+            `https://api.medisearchtool.com/drug/GetDrugById?id=${drugId}`
           );
           setDrug(response.data);
           console.log(response.data);
           response2 = await axios.get(
-            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetAllDrugs?classId=${response.data.classId}`
+            `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.classId}`
           );
           setSortedAlternatives(response2.data);
           console.log("sdsad", response2.data);
           const response3 = await axios.get(
-            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetClassById?id=${response.data.classId}`
+            `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.classId}`
           );
           setClassName(response3.data.name);
         } else {
           const response = await axios.get(
-            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/SearchByNdc?ndc=${ndcCode}`
+            `https://api.medisearchtool.com/drug/SearchByNdc?ndc=${ndcCode}`
           );
           const drugData = response.data;
           console.log("here : ", response.data);
           setDrug(drugData);
           console.log(drugData.id, insuranceId);
           response2 = await axios.get(
-            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
+            `https://api.medisearchtool.com/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
           );
           console.log("here 2 : ", response2.data);
           setDrugDetail(response2.data);
           console.log("temp : ", drugData.classId);
           const response3 = await axios.get(
-            `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetClassById?id=${drugData?.classId}`
+            `https://api.medisearchtool.com/drug/GetClassById?id=${drugData?.classId}`
           );
           setClassName(response3.data.name);
           console.log("here3 : ", response3.data.name);
           if (response2.data && className != "other") {
             const response4 = await axios.get(
-              `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetAltrantives?className=${response3.data.name}&insuranceId=${insuranceId}`
+              `https://api.medisearchtool.com/drug/GetAltrantives?className=${response3.data.name}&insuranceId=${insuranceId}`
             );
             console.log(response4.data);
             const list = response4.data.filter(
@@ -83,7 +83,7 @@ export const DrugDetails: React.FC = () => {
             setSortedAlternatives(list);
           } else {
             const response5 = await axios.get(
-              `http://ec2-13-60-83-232.eu-north-1.compute.amazonaws.com:5004/drug/GetDrugsByClass?classId=${drugData?.classId}`
+              `https://api.medisearchtool.com/drug/GetDrugsByClass?classId=${drugData?.classId}`
             );
             console.log(response5.data);
             setOtherDrugs(response5.data);
