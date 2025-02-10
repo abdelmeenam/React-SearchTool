@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Pill, AlertCircle, Repeat, ArrowUpDown } from "lucide-react";
 import { api } from "../api/api";
-import { Drug, Prescription } from "../types";
+import { Drug, Insurance, Prescription } from "../types";
 import axios from "axios";
 import { motion } from "framer-motion";
 
@@ -22,6 +22,8 @@ export const DrugDetails: React.FC = () => {
   const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
     []
   );
+    const [insurances, setInsurances] = useState<Insurance[]>([]);
+  
   const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
   function padCode(code) {
     return code.padStart(11, "0");
@@ -30,30 +32,46 @@ export const DrugDetails: React.FC = () => {
     setShowOtherAlternatives(!showOtherAlternatives);
   };
   const [selectedInsurance, setSelectedInsurance] = useState<string>("");
+  const [temp, setTemp] = useState("");
   useEffect(() => {
     const fetchDrugDetails = async () => {
-      if (!ndcCode || !insuranceId) {
-      }
-
       try {
+       
         var response2;
         //http://localhost:5107/drug/SearchByIdNdc?id=2445&ndc=69367024516
         if (!ndcCode || !insuranceId) {
+          console.log("hreeeee")
           const response = await axios.get(
             `https://api.medisearchtool.com/drug/GetDrugById?id=${drugId}`
           );
           setDrug(response.data);
+          if (insuranceId) {
+            const insuranceList = await axios.get(
+              `https://api.medisearchtool.com/drug/getDrugInsurances?name=${response.data.name}`
+            );
+            setInsurances(insuranceList.data);
+            console.log("hereeeeee", insuranceList.data);
+            const matchedInsurance = insuranceList.data.find((i) => i.id.toString() === insuranceId);
+            console.log(matchedInsurance);
+            setTemp(matchedInsurance.name);
+          }
           console.log(response.data);
           response2 = await axios.get(
             `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.classId}`
           );
-          setSortedAlternatives(response2.data);
-          console.log("sdsad", response2.data);
+          const list = response2.data.filter(
+            (item) => item.drugName !== response.data.name
+          );
+          setSortedAlternatives(list);
+          console.log("sdsad", list);
           const response3 = await axios.get(
             `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.classId}`
           );
           setClassName(response3.data.name);
+          
         } else {
+          console.log("hreeeee2")
+
           const response = await axios.get(
             `https://api.medisearchtool.com/drug/SearchByNdc?ndc=${ndcCode}`
           );
@@ -71,16 +89,18 @@ export const DrugDetails: React.FC = () => {
             `https://api.medisearchtool.com/drug/GetClassById?id=${drugData?.classId}`
           );
           setClassName(response3.data.name);
-          console.log("here3 : ", response3.data.name);
-          if (response2.data && className != "other") {
+          console.log("here3 : ", response3.data.id);
+          if ( className != "other") {
             const response4 = await axios.get(
-              `https://api.medisearchtool.com/drug/GetAltrantives?className=${response3.data.name}&insuranceId=${insuranceId}`
+              `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.classId}`
             );
-            console.log(response4.data);
+            console.log("gerree " ,response4.data[0]);
             const list = response4.data.filter(
-              (item) => item.drugName !== response2.data.drugName
+              (item) => item.drugName !== response.data.name
             );
+            console.log("asdsadasd ", list);
             setSortedAlternatives(list);
+            console.log("length man ",sortedAlternatives.length)
           } else {
             const response5 = await axios.get(
               `https://api.medisearchtool.com/drug/GetDrugsByClass?classId=${drugData?.classId}`
@@ -236,6 +256,7 @@ export const DrugDetails: React.FC = () => {
                 >
                   NDC: {padCode(drug.ndc)}
                 </a>
+                <p>{temp }</p>
               </div>
             </div>
           </div>

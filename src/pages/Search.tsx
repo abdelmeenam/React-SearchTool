@@ -92,7 +92,7 @@ export const Search: React.FC = () => {
 
     try {
       const results = await axios.get(
-        `https://api.medisearchtool.com/drug/searchByName?name=${searchQuery}`
+        `http://localhost:5107/drug/searchByName?name=${searchQuery}`
       );
       setDrugs(results.data);
       setSelectedDrug(null);
@@ -241,6 +241,7 @@ export const Search: React.FC = () => {
                       </option>
                     ))}
                 </select>
+               
               </div>
             )}
 
@@ -264,7 +265,7 @@ export const Search: React.FC = () => {
             )}
 
             {/* Search Button */}
-            {selectedDrug && selectedNdc && (
+            {selectedDrug  && (
               <button
                 onClick={handleSearch}
                 className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
