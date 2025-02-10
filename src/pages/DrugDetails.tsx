@@ -45,16 +45,16 @@ export const DrugDetails: React.FC = () => {
             `https://api.medisearchtool.com/drug/GetDrugById?id=${drugId}`
           );
           setDrug(response.data);
-          if (insuranceId) {
-            const insuranceList = await axios.get(
-              `https://api.medisearchtool.com/drug/getDrugInsurances?name=${response.data.name}`
-            );
-            setInsurances(insuranceList.data);
-            console.log("hereeeeee", insuranceList.data);
-            const matchedInsurance = insuranceList.data.find((i) => i.id.toString() === insuranceId);
-            console.log(matchedInsurance);
-            setTemp(matchedInsurance.name);
-          }
+          // if (insuranceId) {
+          //   const insuranceList = await axios.get(
+          //     `https://api.medisearchtool.com/drug/getDrugInsurances?name=${response.data.name}`
+          //   );
+          //   setInsurances(insuranceList.data);
+          //   console.log("hereeeeee", insuranceList.data);
+          //   const matchedInsurance = insuranceList.data.find((i) => i.id.toString() === insuranceId);
+          //   console.log(matchedInsurance);
+          //   setTemp(matchedInsurance.name);
+          // }
           console.log(response.data);
           response2 = await axios.get(
             `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.classId}`
