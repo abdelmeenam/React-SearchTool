@@ -31,6 +31,29 @@ export interface Prescription {
   insurance: any | null; // Define a specific type if available
   drug: any | null; // Define a specific type if available
 }
+export interface DrugTransaction {
+  highestNdc: any;
+  date: string; 
+  scriptCode: string;
+  rxNumber: string;
+  user: string;
+  drugName: string;
+  insurance: string;
+  pf: string;
+  prescriber: string;
+  quantity: number;
+  acquisitionCost: number;
+  discount: number;
+  insurancePayment: number;
+  patientPayment: number;
+  ndcCode: string;
+  netProfit: number;
+  drugClass: string;
+  highstDrugNDC: string;
+  highstDrugName: string;
+  highstDrugId: number;
+  highstNet: number;
+}
 
 export interface Insurance {
   id: string;
