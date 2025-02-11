@@ -35,15 +35,23 @@ export const Dashboard: React.FC = () => {
           "https://api.medisearchtool.com/drug/GetAllLatestScripts"
         );
         setLatestScripts(result.data);
-         // Calculate values
-      const belowNetCount = result.data.filter(item => item.netProfit < item.highstNet).length;
-      const totalRev = result.data.reduce((sum, item) => sum + item.netProfit, 0);
-      const totalNetProfit = result.data.reduce((sum, item) => sum + item.highstNet, 0);
-      
-      // Update state
-      setBelowNetPriceCount(belowNetCount);
-      setTotalRevenue(totalRev);
-      setTotalNet(totalNetProfit);
+        // Calculate values
+        const belowNetCount = result.data.filter(
+          (item) => item.netProfit < item.highstNet
+        ).length;
+        const totalRev = result.data.reduce(
+          (sum, item) => sum + item.netProfit,
+          0
+        );
+        const totalNetProfit = result.data.reduce(
+          (sum, item) => sum + item.highstNet,
+          0
+        );
+
+        // Update state
+        setBelowNetPriceCount(belowNetCount);
+        setTotalRevenue(totalRev);
+        setTotalNet(totalNetProfit);
       } catch (error) {
         console.error("Error fetching data", error);
       }
@@ -71,7 +79,7 @@ export const Dashboard: React.FC = () => {
     { label: "Highest Drug Name", key: "highstDrugName" },
     { label: "Highest Drug ID", key: "highstDrugId" },
     { label: "Highest Net", key: "highstNet" },
-  ]
+  ];
   useEffect(() => {
     let sortedData = [...latestScripts];
     if (sortConfig !== null) {
@@ -113,6 +121,39 @@ export const Dashboard: React.FC = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+  const insurance_mapping = {
+    AL: "Aetna (AL)",
+    BW: "aetna (BW)",
+    AD: "Aetna Medicare (AD)",
+    AF: "Anthem BCBS (AF)",
+    DS: "Blue Cross Blue Shield (DS)",
+    CA: "blue shield medicare (CA)",
+    FQ: "Capital Rx (FQ)",
+    BF: "Caremark (BF)",
+    ED: "CatalystRx (ED)",
+    AM: "Cigna (AM)",
+    BO: "Default Claim Format (BO)",
+    AP: "Envision Rx Options (AP)",
+    CG: "Express Scripts (CG)",
+    BI: "Horizon (BI)",
+    AJ: "Humana Medicare (AJ)",
+    BP: "informedRx (BP)",
+    AO: "MEDCO HEALTH (AO)",
+    AC: "MEDCO MEDICARE PART D (AC)",
+    AQ: "MEDGR (AQ)",
+    CC: "MY HEALTH LA (CC)",
+    AG: "Navitus Health Solutions (AG)",
+    AH: "OptumRx (AH)",
+    AS: "PACIFICARE LIFE AND H (AS)",
+    FJ: "Paramount Rx (FJ)",
+    "X ": "PF - DEFAULT (X )",
+    EA: "Pharmacy Data Management (EA)",
+    DW: "phcs (DW)",
+    AX: "PINNACLE (AX)",
+    BN: "Prescription Solutions (BN)",
+    AA: "Tri-Care Express Scripts (AA)",
+    AI: "United Healthcare (AI)",
+  };
   const downloadCSV = () => {
     const headers = [
       "Date",
@@ -164,13 +205,15 @@ export const Dashboard: React.FC = () => {
         <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
           Pharmacy Dashboard
         </h1>
-         {/* Analytics Overview */}
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Analytics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Total Scripts</p>
-                <p className="text-3xl font-semibold">{latestScripts?.length}</p>
+                <p className="text-3xl font-semibold">
+                  {latestScripts?.length}
+                </p>
               </div>
               <Pill className="h-10 w-10" />
             </div>
@@ -178,19 +221,19 @@ export const Dashboard: React.FC = () => {
 
           <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
-            <div>
+              <div>
                 <p className="text-sm font-medium">Best Total </p>
                 <p className="text-3xl font-semibold">
                   ${totalNet?.toFixed(2)}
                 </p>
-              </div>  
+              </div>
               <BarChart3 className="h-10 w-10" />
             </div>
           </div>
 
           <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
-            <div>
+              <div>
                 <p className="text-sm font-medium">Total Revenue</p>
                 <p className="text-3xl font-semibold">
                   ${totalRevenue?.toFixed(2)}
@@ -211,7 +254,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-4 mb-6">
-          
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
@@ -234,11 +276,15 @@ export const Dashboard: React.FC = () => {
             <option value="">All Insurance</option>
             {[...new Set(latestScripts.map((item) => item.insurance))]
               .sort()
-              .map((insuranceName) => (
-                <option key={insuranceName} value={insuranceName}>
-                  {insuranceName}
-                </option>
-              ))}
+              .map((insuranceCode) => {
+                const fullInsuranceName =
+                  insurance_mapping[insuranceCode] || insuranceCode;
+                return (
+                  <option key={insuranceCode} value={insuranceCode}>
+                    {insuranceCode.trim() === "" ? "MARCOG" : fullInsuranceName}
+                  </option>
+                );
+              })}
           </select>
           <button
             onClick={downloadCSV}
@@ -286,7 +332,7 @@ export const Dashboard: React.FC = () => {
                     {item.scriptCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurance}
+                    {item.insurance ==="  " ? "MARCOG" : item.insurance}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.drugClass}
@@ -322,8 +368,8 @@ export const Dashboard: React.FC = () => {
               ))}
             </tbody>
           </table>
-            {/* 🔹 Pagination Controls */}
-            <div className="flex justify-between items-center mt-4">
+          {/* 🔹 Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
@@ -364,4 +410,3 @@ export default Dashboard;
 function normalizePrescriber(prescriber: string): any {
   throw new Error("Function not implemented.");
 }
-
