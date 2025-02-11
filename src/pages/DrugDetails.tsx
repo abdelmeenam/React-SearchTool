@@ -55,9 +55,9 @@ export const DrugDetails: React.FC = () => {
           //   console.log(matchedInsurance);
           //   setTemp(matchedInsurance.name);
           // }
-          console.log(response.data);
+          console.log("sdda",response.data.drugClassId);
           response2 = await axios.get(
-            `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.classId}`
+            `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.drugClassId}`
           );
           const list = response2.data.filter(
             (item) => item.drugName !== response.data.name
@@ -65,7 +65,7 @@ export const DrugDetails: React.FC = () => {
           setSortedAlternatives(list);
           console.log("sdsad", list);
           const response3 = await axios.get(
-            `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.classId}`
+            `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.drugClassId}`
           );
           setClassName(response3.data.name);
           
@@ -86,13 +86,13 @@ export const DrugDetails: React.FC = () => {
           setDrugDetail(response2.data);
           console.log("temp : ", drugData.classId);
           const response3 = await axios.get(
-            `https://api.medisearchtool.com/drug/GetClassById?id=${drugData?.classId}`
+            `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.drugClassId}`
           );
           setClassName(response3.data.name);
           console.log("here3 : ", response3.data.id);
           if ( className != "other") {
             const response4 = await axios.get(
-              `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.classId}`
+              `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.drugClassId}`
             );
             console.log("gerree " ,response4.data[0]);
             const list = response4.data.filter(
@@ -103,7 +103,7 @@ export const DrugDetails: React.FC = () => {
             console.log("length man ",sortedAlternatives.length)
           } else {
             const response5 = await axios.get(
-              `https://api.medisearchtool.com/drug/GetDrugsByClass?classId=${drugData?.classId}`
+              `https://api.medisearchtool.com/drug/GetDrugsByClass?classId=${response.data.drugClassId}`
             );
             console.log(response5.data);
             setOtherDrugs(response5.data);
