@@ -258,6 +258,7 @@ export const Dashboard: React.FC = () => {
                   "drugClass",
                   "drugName",
                   "ndcCode",
+                  "user",
                   "prescriber",
                   "netProfit",
                   "highestNet",
@@ -295,6 +296,9 @@ export const Dashboard: React.FC = () => {
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.ndcCode}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.user}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.prescriber}
