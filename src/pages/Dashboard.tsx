@@ -38,7 +38,7 @@ export const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const result = await axios.get(
-          "http://localhost:5107/drug/GetAllLatestScripts"
+          "https://api.medisearchtool.com/drug/GetAllLatestScripts"
         );
         setLatestScripts(result.data);
         // Calculate values
