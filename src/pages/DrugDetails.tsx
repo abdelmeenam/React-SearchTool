@@ -33,6 +33,39 @@ export const DrugDetails: React.FC = () => {
   };
   const [selectedInsurance, setSelectedInsurance] = useState<string>("");
   const [temp, setTemp] = useState("");
+  const insurance_mapping = {
+    AL: "Aetna (AL)",
+    BW: "aetna (BW)",
+    AD: "Aetna Medicare (AD)",
+    AF: "Anthem BCBS (AF)",
+    DS: "Blue Cross Blue Shield (DS)",
+    CA: "blue shield medicare (CA)",
+    FQ: "Capital Rx (FQ)",
+    BF: "Caremark (BF)",
+    ED: "CatalystRx (ED)",
+    AM: "Cigna (AM)",
+    BO: "Default Claim Format (BO)",
+    AP: "Envision Rx Options (AP)",
+    CG: "Express Scripts (CG)",
+    BI: "Horizon (BI)",
+    AJ: "Humana Medicare (AJ)",
+    BP: "informedRx (BP)",
+    AO: "MEDCO HEALTH (AO)",
+    AC: "MEDCO MEDICARE PART D (AC)",
+    AQ: "MEDGR (AQ)",
+    CC: "MY HEALTH LA (CC)",
+    AG: "Navitus Health Solutions (AG)",
+    AH: "OptumRx (AH)",
+    AS: "PACIFICARE LIFE AND H (AS)",
+    FJ: "Paramount Rx (FJ)",
+    "X ": "PF - DEFAULT (X )",
+    EA: "Pharmacy Data Management (EA)",
+    DW: "phcs (DW)",
+    AX: "PINNACLE (AX)",
+    BN: "Prescription Solutions (BN)",
+    AA: "Tri-Care Express Scripts (AA)",
+    AI: "United Healthcare (AI)",
+  };
   useEffect(() => {
     const fetchDrugDetails = async () => {
       try {
@@ -242,7 +275,7 @@ export const DrugDetails: React.FC = () => {
 
   return (
     <motion.div>
-      <div className="max-w-8xl mx-auto">
+      <div className="max-w-10xl mx-auto">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
           <div className="bg-blue-600 p-6 text-white">
@@ -460,7 +493,7 @@ export const DrugDetails: React.FC = () => {
                       <option value="">All</option>
                       {uniqueInsuranceNames.map((name) => (
                         <option key={name} value={name}>
-                          {name}
+                          {insurance_mapping[name] || name}
                         </option>
                       ))}
                     </select>
@@ -544,9 +577,9 @@ export const DrugDetails: React.FC = () => {
                                     </a>
                                   </div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-10 py-4">
                                   <div className="text-sm text-gray-500">
-                                    <div>{alt.insuranceName ?? "NA"}</div>
+                                    <div>{insurance_mapping[alt.insuranceName] || alt.insuranceName}</div>
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
