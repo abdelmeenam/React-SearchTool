@@ -234,7 +234,7 @@ export const Dashboard: React.FC = () => {
   };
   return (
     <motion.div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
         <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
           Pharmacy Dashboard
         </h1>
@@ -331,7 +331,7 @@ export const Dashboard: React.FC = () => {
               .sort()
               .map((insurance) => (
                 <option key={insurance} value={insurance}>
-                  {insurance_mapping[insurance] || insurance}
+                  {insurance === "  " ? "MARCOG" : insurance_mapping[insurance] || insurance}
                 </option>
               ))}
           </select>
@@ -393,6 +393,8 @@ export const Dashboard: React.FC = () => {
                   "difference",
                   "highestDrugNDC",
                   "highestDrugName",
+                  "highestScriptCode",
+                  "highestScriptDate"
                 ].map((col) => (
                   <th
                     key={col}
@@ -445,6 +447,12 @@ export const Dashboard: React.FC = () => {
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
                     {item.highstDrugName}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-blue-600 font-bold">
+                    {item.highstScriptCode}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-blue-600 font-bold">
+                    {new Date(item.highstScriptDate).toLocaleDateString("en-US")}
                   </td>
                 </tr>
               ))}

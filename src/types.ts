@@ -53,6 +53,8 @@ export interface DrugTransaction {
   highstDrugName: string;
   highstDrugId: number;
   highstNet: number;
+  highstScriptCode: string;
+  highstScriptDate: string;
 }
 
 export interface Insurance {
