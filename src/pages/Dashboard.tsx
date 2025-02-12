@@ -38,7 +38,7 @@ export const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const result = await axios.get(
-          "https://api.medisearchtool.com/drug/GetAllLatestScripts"
+          "http://localhost:5107/drug/GetAllLatestScripts"
         );
         setLatestScripts(result.data);
         // Calculate values
@@ -331,7 +331,7 @@ export const Dashboard: React.FC = () => {
               .sort()
               .map((insurance) => (
                 <option key={insurance} value={insurance}>
-                  {insurance}
+                  {insurance_mapping[insurance] || insurance}
                 </option>
               ))}
           </select>
@@ -365,7 +365,10 @@ export const Dashboard: React.FC = () => {
                 </option>
               ))}
           </select>
-          <button
+       
+        </div>
+        <div>
+        <button
             onClick={downloadCSV}
             className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
@@ -411,7 +414,7 @@ export const Dashboard: React.FC = () => {
                     {item.scriptCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurance === "  " ? "MARCOG" : item.insurance}
+                    {item.insurance === "  " ? "MARCOG" : insurance_mapping[item.insurance] || item.insurance}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.drugClass}
