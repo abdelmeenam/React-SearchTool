@@ -64,6 +64,13 @@ export const Dashboard: React.FC = () => {
     };
     fetchData();
   }, []);
+  const normalizeName = (name) => {
+    return name
+      .split(/\s+/) // Split by spaces
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+      .join(" ") // Join back with a space
+      .replace(/[.,]/g, ""); // Remove all periods and commas
+  };
   const headers = [
     { label: "Date", key: "date" },
     { label: "Script Code", key: "scriptCode" },
@@ -209,12 +216,12 @@ export const Dashboard: React.FC = () => {
       item.drugClass,
       item.drugName,
       item.ndcCode,
-      item.prescriber,
+      normalizeName(item.prescriber), // Normalize name here
       item.netProfit.toFixed(2),
       item.highstNet,
       (item.highstNet - item.netProfit).toFixed(2),
       item.highstDrugNDC,
-      item.highstDrugName,
+      item.highstDrugName
     ]);
 
     const csvContent = [
