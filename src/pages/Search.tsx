@@ -57,7 +57,7 @@ export const Search: React.FC = () => {
 
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
-      if (query.length >= 2) {
+      if (query.length >= 1) {
         //const results = await api.searchDrugsSuggestions(query);
         try {
           const results = await axios.get(
@@ -166,7 +166,7 @@ export const Search: React.FC = () => {
 
               {/* Suggestions Dropdown */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md overflow-hidden">
+                <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md overflow-hidden max-h-60 overflow-y-auto">
                   {[
                     ...new Map(
                       suggestions.map((drug) => [drug.name, drug])
@@ -241,7 +241,6 @@ export const Search: React.FC = () => {
                       </option>
                     ))}
                 </select>
-               
               </div>
             )}
 
@@ -265,7 +264,7 @@ export const Search: React.FC = () => {
             )}
 
             {/* Search Button */}
-            {selectedDrug  && (
+            {selectedDrug && (
               <button
                 onClick={handleSearch}
                 className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"

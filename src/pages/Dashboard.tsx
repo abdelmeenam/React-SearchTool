@@ -25,9 +25,15 @@ export const Dashboard: React.FC = () => {
   const [belowNetPriceCount, setBelowNetPriceCount] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalNet, setTotalNet] = useState<number>(0);
-
+  const [selectedPrescriber, setSelectedPrescriber] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
   const rowsPerPage = 10;
-
+  const formattedPrice = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+  }).format(totalRevenue ?? 0);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -95,15 +101,42 @@ export const Dashboard: React.FC = () => {
     }
 
     const filtered = sortedData.filter((item) => {
+      const itemDate = new Date(item.date);
+      const itemMonth = itemDate.toISOString().slice(0, 7); // YYYY-MM
       return (
         (!selectedClass || item.drugClass === selectedClass) &&
-        (!selectedInsurance || item.insurance === selectedInsurance)
+        (!selectedInsurance || item.insurance === selectedInsurance) &&
+        (!selectedPrescriber || item.prescriber === selectedPrescriber) &&
+        (!selectedUser || item.user === selectedUser) &&
+        (!selectedMonth || itemMonth === selectedMonth)
       );
     });
     setFilteredData(filtered);
-    setCurrentPage(1);
-  }, [selectedClass, selectedInsurance, latestScripts, sortConfig]);
+    const belowNetCount =filtered.filter(
+      (item) => item.netProfit < item.highstNet
+    ).length;
+    const totalRev = filtered.reduce(
+      (sum, item) => sum + item.netProfit,
+      0
+    );
+    const totalNetProfit = filtered.reduce(
+      (sum, item) => sum + item.highstNet,
+      0
+    );
 
+    // Update state
+    setBelowNetPriceCount(belowNetCount);
+    setTotalRevenue(totalRev);
+    setTotalNet(totalNetProfit);
+    setCurrentPage(1);
+  }, [
+    selectedClass,
+    selectedInsurance,
+    selectedPrescriber,
+    selectedUser,
+    selectedMonth,
+    latestScripts,
+  ]);
   const requestSort = (key: string) => {
     let direction = "ascending";
     if (
@@ -211,20 +244,26 @@ export const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Total Scripts</p>
-                <p className="text-3xl font-semibold">
-                  {latestScripts?.length}
-                </p>
+                <p className="text-3xl font-semibold">{filteredData?.length}</p>
               </div>
               <Pill className="h-10 w-10" />
             </div>
           </div>
-
+          <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Total Scripts Below Net Price</p>
+                <p className="text-3xl font-semibold">{belowNetPriceCount}</p>
+              </div>
+              <AlertTriangle className="h-10 w-10" />
+            </div>
+          </div>
           <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Best Total </p>
+                <p className="text-sm font-medium">Best Total Revenue </p>
                 <p className="text-3xl font-semibold">
-                  ${totalNet?.toFixed(2)}
+                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalNet ?? 0)}</span>
                 </p>
               </div>
               <BarChart3 className="h-10 w-10" />
@@ -234,26 +273,39 @@ export const Dashboard: React.FC = () => {
           <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Total Revenue</p>
+                <p className="text-sm font-medium"> Current Total Revenue</p>
                 <p className="text-3xl font-semibold">
-                  ${totalRevenue?.toFixed(2)}
+                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue ?? 0)}</span>
                 </p>
               </div>
               <PieChart className="h-10 w-10" />
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Below Net Price</p>
-                <p className="text-3xl font-semibold">{belowNetPriceCount}</p>
-              </div>
-              <AlertTriangle className="h-10 w-10" />
-            </div>
-          </div>
+         
         </div>
         <div className="flex gap-4 mb-6">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border rounded-md bg-white"
+          >
+            <option value="">All Months</option>
+            {[
+              ...new Set(
+                latestScripts.map((item) =>
+                  new Date(item.date).toISOString().slice(0, 7)
+                )
+              ),
+            ]
+              .sort()
+              .map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+          </select>
+
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
@@ -268,6 +320,7 @@ export const Dashboard: React.FC = () => {
                 </option>
               ))}
           </select>
+
           <select
             value={selectedInsurance}
             onChange={(e) => setSelectedInsurance(e.target.value)}
@@ -276,15 +329,41 @@ export const Dashboard: React.FC = () => {
             <option value="">All Insurance</option>
             {[...new Set(latestScripts.map((item) => item.insurance))]
               .sort()
-              .map((insuranceCode) => {
-                const fullInsuranceName =
-                  insurance_mapping[insuranceCode] || insuranceCode;
-                return (
-                  <option key={insuranceCode} value={insuranceCode}>
-                    {insuranceCode.trim() === "" ? "MARCOG" : fullInsuranceName}
-                  </option>
-                );
-              })}
+              .map((insurance) => (
+                <option key={insurance} value={insurance}>
+                  {insurance}
+                </option>
+              ))}
+          </select>
+
+          <select
+            value={selectedPrescriber}
+            onChange={(e) => setSelectedPrescriber(e.target.value)}
+            className="px-4 py-2 border rounded-md bg-white"
+          >
+            <option value="">All Prescribers</option>
+            {[...new Set(latestScripts.map((item) => item.prescriber))]
+              .sort()
+              .map((prescriber) => (
+                <option key={prescriber} value={prescriber}>
+                  {prescriber}
+                </option>
+              ))}
+          </select>
+
+          <select
+            value={selectedUser}
+            onChange={(e) => setSelectedUser(e.target.value)}
+            className="px-4 py-2 border rounded-md bg-white"
+          >
+            <option value="">All Users</option>
+            {[...new Set(latestScripts.map((item) => item.user))]
+              .sort()
+              .map((user) => (
+                <option key={user} value={user}>
+                  {user}
+                </option>
+              ))}
           </select>
           <button
             onClick={downloadCSV}
@@ -332,7 +411,7 @@ export const Dashboard: React.FC = () => {
                     {item.scriptCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurance ==="  " ? "MARCOG" : item.insurance}
+                    {item.insurance === "  " ? "MARCOG" : item.insurance}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.drugClass}
