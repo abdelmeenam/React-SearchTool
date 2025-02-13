@@ -31,9 +31,27 @@ export interface Prescription {
   insurance: any | null; // Define a specific type if available
   drug: any | null; // Define a specific type if available
 }
+export interface DrugInsuranceInfo {
+  insuranceId: number;
+  drugId: number;
+  ndcCode: string;
+  drugName: string;
+  drugClassId: number;
+  insuranceName: string;
+  net: number;
+  date: string; // Consider using Date if parsing is needed
+  prescriber: string;
+  quantity: number;
+  acquisitionCost: number;
+  discount: number;
+  insurancePayment: number;
+  patientPayment: number;
+  drugClass: string;
+  insurance: any | null; // Adjust `any` to a specific type if known
+  drug: any | null; // Adjust `any` to a specific type if known
+}
 export interface DrugTransaction {
-  highestNdc: any;
-  date: string; 
+  date: string; // ISO 8601 format (e.g., "2025-01-01T22:00:00Z")
   scriptCode: string;
   rxNumber: string;
   user: string;
@@ -54,7 +72,7 @@ export interface DrugTransaction {
   highstDrugId: number;
   highstNet: number;
   highstScriptCode: string;
-  highstScriptDate: string;
+  highstScriptDate: string; // ISO 8601 format
 }
 
 export interface Insurance {

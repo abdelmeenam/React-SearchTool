@@ -9,6 +9,9 @@ import { DrugDetails } from "./pages/DrugDetails";
 import { Dashboard } from "./pages/Dashboard";
 import { Home } from "./pages/Home";
 import { LogsPage } from "./pages/Logs";
+import SecondDashBoard from "./pages/SecondDashBoard";
+import ThirdDashBoard from "./pages/ThirdDashBoard";
+import MainDashboard from "./pages/MainDashboard";
 
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -71,7 +74,7 @@ function App() {
               path="dashboard"
               element={
                 <PrivateRoute isAdmin={true}>
-                  <Dashboard />
+                  <MainDashboard />
                 </PrivateRoute>
               }
             />

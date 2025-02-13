@@ -1,243 +1,716 @@
-import React, { useEffect, useState } from 'react';
-import { BarChart3, AlertTriangle, PieChart, Pill , ChevronLeft, ChevronRight  } from 'lucide-react';
-import { api } from '../api/api';
-import { PharmacySale, Prescription, SalesAnalytics } from '../types';
-import { format } from 'date-fns';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { Pill, AlertCircle, Repeat, ArrowUpDown } from "lucide-react";
+import { api } from "../api/api";
+import { Drug, Insurance, Prescription } from "../types";
+import axios from "axios";
+import { motion } from "framer-motion";
 
+export const DrugDetails: React.FC = () => {
+  const { drugId } = useParams();
+  const [searchParams] = useSearchParams();
 
-export const oldDashboard: React.FC = () => {
-  const [sales, setSales] = useState<PharmacySale[]>([]);
-  const [analytics, setAnalytics] = useState<SalesAnalytics | null>(null);
-  const [latestScript, setLatestScript] = useState<Prescription [] | null>([]);
-  const [totalNet, setTotalNet] = useState<number>(0);
-  const [groupedData, setGroupedData] = useState([]);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10; // Number of records per page
+  const ndcCode = searchParams.get("ndc");
+  const insuranceId = searchParams.get("insuranceId");
+  console.log(insuranceId);
+  const [drug, setDrug] = useState<Drug | null>(null);
+  const [otherDrugs, setOtherDrugs] = useState<Drug[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [className, setClassName] = useState("");
+  const [drugDetial, setDrugDetail] = useState<Prescription | null>(null);
+  const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
+    []
+  );
+    const [insurances, setInsurances] = useState<Insurance[]>([]);
   
+  const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
+  function padCode(code) {
+    return code.padStart(11, "0");
+  }
+  const toggleOtherAlternatives = () => {
+    setShowOtherAlternatives(!showOtherAlternatives);
+  };
+  const [selectedInsurance, setSelectedInsurance] = useState<string>("");
+  const [temp, setTemp] = useState("");
+  const insurance_mapping = {
+    AL: "Aetna (AL)",
+    BW: "aetna (BW)",
+    AD: "Aetna Medicare (AD)",
+    AF: "Anthem BCBS (AF)",
+    DS: "Blue Cross Blue Shield (DS)",
+    CA: "blue shield medicare (CA)",
+    FQ: "Capital Rx (FQ)",
+    BF: "Caremark (BF)",
+    ED: "CatalystRx (ED)",
+    AM: "Cigna (AM)",
+    BO: "Default Claim Format (BO)",
+    AP: "Envision Rx Options (AP)",
+    CG: "Express Scripts (CG)",
+    BI: "Horizon (BI)",
+    AJ: "Humana Medicare (AJ)",
+    BP: "informedRx (BP)",
+    AO: "MEDCO HEALTH (AO)",
+    AC: "MEDCO MEDICARE PART D (AC)",
+    AQ: "MEDGR (AQ)",
+    CC: "MY HEALTH LA (CC)",
+    AG: "Navitus Health Solutions (AG)",
+    AH: "OptumRx (AH)",
+    AS: "PACIFICARE LIFE AND H (AS)",
+    FJ: "Paramount Rx (FJ)",
+    "X ": "PF - DEFAULT (X )",
+    EA: "Pharmacy Data Management (EA)",
+    DW: "phcs (DW)",
+    AX: "PINNACLE (AX)",
+    BN: "Prescription Solutions (BN)",
+    AA: "Tri-Care Express Scripts (AA)",
+    AI: "United Healthcare (AI)",
+  };
   useEffect(() => {
-    const fetchData = async () => {
-        const result = await axios.get('http://localhost:5107/drug/GetAllLatest');
-        console.log(result.data);
-        setLatestScript(result.data);
-    };
-    fetchData();
-  }, []);
+    const fetchDrugDetails = async () => {
+      try {
+       
+        var response2;
+        //http://localhost:5107/drug/SearchByIdNdc?id=2445&ndc=69367024516
+        if (!ndcCode || !insuranceId) {
+          console.log("hreeeee")
+          const response = await axios.get(
+            `https://api.medisearchtool.com/drug/GetDrugById?id=${drugId}`
+          );
+          setDrug(response.data);
+          // if (insuranceId) {
+          //   const insuranceList = await axios.get(
+          //     `https://api.medisearchtool.com/drug/getDrugInsurances?name=${response.data.name}`
+          //   );
+          //   setInsurances(insuranceList.data);
+          //   console.log("hereeeeee", insuranceList.data);
+          //   const matchedInsurance = insuranceList.data.find((i) => i.id.toString() === insuranceId);
+          //   console.log(matchedInsurance);
+          //   setTemp(matchedInsurance.name);
+          // }
+          console.log("sdda",response.data.drugClassId);
+          response2 = await axios.get(
+            `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.drugClassId}`
+          );
+          const list = response2.data.filter(
+            (item) => item.drugName !== response.data.name
+          );
+          setSortedAlternatives(list);
+          console.log("sdsad", list);
+          const response3 = await axios.get(
+            `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.drugClassId}`
+          );
+          setClassName(response3.data.name);
+          
+        } else {
+          console.log("hreeeee2")
 
-
-
-  useEffect(() => {
-    if (latestScript.length > 0) {
-      const totalNet = latestScript.reduce((acc, entry) => acc + entry.net, 0);
-      setTotalNet(totalNet);
-
-    // 🔹 Step 1: Define the Insurance Name Mapping
-      const insuranceMapping = {
-        'AL': 'Aetna (AL)',
-        'BW': 'aetna (BW)',
-        'AD': 'Aetna Medicare (AD)',
-        'AF': 'Anthem BCBS (AF)',
-        'DS': 'Blue Cross Blue Shield (DS)',
-        'CA': 'blue shield medicare (CA)',
-        'FQ': 'Capital Rx (FQ)',
-        'BF': 'Caremark (BF)',
-        'ED': 'CatalystRx (ED)',
-        'AM': 'Cigna (AM)',
-        'BO': 'Default Claim Format (BO)',
-        'AP': 'Envision Rx Options (AP)',
-        'CG': 'Express Scripts (CG)',
-        'BI': 'Horizon (BI)',
-        'AJ': 'Humana Medicare (AJ)',
-        'BP': 'informedRx (BP)',
-        'AO': 'MEDCO HEALTH (AO)',
-        'AC': 'MEDCO MEDICARE PART D (AC)',
-        'AQ': 'MEDGR (AQ)',
-        'CC': 'MY HEALTH LA (CC)',
-        'AG': 'Navitus Health Solutions (AG)',
-        'AH': 'OptumRx (AH)',
-        'AS': 'PACIFICARE LIFE AND H (AS)',
-        'FJ': 'Paramount Rx (FJ)',
-        'X ': 'PF - DEFAULT (X )',
-        'EA': 'Pharmacy Data Management (EA)',
-        'DW': 'phcs (DW)',
-        'AX': 'PINNACLE (AX)',
-        'BN': 'Prescription Solutions (BN)',
-        'AA': 'Tri-Care Express Scripts (AA)',
-        'AI': 'United Healthcare (AI)'
-      };
-
-      
-    // 🔹 Step 2: Filter out records with empty insurance names
-    const filteredData = latestScript.filter(item => item.insurance?.name?.trim());
-
-      const grouped = filteredData.reduce((acc, item) => {
-        const key = `${item.classId}-${item.insuranceId}`;
-        if (!acc[key]) acc[key] = { highestNet: 0, records: [] };
-
-        acc[key].records.push(item);
-
-        // acc[key].highestNet = Math.max(acc[key].highestNet, item.net); // Store highest net per group
-        if (item.net > acc[key].highestNet) {
-          acc[key].highestNet = item.net;
-          acc[key].highestNdc = item.ndcCode;
-          acc[key].drugName = item.drugName;
+          const response = await axios.get(
+            `https://api.medisearchtool.com/drug/SearchByNdc?ndc=${ndcCode}`
+          );
+          const drugData = response.data;
+          console.log("here : ", response.data);
+          setDrug(drugData);
+          console.log(drugData.id, insuranceId);
+          response2 = await axios.get(
+            `https://api.medisearchtool.com/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
+          );
+          console.log("here 2 : ", response2.data);
+          setDrugDetail(response2.data);
+          console.log("temp : ", drugData.classId);
+          const response3 = await axios.get(
+            `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.drugClassId}`
+          );
+          setClassName(response3.data.name);
+          console.log("here3 : ", response3.data.id);
+          if ( className != "other") {
+            const response4 = await axios.get(
+              `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.drugClassId}`
+            );
+            console.log("gerree " ,response4.data[0]);
+            const list = response4.data.filter(
+              (item) => item.drugName !== response.data.name
+            );
+            console.log("asdsadasd ", list);
+            setSortedAlternatives(list);
+            console.log("length man ",sortedAlternatives.length)
+          } else {
+            const response5 = await axios.get(
+              `https://api.medisearchtool.com/drug/GetDrugsByClass?classId=${response.data.drugClassId}`
+            );
+            console.log(response5.data);
+            setOtherDrugs(response5.data);
+          }
         }
+      } catch (err) {
+        setError("Failed to load drug details");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        return acc;
-      }, {});
-      
+    fetchDrugDetails();
+  }, [drugId, ndcCode]);
 
-      const processed = Object.values(grouped).flatMap(({ highestNet, highestNdc,drugName, records }) =>
-        records.map((item) => ({
-          ...item,
-          insuranceName: insuranceMapping[item.insurance.name] || item.insurance.name, // Map insurance name
-          highestNet,
-          highestNdc, // Keep the highest NDC for the group
-          drugName,
-          difference: highestNet - item.net,
-        }))
-      );
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
+  if (error || !drug) {
+    return (
+      <div className="text-center text-red-600 p-8">
+        <AlertCircle className="h-12 w-12 mx-auto mb-4" />
+        <p>{error || "Drug not found"}</p>
+      </div>
+    );
+  }
+  const handleSort = () => {
+    const sorted = [...sortedAlternatives].sort((a, b) => b.net - a.net);
+    setSortedAlternatives(sorted);
+  };
+  const handleInsuranceFilterChange = (event) => {
+    setSelectedInsurance(event.target.value);
+  };
 
+  const alternativesWithInsurance = sortedAlternatives.filter(
+    (alt) => alt.insuranceName
+  );
+  const uniqueInsuranceNames: string[] = [
+    ...new Set([
+      ...alternativesWithInsurance.map((alt) => alt.insuranceName),
+      "AA",
+      "AB",
+      "AC",
+      "AD",
+      "AF",
+      "AG",
+      "AH",
+      "AI",
+      "AJ",
+      "AL",
+      "AM",
+      "AO",
+      "AQ",
+      "AS",
+      "AT",
+      "AU",
+      "AV",
+      "AX",
+      "BE",
+      "BF",
+      "BI",
+      "BL",
+      "BM",
+      "BN",
+      "BO",
+      "BP",
+      "BR",
+      "BU",
+      "BW",
+      "CA",
+      "CC",
+      "CE",
+      "CG",
+      "CJ",
+      "CK",
+      "CL",
+      "CM",
+      "CO",
+      "CQ",
+      "CR",
+      "CU",
+      "CY",
+      "DJ",
+      "DQ",
+      "DS",
+      "DW",
+      "EA",
+      "EB",
+      "ED",
+      "EH",
+      "EJ",
+      "EO",
+      "EP",
+      "EQ",
+      "ER",
+      "ET",
+      "EW",
+      "EY",
+      "FA",
+      "FF",
+      "FG",
+      "FJ",
+      "FQ",
+      "FS",
+      "FT",
+      "GA",
+      "GC",
+      "GE",
+      "GF",
+      "GH",
+      "GI",
+      "GJ",
+      "GM",
+      "GO",
+      "GQ",
+      "GS",
+      "GT",
+      "GV",
+      "GX",
+      "GY",
+      "GZ",
+      "HB",
+      "HE",
+      "X ",
+    ]),
+  ].sort();
 
-      console.log(processed);
-      setGroupedData(processed);
-
-    }
-  }, [latestScript]);
-
-
-  const belowNetPriceSales = sales.filter(sale => sale.salePrice < sale.netPrice);
-  // 🔹 Calculate Pagination
-  const totalPages = Math.ceil(groupedData.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const currentRecords = groupedData.slice(startIndex, endIndex);
+  const alternativesWithoutInsurance = sortedAlternatives.filter(
+    (alt) => !alt.insuranceName
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-4xl font-bold text-gray-900 mb-6 text-center">Pharmacy Dashboard</h1>
-
-      {/* Analytics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Total Scripts</p>
-              <p className="text-3xl font-semibold">{latestScript?.length}</p>
+    <motion.div>
+      <div className="max-w-10xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {/* Header */}
+          <div className="bg-blue-600 p-6 text-white">
+            <div className="flex items-center space-x-4">
+              <Pill className="h-8 w-8" />
+              <div>
+                <h1 className="text-2xl font-bold">{drug.name}</h1>
+                <a
+                  href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
+                  className="text-blue-100"
+                >
+                  NDC: {padCode(drug.ndc)}
+                </a>
+                <p>{temp }</p>
+              </div>
             </div>
-            <Pill className="h-10 w-10" />
           </div>
-        </div>
 
-        
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Drug Information */}
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Drug Information
+              </h2>
+              {!drugDetial ? (
+                <>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">
+                          Class Name
+                        </dt>
+                        <dd className="mt-1 text-sm text-gray-900">
+                          {className}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">
+                          AWP
+                        </dt>
+                        <dd className="mt-1 text-sm text-gray-900">
+                          ${drug.awp}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">
+                          Strength
+                        </dt>
+                        <dd className="mt-1 text-sm text-gray-900">
+                          {drug.strength}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-gray-500">
+                          Form
+                        </dt>
+                        <dd className="mt-1 text-sm text-gray-900">
+                          {drug.form}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                  <div className="text-center text-2xl font-bold my-4">
+                    Other Drugs
+                  </div>{" "}
+                  {/* <div className="overflow-x-auto pt-9">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ACQ
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          AWP
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          form
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Strength
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {otherDrugs.map((alt) => (
+                        <tr key={alt.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {alt.name}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-500">
+                              <div>${alt.acq}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              ${alt.awp}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">{alt.form}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {alt.strength ? alt.strength : "NA"}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div> */}
+                </>
+              ) : (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Class Name
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {className}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">ACQ</dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        ${drug.acq.toFixed(2)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">AWP</dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        ${drug.awp}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Strength
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {drug.strength}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Net</dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        ${drugDetial.net}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Insurance Pay
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        ${drugDetial.insurancePayment}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Patient Pay
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        ${drugDetial.patientPayment}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">
+                        Quantity
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {drugDetial.quantity}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+            </section>
 
-        <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Total Sales</p>
-              <p className="text-3xl font-semibold">{analytics?.totalSales}</p>
-            </div>
-            <BarChart3 className="h-10 w-10" />
-          </div>
-        </div>
+            {sortedAlternatives.length > 0 && (
+              <>
+                <section>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                      <Repeat className="h-5 w-5 mr-2" />
+                      Alternative Medications with Insurance
+                    </h2>
+                    <div
+                      className="flex items-center text-sm text-gray-500"
+                      onClick={handleSort}
+                    >
+                      <ArrowUpDown className="h-4 w-4 mr-1" />
+                      Sorted by Net Price
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="insuranceFilter"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Filter by Insurance Name
+                    </label>
+                    <select
+                      id="insuranceFilter"
+                      value={selectedInsurance}
+                      onChange={handleInsuranceFilterChange}
+                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    >
+                      <option value="">All</option>
+                      {uniqueInsuranceNames.map((name) => (
+                        <option key={name} value={name}>
+                          {insurance_mapping[name] || name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Class
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            NDC Codes
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Insurance
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Net Price
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Insurance Coverage
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Patient Pay
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Quantity
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            ACQ
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {alternativesWithInsurance.filter(
+                          (alt) =>
+                            !selectedInsurance ||
+                            alt.insuranceName === selectedInsurance
+                        ).length > 0 ? (
+                          alternativesWithInsurance
+                            .filter(
+                              (alt) =>
+                                !selectedInsurance ||
+                                alt.insuranceName === selectedInsurance
+                            )
+                            .map((alt) => (
+                              <tr
+                                key={alt.ndcCode}
+                                className="hover:bg-gray-50"
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    <a
+                                      href={`/drug/${alt.drugId}`}
+                                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                                    >
+                                      {alt.drugName}
+                                    </a>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-500">
+                                    {className}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="text-sm text-gray-500">
+                                    <a
+                                      href={`https://ndclist.com/ndc/${padCode(
+                                        alt.ndcCode
+                                      )}`}
+                                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      {padCode(alt.ndcCode)}
+                                    </a>
+                                  </div>
+                                </td>
+                                <td className="px-10 py-4">
+                                  <div className="text-sm text-gray-500">
+                                    <div>{insurance_mapping[alt.insuranceName] || alt.insuranceName}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.insuranceName
+                                      ? "$" + alt.net.toFixed(2)
+                                      : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="space-y-1">
+                                    {alt.insuranceName
+                                      ? "$" + alt.insurancePayment.toFixed(2)
+                                      : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.insuranceName
+                                      ? "$" + alt.patientPayment.toFixed(2)
+                                      : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.insuranceName ? alt.quantity : "NA"}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {alt.acquisitionCost}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                        ) : (
+                          // عرض رسالة "No insurance found" إذا لم يكن هناك بيانات متاحة بعد التصفية
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="px-6 py-4 text-center text-sm text-gray-500"
+                            >
+                              No insurance found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
 
-        <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Total Revenue</p>
-              <p className="text-3xl font-semibold">
-                ${totalNet?.toFixed(2)}
-              </p>
-            </div>
-            <PieChart className="h-10 w-10" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Below Net Price</p>
-              <p className="text-3xl font-semibold">{analytics?.belowNetPriceCount}</p>
-            </div>
-            <AlertTriangle className="h-10 w-10" />
+                <button
+                  onClick={toggleOtherAlternatives}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+                >
+                  {showOtherAlternatives
+                    ? "Hide Other Alternatives"
+                    : "Show Other Alternatives"}
+                </button>
+                {showOtherAlternatives && (
+                  <section className="mt-8">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Alternative Medications without Insurance
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Class
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              NDC Codes
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              ACQ
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {alternativesWithoutInsurance.map((alt) => (
+                            <tr key={alt.ndcCode} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  <a
+                                    href={`/drug/${alt.drugId}`}
+                                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                                  >
+                                    {alt.drugName}
+                                  </a>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500">
+                                  {className}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-500">
+                                  <a
+                                    href={`https://ndclist.com/ndc/${padCode(
+                                      alt.ndcCode
+                                    )}`}
+                                    className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {padCode(alt.ndcCode)}
+                                  </a>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500">
+                                  {alt.acquisitionCost}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Processed Data Table */}
-
-
-  <div className="mt-8">
-      <h2 className="text-2xl font-semibold text-gray-900 mb-4">Audit Report</h2>
-     {/* 🔹 Table with Pagination */}
-     <div className="overflow-x-auto">
-        <table className="table-auto min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Date</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Insurance Name</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Drug Class</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Drug Name</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">NDC Code</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Prescriber</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Net</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Highest Net</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Difference</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Highest NDC</th>
-              <th className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase">Highest Drug</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-250">
-            {currentRecords.map((item, index) => (
-              <tr key={index}>
-                <td className="px-2 py-2 text-sm text-gray-900">{item.date}</td>
-                <td className="px-2 py-2 text-sm text-gray-900">{item.insuranceName}</td>
-                <td className="px-2 py-2 text-sm text-gray-900">{item.drugClass}</td>
-                <td className="px-2 py-2 text-sm text-gray-900">{item.drugName}</td>
-                <td className="px-2 py-2 text-sm text-gray-900">{item.ndcCode}</td>
-                <td className="px-2 py-2 text-sm text-gray-900">{item.prescriber}</td>
-                <td className="px-2 py-2 text-sm text-gray-900">${item.net.toFixed(2)}</td>
-                <td className="px-2 py-2 text-sm text-blue-600 font-bold">${item.highestNet.toFixed(2)}</td>
-                <td className="px-2 py-2 text-sm text-red-600">${item.difference.toFixed(2)}</td>
-                <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.highestNdc}</td>
-                <td className="px-2 py-2 text-sm text-blue-600 font-bold">{item.drugName}</td>
-
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 🔹 Pagination Controls */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className={`px-4 py-2 bg-gray-200 text-gray-700 rounded-md ${
-            currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"
-          }`}
-        >
-          <ChevronLeft className="inline-block w-4 h-4 mr-1" /> Previous
-        </button>
-
-        <p className="text-sm text-gray-700">
-          Page {currentPage} of {totalPages}
-        </p>
-
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className={`px-4 py-2 bg-gray-200 text-gray-700 rounded-md ${
-            currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"
-          }`}
-        >
-          Next <ChevronRight className="inline-block w-4 h-4 ml-1" />
-        </button>
-      </div>
-
-      </div>
-    </div>
+    </motion.div>
   );
 };

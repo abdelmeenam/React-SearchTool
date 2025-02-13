@@ -12,7 +12,7 @@ import { DrugTransaction } from "../types";
 import { motion } from "framer-motion";
 import { CSVLink } from "react-csv";
 
-export const Dashboard: React.FC = () => {
+export const ThirdDashBoard: React.FC = () => {
   const [latestScripts, setLatestScripts] = useState<DrugTransaction[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedInsurance, setSelectedInsurance] = useState("");
@@ -39,20 +39,18 @@ export const Dashboard: React.FC = () => {
       try {
         const result = await axios.get(
           "https://api.medisearchtool.com/drug/GetAllLatestScripts"
-        );
-        var temp =  new Date(result.data[0].highstScriptDate).toISOString(); // Force UTC format
-
-        console.log("Highest Script Date:", temp);
-        setLatestScripts(result.data);
-        // Calculate values
-        const belowNetCount = result.data.filter(
+          );
+          const filters = result.data.filter(item => item.ndcCode !== item.highstDrugNDC);
+          console.log(result.data)
+          setLatestScripts(filters);
+        const belowNetCount = filters.filter(
           (item) => item.netProfit < item.highstNet
         ).length;
-        const totalRev = result.data.reduce(
+        const totalRev = filters.reduce(
           (sum, item) => sum + item.netProfit,
           0
         );
-        const totalNetProfit = result.data.reduce(
+        const totalNetProfit = filters.reduce(
           (sum, item) => sum + item.highstNet,
           0
         );
@@ -133,15 +131,11 @@ export const Dashboard: React.FC = () => {
       (sum, item) => sum + item.highstNet,
       0
     );
-    const deff = filtered.reduce(
-      (sum, item) => sum + (item.highstDrugNDC === item.ndcCode ? item.highstNet - item.netProfit : 0),
-      0
-    );
 
     // Update state
     setBelowNetPriceCount(belowNetCount);
     setTotalRevenue(totalRev);
-    setTotalNet(totalNetProfit-deff);
+    setTotalNet(totalNetProfit);
     setCurrentPage(1);
   }, [
     selectedClass,
@@ -249,31 +243,33 @@ export const Dashboard: React.FC = () => {
   return (
     <motion.div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
-      
+      <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
+          Estimated Bad Drug choices{" "}
+        </h1>
         {/* Analytics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium"> Total Number of Prescriptions in Database</p>
+                <p className="text-sm font-medium">Total MisMatching Perscriptions</p>
                 <p className="text-3xl font-semibold">{filteredData?.length}</p>
               </div>
               <Pill className="h-10 w-10" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg shadow p-6">
+          {/* <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Prescriptions Below Optimal Net Profit</p>
+                <p className="text-sm font-medium">Estimated Total Scripts Below Net Price</p>
                 <p className="text-3xl font-semibold">{belowNetPriceCount}</p>
               </div>
               <AlertTriangle className="h-10 w-10" />
             </div>
-          </div>
+          </div> */}
           <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Estimated Max. Net Profit with Alternative Options </p>
+                <p className="text-sm font-medium"> Best Total Estimated Revenue </p>
                 <p className="text-3xl font-semibold">
                 <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalNet ?? 0)}</span>
                 </p>
@@ -285,7 +281,7 @@ export const Dashboard: React.FC = () => {
           <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">  Current Total Net Profit from Dispensed Prescriptions</p>
+                <p className="text-sm font-medium"> Current Total Revenue</p>
                 <p className="text-3xl font-semibold">
                 <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue ?? 0)}</span>
                 </p>
@@ -508,7 +504,7 @@ export const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default ThirdDashBoard;
 function normalizePrescriber(prescriber: string): any {
   throw new Error("Function not implemented.");
 }

@@ -22,8 +22,8 @@ export const DrugDetails: React.FC = () => {
   const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
     []
   );
-    const [insurances, setInsurances] = useState<Insurance[]>([]);
-  
+  const [insurances, setInsurances] = useState<Insurance[]>([]);
+
   const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
   function padCode(code) {
     return code.padStart(11, "0");
@@ -69,41 +69,35 @@ export const DrugDetails: React.FC = () => {
   useEffect(() => {
     const fetchDrugDetails = async () => {
       try {
-       
         var response2;
-        //http://localhost:5107/drug/SearchByIdNdc?id=2445&ndc=69367024516
-        if (!ndcCode || !insuranceId) {
-          console.log("hreeeee")
-          const response = await axios.get(
-            `https://api.medisearchtool.com/drug/GetDrugById?id=${drugId}`
-          );
+        if (!insuranceId) {
+          console.log("hreeeee");
+          var response;
+          if (ndcCode) {
+            response = await axios.get(
+              `https://api.medisearchtool.com/drug/SearchByNdc?ndc=${ndcCode}`
+            );
+          } else {
+            response = await axios.get(
+              `https://api.medisearchtool.com/drug/GetDrugById?id=${drugId}`
+            );
+          }
+
           setDrug(response.data);
-          // if (insuranceId) {
-          //   const insuranceList = await axios.get(
-          //     `https://api.medisearchtool.com/drug/getDrugInsurances?name=${response.data.name}`
-          //   );
-          //   setInsurances(insuranceList.data);
-          //   console.log("hereeeeee", insuranceList.data);
-          //   const matchedInsurance = insuranceList.data.find((i) => i.id.toString() === insuranceId);
-          //   console.log(matchedInsurance);
-          //   setTemp(matchedInsurance.name);
-          // }
-          console.log("sdda",response.data.drugClassId);
+          console.log("sdda", response.data.drugClassId);
           response2 = await axios.get(
             `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.drugClassId}`
           );
           const list = response2.data.filter(
-            (item) => item.drugName !== response.data.name
+            (item) => item.ndcCode !== response.data.ndc
           );
           setSortedAlternatives(list);
-          console.log("sdsad", list);
           const response3 = await axios.get(
             `https://api.medisearchtool.com/drug/GetClassById?id=${response.data.drugClassId}`
           );
           setClassName(response3.data.name);
-          
         } else {
-          console.log("hreeeee2")
+          console.log("hreeeee2");
 
           const response = await axios.get(
             `https://api.medisearchtool.com/drug/SearchByNdc?ndc=${ndcCode}`
@@ -123,17 +117,17 @@ export const DrugDetails: React.FC = () => {
           );
           setClassName(response3.data.name);
           console.log("here3 : ", response3.data.id);
-          if ( className != "other") {
+          if (className != "other") {
             const response4 = await axios.get(
               `https://api.medisearchtool.com/drug/GetAllDrugs?classId=${response.data.drugClassId}`
             );
-            console.log("gerree " ,response4.data[0]);
+            console.log("gerree ", response4.data[0]);
             const list = response4.data.filter(
-              (item) => item.drugName !== response.data.name
+              (item) => item.ndcCode !== response.data.ndc
             );
             console.log("asdsadasd ", list);
             setSortedAlternatives(list);
-            console.log("length man ",sortedAlternatives.length)
+            console.log("length man ", sortedAlternatives.length);
           } else {
             const response5 = await axios.get(
               `https://api.medisearchtool.com/drug/GetDrugsByClass?classId=${response.data.drugClassId}`
@@ -289,7 +283,7 @@ export const DrugDetails: React.FC = () => {
                 >
                   NDC: {padCode(drug.ndc)}
                 </a>
-                <p>{temp }</p>
+                <p>{temp}</p>
               </div>
             </div>
           </div>
@@ -579,7 +573,10 @@ export const DrugDetails: React.FC = () => {
                                 </td>
                                 <td className="px-10 py-4">
                                   <div className="text-sm text-gray-500">
-                                    <div>{insurance_mapping[alt.insuranceName] || alt.insuranceName}</div>
+                                    <div>
+                                      {insurance_mapping[alt.insuranceName] ||
+                                        alt.insuranceName}
+                                    </div>
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
