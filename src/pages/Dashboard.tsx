@@ -11,8 +11,10 @@ import axios from "axios";
 import { DrugTransaction } from "../types";
 import { motion } from "framer-motion";
 import { CSVLink } from "react-csv";
-
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  data: DrugTransaction[];
+}
+export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const [latestScripts, setLatestScripts] = useState<DrugTransaction[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedInsurance, setSelectedInsurance] = useState("");
@@ -37,22 +39,18 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await axios.get(
-          "https://api.medisearchtool.com/drug/GetAllLatestScripts"
-        );
-        var temp =  new Date(result.data[0].highstScriptDate).toISOString(); // Force UTC format
+        const result =data
 
-        console.log("Highest Script Date:", temp);
-        setLatestScripts(result.data);
+        setLatestScripts(result);
         // Calculate values
-        const belowNetCount = result.data.filter(
+        const belowNetCount = result.filter(
           (item) => item.netProfit < item.highstNet
         ).length;
-        const totalRev = result.data.reduce(
+        const totalRev = result.reduce(
           (sum, item) => sum + item.netProfit,
           0
         );
-        const totalNetProfit = result.data.reduce(
+        const totalNetProfit = result.reduce(
           (sum, item) => sum + item.highstNet,
           0
         );

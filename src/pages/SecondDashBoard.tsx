@@ -11,8 +11,10 @@ import axios from "axios";
 import { DrugTransaction } from "../types";
 import { motion } from "framer-motion";
 import { CSVLink } from "react-csv";
-
-export const SecondDashBoard: React.FC = () => {
+interface DashboardProps {
+    data: DrugTransaction[];
+  }
+export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
   const [latestScripts, setLatestScripts] = useState<DrugTransaction[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedInsurance, setSelectedInsurance] = useState("");
@@ -37,13 +39,11 @@ export const SecondDashBoard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await axios.get(
-          "https://api.medisearchtool.com/drug/GetAllLatestScripts"
-        );
-        const filters = result.data.filter(
+        const result =data
+        const filters = result.filter(
           (item) => item.ndcCode === item.highstDrugNDC
         );
-        console.log(result.data);
+        console.log(result);
         setLatestScripts(filters);
         const belowNetCount = filters.filter(
           (item) => item.netProfit < item.highstNet
