@@ -6,7 +6,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Drug, DrugInsuranceInfo, Insurance } from "../types";
 
-const API_BASE_URL = "http://localhost:5107";
+const API_BASE_URL = "https://api.medisearchtool.com";
 
 export const Search: React.FC = () => {
   const navigate = useNavigate();
