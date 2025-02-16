@@ -31,25 +31,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const rowsPerPage = 10;
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  const formattedPrice = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
   }).format(totalRevenue ?? 0);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result =data
+        const result = data;
 
         setLatestScripts(result);
         // Calculate values
         const belowNetCount = result.filter(
           (item) => item.netProfit < item.highstNet
         ).length;
-        const totalRev = result.reduce(
-          (sum, item) => sum + item.netProfit,
-          0
-        );
+        const totalRev = result.reduce((sum, item) => sum + item.netProfit, 0);
         const totalNetProfit = result.reduce(
           (sum, item) => sum + item.highstNet,
           0
@@ -120,26 +117,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       );
     });
     setFilteredData(filtered);
-    const belowNetCount =filtered.filter(
+    const belowNetCount = filtered.filter(
       (item) => item.netProfit < item.highstNet
     ).length;
-    const totalRev = filtered.reduce(
-      (sum, item) => sum + item.netProfit,
-      0
-    );
+    const totalRev = filtered.reduce((sum, item) => sum + item.netProfit, 0);
     const totalNetProfit = filtered.reduce(
       (sum, item) => sum + item.highstNet,
       0
     );
     const deff = filtered.reduce(
-      (sum, item) => sum + (item.highstDrugNDC === item.ndcCode ? item.highstNet - item.netProfit : 0),
+      (sum, item) =>
+        sum +
+        (item.highstDrugNDC === item.ndcCode
+          ? item.highstNet - item.netProfit
+          : 0),
       0
     );
 
     // Update state
     setBelowNetPriceCount(belowNetCount);
     setTotalRevenue(totalRev);
-    setTotalNet(totalNetProfit-deff);
+    setTotalNet(totalNetProfit - deff);
     setCurrentPage(1);
   }, [
     selectedClass,
@@ -207,6 +205,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       "Drug Class",
       "Drug Name",
       "NDC Code",
+      "patient Payment",
+      "ACQ",
+      "insurance Payment",
       "Prescriber",
       "Net Profit",
       "Highest Net",
@@ -221,12 +222,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       item.drugClass,
       item.drugName,
       item.ndcCode,
+      item.patientPayment,
+      item.acquisitionCost,
+      item.insurancePayment,
       normalizeName(item.prescriber), // Normalize name here
       item.netProfit.toFixed(2),
       item.highstNet,
       (item.highstNet - item.netProfit).toFixed(2),
       item.highstDrugNDC,
-      item.highstDrugName
+      item.highstDrugName,
     ]);
 
     const csvContent = [
@@ -247,13 +251,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   return (
     <motion.div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
-      
         {/* Analytics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium"> Total Number of Prescriptions in Database</p>
+                <p className="text-sm font-medium">
+                  {" "}
+                  Total Number of Prescriptions in Database
+                </p>
                 <p className="text-3xl font-semibold">{filteredData?.length}</p>
               </div>
               <Pill className="h-10 w-10" />
@@ -262,7 +268,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Prescriptions Below Optimal Net Profit</p>
+                <p className="text-sm font-medium">
+                  Prescriptions Below Optimal Net Profit
+                </p>
                 <p className="text-3xl font-semibold">{belowNetPriceCount}</p>
               </div>
               <AlertTriangle className="h-10 w-10" />
@@ -271,9 +279,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Estimated Max. Net Profit with Alternative Options </p>
+                <p className="text-sm font-medium">
+                  Estimated Max. Net Profit with Alternative Options{" "}
+                </p>
                 <p className="text-3xl font-semibold">
-                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalNet ?? 0)}</span>
+                  <span>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    }).format(totalNet ?? 0)}
+                  </span>
                 </p>
               </div>
               <BarChart3 className="h-10 w-10" />
@@ -283,16 +298,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">  Current Total Net Profit from Dispensed Prescriptions</p>
+                <p className="text-sm font-medium">
+                  {" "}
+                  Current Total Net Profit from Dispensed Prescriptions
+                </p>
                 <p className="text-3xl font-semibold">
-                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue ?? 0)}</span>
+                  <span>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    }).format(totalRevenue ?? 0)}
+                  </span>
                 </p>
               </div>
               <PieChart className="h-10 w-10" />
             </div>
           </div>
-
-         
         </div>
         <div className="flex gap-4 mb-6">
           <select
@@ -341,7 +362,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               .sort()
               .map((insurance) => (
                 <option key={insurance} value={insurance}>
-                  {insurance === "  " ? "MARCOG" : insurance_mapping[insurance] || insurance}
+                  {insurance === "  "
+                    ? "MARCOG"
+                    : insurance_mapping[insurance] || insurance}
                 </option>
               ))}
           </select>
@@ -375,10 +398,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                 </option>
               ))}
           </select>
-       
         </div>
         <div>
-        <button
+          <button
             onClick={downloadCSV}
             className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
@@ -397,6 +419,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   "drugName",
                   "ndcCode",
                   "user",
+                  "patient Payment",
+                  "ACQ",
+                  "insurance Payment",
                   "prescriber",
                   "netProfit",
                   "highestNet",
@@ -404,7 +429,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   "highestDrugNDC",
                   "highestDrugName",
                   "highestScriptCode",
-                  "highestScriptDate"
+                  "highestScriptDate",
                 ].map((col) => (
                   <th
                     key={col}
@@ -426,7 +451,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     {item.scriptCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurance === "  " ? "MARCOG" : insurance_mapping[item.insurance] || item.insurance}
+                    {item.insurance === "  "
+                      ? "MARCOG"
+                      : insurance_mapping[item.insurance] || item.insurance}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.drugClass}
@@ -441,7 +468,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     {item.user}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.prescriber}
+                    {item.patientPayment}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.acquisitionCost}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.insurancePayment}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.netProfit}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.netProfit}
@@ -462,7 +498,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     {item.highstScriptCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    {new Date(item.highstScriptDate).toLocaleDateString("en-US")}
+                    {new Date(item.highstScriptDate).toLocaleDateString(
+                      "en-US"
+                    )}
                   </td>
                 </tr>
               ))}

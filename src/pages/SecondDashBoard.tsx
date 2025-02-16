@@ -199,6 +199,9 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
       "Drug Class",
       "Drug Name",
       "NDC Code",
+      "patient Payment",
+      "ACQ",
+      "insurance Payment",
       "Prescriber",
       "Net Profit",
       "Highest Net",
@@ -213,6 +216,9 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
       item.drugClass,
       item.drugName,
       item.ndcCode,
+      item.patientPayment,
+      item.acquisitionCost,
+      item.insurancePayment,
       normalizeName(item.prescriber), // Normalize name here
       item.netProfit.toFixed(2),
       item.highstNet,
@@ -404,6 +410,9 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   "drugName",
                   "ndcCode",
                   "user",
+                  "patient Payment",
+                  "ACQ",
+                  "insurance Payment",
                   "prescriber",
                   "netProfit",
                   "highestNet",
@@ -448,6 +457,15 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.user}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.patientPayment}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.acquisitionCost}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.insurancePayment}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.prescriber}
