@@ -39,7 +39,7 @@ export interface DrugInsuranceInfo {
   drugClassId: number;
   insuranceName: string;
   net: number;
-  date: string; // Consider using Date if parsing is needed
+  date: string; 
   prescriber: string;
   quantity: number;
   acquisitionCost: number;
@@ -47,11 +47,11 @@ export interface DrugInsuranceInfo {
   insurancePayment: number;
   patientPayment: number;
   drugClass: string;
-  insurance: any | null; // Adjust `any` to a specific type if known
-  drug: any | null; // Adjust `any` to a specific type if known
+  insurance: any | null;
+  drug: any | null; 
 }
 export interface DrugTransaction {
-  date: string; // ISO 8601 format (e.g., "2025-01-01T22:00:00Z")
+  date: string; 
   scriptCode: string;
   rxNumber: string;
   user: string;
@@ -72,7 +72,7 @@ export interface DrugTransaction {
   highstDrugId: number;
   highstNet: number;
   highstScriptCode: string;
-  highstScriptDate: string; // ISO 8601 format
+  highstScriptDate: string; 
 }
 
 export interface Insurance {
