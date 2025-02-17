@@ -453,7 +453,14 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {item.drugName}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.ndcCode}
+                    <a
+                      href={`https://ndclist.com/ndc/${item.ndcCode}`}
+                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.ndcCode}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.user}
@@ -468,7 +475,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {item.insurancePayment}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.prescriber}
+                    {item.netProfit}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.netProfit}
@@ -480,10 +487,23 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {(item.highstNet - item.netProfit).toFixed(2)}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    {item.highstDrugNDC}
+                    <a
+                      href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
+                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.highstDrugNDC}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    {item.highstDrugName}
+                    <a
+                      href={`/drug/${item.highstDrugId}`}
+                      target="_blank"
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                    >
+                      {item.highstDrugName}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
                     {item.highstScriptCode}
