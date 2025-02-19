@@ -199,9 +199,6 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
       "Drug Class",
       "Drug Name",
       "NDC Code",
-      "patient Payment",
-      "ACQ",
-      "insurance Payment",
       "Prescriber",
       "Net Profit",
       "Highest Net",
@@ -216,9 +213,6 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
       item.drugClass,
       item.drugName,
       item.ndcCode,
-      item.patientPayment,
-      item.acquisitionCost,
-      item.insurancePayment,
       normalizeName(item.prescriber), // Normalize name here
       item.netProfit.toFixed(2),
       item.highstNet,
@@ -410,9 +404,6 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   "drugName",
                   "ndcCode",
                   "user",
-                  "patient Payment",
-                  "ACQ",
-                  "insurance Payment",
                   "prescriber",
                   "netProfit",
                   "highestNet",
@@ -453,29 +444,13 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {item.drugName}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    <a
-                      href={`https://ndclist.com/ndc/${item.ndcCode}`}
-                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.ndcCode}
-                    </a>
+                    {item.ndcCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.user}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.patientPayment}
-                  </td>
-                  <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.acquisitionCost}
-                  </td>
-                  <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurancePayment}
-                  </td>
-                  <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.netProfit}
+                    {item.prescriber}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.netProfit}
@@ -487,23 +462,10 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {(item.highstNet - item.netProfit).toFixed(2)}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    <a
-                      href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
-                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.highstDrugNDC}
-                    </a>
+                    {item.highstDrugNDC}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    <a
-                      href={`/drug/${item.highstDrugId}`}
-                      target="_blank"
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                    >
-                      {item.highstDrugName}
-                    </a>
+                    {item.highstDrugName}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
                     {item.highstScriptCode}

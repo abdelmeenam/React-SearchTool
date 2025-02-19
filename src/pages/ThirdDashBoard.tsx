@@ -14,7 +14,7 @@ import { CSVLink } from "react-csv";
 interface DashboardProps {
   data: DrugTransaction[];
 }
-export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
+export const ThirdDashBoard: React.FC<DashboardProps> = ({ data })=> {
   const [latestScripts, setLatestScripts] = useState<DrugTransaction[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedInsurance, setSelectedInsurance] = useState("");
@@ -31,24 +31,25 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const rowsPerPage = 10;
-  const formattedPrice = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  const formattedPrice = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 2,
   }).format(totalRevenue ?? 0);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = data;
-        const filters = result.filter(
-          (item) => item.ndcCode !== item.highstDrugNDC
-        );
-        console.log(result);
-        setLatestScripts(filters);
+        const result = data
+          const filters = result.filter(item => item.ndcCode !== item.highstDrugNDC);
+          console.log(result)
+          setLatestScripts(filters);
         const belowNetCount = filters.filter(
           (item) => item.netProfit < item.highstNet
         ).length;
-        const totalRev = filters.reduce((sum, item) => sum + item.netProfit, 0);
+        const totalRev = filters.reduce(
+          (sum, item) => sum + item.netProfit,
+          0
+        );
         const totalNetProfit = filters.reduce(
           (sum, item) => sum + item.highstNet,
           0
@@ -119,10 +120,13 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
       );
     });
     setFilteredData(filtered);
-    const belowNetCount = filtered.filter(
+    const belowNetCount =filtered.filter(
       (item) => item.netProfit < item.highstNet
     ).length;
-    const totalRev = filtered.reduce((sum, item) => sum + item.netProfit, 0);
+    const totalRev = filtered.reduce(
+      (sum, item) => sum + item.netProfit,
+      0
+    );
     const totalNetProfit = filtered.reduce(
       (sum, item) => sum + item.highstNet,
       0
@@ -199,9 +203,6 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
       "Drug Class",
       "Drug Name",
       "NDC Code",
-      "patient Payment",
-      "ACQ",
-      "insurance Payment",
       "Prescriber",
       "Net Profit",
       "Highest Net",
@@ -216,15 +217,12 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
       item.drugClass,
       item.drugName,
       item.ndcCode,
-      item.patientPayment,
-      item.acquisitionCost,
-      item.insurancePayment,
       normalizeName(item.prescriber), // Normalize name here
       item.netProfit.toFixed(2),
       item.highstNet,
       (item.highstNet - item.netProfit).toFixed(2),
       item.highstDrugNDC,
-      item.highstDrugName,
+      item.highstDrugName
     ]);
 
     const csvContent = [
@@ -245,17 +243,15 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
   return (
     <motion.div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
-        <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
-          MisMatching Perscriptions Dashboard{" "}
+      <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
+          Estimated Bad Drug choices{" "}
         </h1>
         {/* Analytics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">
-                  Total MisMatching Perscriptions
-                </p>
+                <p className="text-sm font-medium">Total MisMatching Perscriptions</p>
                 <p className="text-3xl font-semibold">{filteredData?.length}</p>
               </div>
               <Pill className="h-10 w-10" />
@@ -273,17 +269,9 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
           <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">
-                  {" "}
-                  Best Total Estimated Revenue{" "}
-                </p>
+                <p className="text-sm font-medium"> Best Total Estimated Revenue </p>
                 <p className="text-3xl font-semibold">
-                  <span>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(totalNet ?? 0)}
-                  </span>
+                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalNet ?? 0)}</span>
                 </p>
               </div>
               <BarChart3 className="h-10 w-10" />
@@ -295,17 +283,14 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
               <div>
                 <p className="text-sm font-medium"> Current Total Revenue</p>
                 <p className="text-3xl font-semibold">
-                  <span>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(totalRevenue ?? 0)}
-                  </span>
+                <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalRevenue ?? 0)}</span>
                 </p>
               </div>
               <PieChart className="h-10 w-10" />
             </div>
           </div>
+
+         
         </div>
         <div className="flex gap-4 mb-6">
           <select
@@ -354,9 +339,7 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
               .sort()
               .map((insurance) => (
                 <option key={insurance} value={insurance}>
-                  {insurance === "  "
-                    ? "MARCOG"
-                    : insurance_mapping[insurance] || insurance}
+                  {insurance === "  " ? "MARCOG" : insurance_mapping[insurance] || insurance}
                 </option>
               ))}
           </select>
@@ -375,6 +358,7 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                 </option>
               ))}
           </select>
+
           <select
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
@@ -389,9 +373,10 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                 </option>
               ))}
           </select>
+       
         </div>
         <div>
-          <button
+        <button
             onClick={downloadCSV}
             className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
@@ -410,9 +395,6 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   "drugName",
                   "ndcCode",
                   "user",
-                  "patient Payment",
-                  "ACQ",
-                  "insurance Payment",
                   "prescriber",
                   "netProfit",
                   "highestNet",
@@ -420,7 +402,7 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   "highestDrugNDC",
                   "highestDrugName",
                   "highestScriptCode",
-                  "highestScriptDate",
+                  "highestScriptDate"
                 ].map((col) => (
                   <th
                     key={col}
@@ -442,9 +424,7 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {item.scriptCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurance === "  "
-                      ? "MARCOG"
-                      : insurance_mapping[item.insurance] || item.insurance}
+                    {item.insurance === "  " ? "MARCOG" : insurance_mapping[item.insurance] || item.insurance}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.drugClass}
@@ -453,29 +433,13 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {item.drugName}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    <a
-                      href={`https://ndclist.com/ndc/${item.ndcCode}`}
-                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.ndcCode}
-                    </a>
+                    {item.ndcCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.user}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.patientPayment}
-                  </td>
-                  <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.acquisitionCost}
-                  </td>
-                  <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurancePayment}
-                  </td>
-                  <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.netProfit}
+                    {item.prescriber}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.netProfit}
@@ -487,31 +451,16 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {(item.highstNet - item.netProfit).toFixed(2)}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    <a
-                      href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
-                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.highstDrugNDC}
-                    </a>
+                    {item.highstDrugNDC}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    <a
-                      href={`/drug/${item.highstDrugId}`}
-                      target="_blank"
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                    >
-                      {item.highstDrugName}
-                    </a>
+                    {item.highstDrugName}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
                     {item.highstScriptCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    {new Date(item.highstScriptDate).toLocaleDateString(
-                      "en-US"
-                    )}
+                    {new Date(item.highstScriptDate).toLocaleDateString("en-US")}
                   </td>
                 </tr>
               ))}
