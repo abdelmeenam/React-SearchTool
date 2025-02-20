@@ -7,16 +7,18 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import axios from "axios";
 import { DrugTransaction } from "../types";
 import { motion } from "framer-motion";
 import { CSVLink } from "react-csv";
+
 interface DashboardProps {
   data: DrugTransaction[];
 }
+
 export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const [latestScripts, setLatestScripts] = useState<DrugTransaction[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedInsurance, setSelectedInsurance] = useState("");
   const [filteredData, setFilteredData] = useState<DrugTransaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,18 +33,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const rowsPerPage = 10;
-  const formattedPrice = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(totalRevenue ?? 0);
+
+  // When the component mounts (or the data prop changes), initialize latestScripts and aggregates.
   useEffect(() => {
     const fetchData = async () => {
       try {
         const result = data;
-
         setLatestScripts(result);
-        // Calculate values
         const belowNetCount = result.filter(
           (item) => item.netProfit < item.highstNet
         ).length;
@@ -51,8 +48,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           (sum, item) => sum + item.highstNet,
           0
         );
-
-        // Update state
         setBelowNetPriceCount(belowNetCount);
         setTotalRevenue(totalRev);
         setTotalNet(totalNetProfit);
@@ -61,14 +56,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       }
     };
     fetchData();
-  }, []);
-  const normalizeName = (name) => {
+  }, [data]);
+
+  // Helper to normalize names.
+  const normalizeName = (name: string) => {
     return name
-      .split(/\s+/) // Split by spaces
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
-      .join(" ") // Join back with a space
-      .replace(/[.,]/g, ""); // Remove all periods and commas
+      .split(/\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ")
+      .replace(/[.,]/g, "");
   };
+
+  // CSV headers definition.
   const headers = [
     { label: "Date", key: "date" },
     { label: "Script Code", key: "scriptCode" },
@@ -91,6 +90,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     { label: "Highest Drug ID", key: "highstDrugId" },
     { label: "Highest Net", key: "highstNet" },
   ];
+
+  // Update filtered data whenever any filter or latestScripts changes.
   useEffect(() => {
     let sortedData = [...latestScripts];
     if (sortConfig !== null) {
@@ -107,12 +108,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
     const filtered = sortedData.filter((item) => {
       const itemDate = new Date(item.date);
-      const itemMonth = itemDate.toISOString().slice(0, 7); // YYYY-MM
+      const itemMonth = itemDate.toISOString().slice(0, 7);
       return (
         (!selectedClass || item.drugClass === selectedClass) &&
         (!selectedInsurance || item.insurance === selectedInsurance) &&
         (!selectedPrescriber || item.prescriber === selectedPrescriber) &&
         (!selectedUser || item.user === selectedUser) &&
+        (!selectedBranch || item.branchCode === selectedBranch) &&
         (!selectedMonth || itemMonth === selectedMonth)
       );
     });
@@ -133,8 +135,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           : 0),
       0
     );
-
-    // Update state
     setBelowNetPriceCount(belowNetCount);
     setTotalRevenue(totalRev);
     setTotalNet(totalNetProfit - deff);
@@ -144,9 +144,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     selectedInsurance,
     selectedPrescriber,
     selectedUser,
+    selectedBranch, // <-- Added to ensure branch filter updates the results.
     selectedMonth,
     latestScripts,
   ]);
+
+  // Sorting functionality.
   const requestSort = (key: string) => {
     let direction = "ascending";
     if (
@@ -164,7 +167,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-  const insurance_mapping = {
+
+  const insurance_mapping: { [key: string]: string } = {
     AL: "Aetna (AL)",
     BW: "aetna (BW)",
     AD: "Aetna Medicare (AD)",
@@ -197,6 +201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     AA: "Tri-Care Express Scripts (AA)",
     AI: "United Healthcare (AI)",
   };
+
   const downloadCSV = () => {
     const headers = [
       "Date",
@@ -205,9 +210,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       "Drug Class",
       "Drug Name",
       "NDC Code",
-      "patient Payment",
+      "Patient Payment",
       "ACQ",
-      "insurance Payment",
+      "Insurance Payment",
       "Prescriber",
       "Net Profit",
       "Highest Net",
@@ -225,7 +230,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       item.patientPayment,
       item.acquisitionCost,
       item.insurancePayment,
-      normalizeName(item.prescriber), // Normalize name here
+      normalizeName(item.prescriber),
       item.netProfit.toFixed(2),
       item.highstNet,
       (item.highstNet - item.netProfit).toFixed(2),
@@ -237,7 +242,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       headers.join(","),
       ...rows.map((row) => row.join(",")),
     ].join("\n");
-
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -248,6 +252,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     link.click();
     document.body.removeChild(link);
   };
+
   return (
     <motion.div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
@@ -257,7 +262,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">
-                  {" "}
                   Total Number of Prescriptions in Database
                 </p>
                 <p className="text-3xl font-semibold">{filteredData?.length}</p>
@@ -280,42 +284,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">
-                  Estimated Max. Net Profit with Alternative Options{" "}
+                  Estimated Max. Net Profit with Alternative Options
                 </p>
                 <p className="text-3xl font-semibold">
-                  <span>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(totalNet ?? 0)}
-                  </span>
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  }).format(totalNet ?? 0)}
                 </p>
               </div>
               <BarChart3 className="h-10 w-10" />
             </div>
           </div>
-
           <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">
-                  {" "}
                   Current Total Net Profit from Dispensed Prescriptions
                 </p>
                 <p className="text-3xl font-semibold">
-                  <span>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(totalRevenue ?? 0)}
-                  </span>
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  }).format(totalRevenue ?? 0)}
                 </p>
               </div>
               <PieChart className="h-10 w-10" />
             </div>
           </div>
         </div>
-        <div className="flex gap-4 mb-6">
+        <div className="flex  gap-4 mb-6">
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
@@ -336,7 +334,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                 </option>
               ))}
           </select>
-
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
@@ -368,7 +365,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                 </option>
               ))}
           </select>
-
           <select
             value={selectedPrescriber}
             onChange={(e) => setSelectedPrescriber(e.target.value)}
@@ -383,7 +379,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                 </option>
               ))}
           </select>
-
           <select
             value={selectedUser}
             onChange={(e) => setSelectedUser(e.target.value)}
@@ -395,6 +390,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               .map((user) => (
                 <option key={user} value={user}>
                   {user}
+                </option>
+              ))}
+          </select>
+        </div>
+        <div className="mb-5">
+          <select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="px-4 py-2 border rounded-md bg-white"
+          >
+            <option value="">All Branches</option>
+            {[...new Set(latestScripts.map((item) => item.branchCode))]
+              .sort()
+              .map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
                 </option>
               ))}
           </select>
@@ -463,7 +474,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     <a
                       href={`/InsruanceDetails/${item.insurance}`}
                       target="_blank"
-
                       className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
                     >
                       {item.insurance === "  "
@@ -549,7 +559,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               ))}
             </tbody>
           </table>
-          {/* 🔹 Pagination Controls */}
+          {/* Pagination Controls */}
           <div className="flex justify-between items-center mt-4">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -562,11 +572,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             >
               <ChevronLeft className="inline-block w-4 h-4 mr-1" /> Previous
             </button>
-
             <p className="text-sm text-gray-700">
               Page {currentPage} of {totalPages}
             </p>
-
             <button
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
@@ -588,6 +596,3 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 };
 
 export default Dashboard;
-function normalizePrescriber(prescriber: string): any {
-  throw new Error("Function not implemented.");
-}

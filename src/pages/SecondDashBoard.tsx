@@ -17,6 +17,8 @@ interface DashboardProps {
 export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
   const [latestScripts, setLatestScripts] = useState<DrugTransaction[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
+
   const [selectedInsurance, setSelectedInsurance] = useState("");
   const [filteredData, setFilteredData] = useState<DrugTransaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,6 +117,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
         (!selectedInsurance || item.insurance === selectedInsurance) &&
         (!selectedPrescriber || item.prescriber === selectedPrescriber) &&
         (!selectedUser || item.user === selectedUser) &&
+        (!selectedBranch || item.branchCode === selectedBranch) &&
         (!selectedMonth || itemMonth === selectedMonth)
       );
     });
@@ -137,6 +140,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
     selectedClass,
     selectedInsurance,
     selectedPrescriber,
+    selectedBranch,
     selectedUser,
     selectedMonth,
     latestScripts,
@@ -389,6 +393,22 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
               .map((user) => (
                 <option key={user} value={user}>
                   {user}
+                </option>
+              ))}
+          </select>
+        </div>
+        <div className="mb-5">
+          <select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="px-4 py-2 border rounded-md bg-white"
+          >
+            <option value="">All Branches</option>
+            {[...new Set(latestScripts.map((item) => item.branchCode))]
+              .sort()
+              .map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
                 </option>
               ))}
           </select>
