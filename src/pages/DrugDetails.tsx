@@ -279,6 +279,8 @@ export const DrugDetails: React.FC = () => {
                 <h1 className="text-2xl font-bold">{drug.name}</h1>
                 <a
                   href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
+                  target="_blank"
+
                   className="text-blue-100"
                 >
                   NDC: {padCode(drug.ndc)}
@@ -574,8 +576,14 @@ export const DrugDetails: React.FC = () => {
                                 <td className="px-10 py-4">
                                   <div className="text-sm text-gray-500">
                                     <div>
-                                      {insurance_mapping[alt.insuranceName] ||
-                                        alt.insuranceName}
+                                      <a
+                                        href={`/InsruanceDetails/${alt.insuranceName}`}
+                                        target="_blank"
+                                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                                      >
+                                        {insurance_mapping[alt.insuranceName] ||
+                                          alt.insuranceName}
+                                      </a>
                                     </div>
                                   </div>
                                 </td>

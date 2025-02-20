@@ -12,6 +12,8 @@ import { LogsPage } from "./pages/Logs";
 import SecondDashBoard from "./pages/SecondDashBoard";
 import ThirdDashBoard from "./pages/ThirdDashBoard";
 import MainDashboard from "./pages/MainDashboard";
+import ScriptDetails from "./pages/ScriptDetails";
+import InsuranceDetails from "./pages/InsuranceDetails";
 
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -93,6 +95,14 @@ function App() {
                   <DrugDetails />
                 </PrivateRoute>
               }
+            />
+            <Route
+              path="/scriptitems/:scriptcode"
+              element={<ScriptDetails />}
+            />
+            <Route
+              path="/InsruanceDetails/:insuranceName"
+              element={<InsuranceDetails />}
             />
           </Route>
         </Routes>

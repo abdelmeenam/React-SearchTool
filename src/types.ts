@@ -39,7 +39,7 @@ export interface DrugInsuranceInfo {
   drugClassId: number;
   insuranceName: string;
   net: number;
-  date: string; 
+  date: string;
   prescriber: string;
   quantity: number;
   acquisitionCost: number;
@@ -48,14 +48,24 @@ export interface DrugInsuranceInfo {
   patientPayment: number;
   drugClass: string;
   insurance: any | null;
-  drug: any | null; 
+  drug: any | null;
 }
+export interface Insurance {
+  id: number;
+  name: string;
+  description: string;
+  bin: string;
+  pcn: string;
+  helpDeskNumber: string;
+}
+
 export interface DrugTransaction {
-  date: string; 
+  date: string;
   scriptCode: string;
   rxNumber: string;
   user: string;
   drugName: string;
+  drugId: number;
   insurance: string;
   pf: string;
   prescriber: string;
@@ -64,6 +74,7 @@ export interface DrugTransaction {
   discount: number;
   insurancePayment: number;
   patientPayment: number;
+  branchCode: string;
   ndcCode: string;
   netProfit: number;
   drugClass: string;
@@ -72,12 +83,25 @@ export interface DrugTransaction {
   highstDrugId: number;
   highstNet: number;
   highstScriptCode: string;
-  highstScriptDate: string; 
+  highstScriptDate: string;
 }
 
-export interface Insurance {
-  id: string;
-  name: string;
+export interface ScriptData {
+  id: number;
+  drugName: string;
+  insuranceName: string;
+  drugClassName: string;
+  prescriberName: string;
+  userName: string;
+  pf: string;
+  quantity: number;
+  acquisitionCost: number;
+  discount: number;
+  insurancePayment: number;
+  patientPayment: number;
+  netProfit: number;
+  ndcCode: string;
+  branchName: string;
 }
 
 export interface User {

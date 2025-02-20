@@ -12,8 +12,8 @@ import { DrugTransaction } from "../types";
 import { motion } from "framer-motion";
 import { CSVLink } from "react-csv";
 interface DashboardProps {
-    data: DrugTransaction[];
-  }
+  data: DrugTransaction[];
+}
 export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
   const [latestScripts, setLatestScripts] = useState<DrugTransaction[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
@@ -39,7 +39,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result =data
+        const result = data;
         const filters = result.filter(
           (item) => item.ndcCode === item.highstDrugNDC
         );
@@ -199,6 +199,9 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
       "Drug Class",
       "Drug Name",
       "NDC Code",
+      "patient Payment",
+      "ACQ",
+      "insurance Payment",
       "Prescriber",
       "Net Profit",
       "Highest Net",
@@ -213,6 +216,9 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
       item.drugClass,
       item.drugName,
       item.ndcCode,
+      item.patientPayment,
+      item.acquisitionCost,
+      item.insurancePayment,
       normalizeName(item.prescriber), // Normalize name here
       item.netProfit.toFixed(2),
       item.highstNet,
@@ -286,7 +292,10 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
           <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">  Total Revenue from matching scripts</p>
+                <p className="text-sm font-medium">
+                  {" "}
+                  Total Revenue from matching scripts
+                </p>
                 <p className="text-3xl font-semibold">
                   <span>
                     {new Intl.NumberFormat("en-US", {
@@ -397,21 +406,25 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
             <thead className="bg-gray-100">
               <tr>
                 {[
-                  "date",
-                  "scriptCode",
-                  "insurance",
-                  "drugClass",
-                  "drugName",
-                  "ndcCode",
-                  "user",
-                  "prescriber",
-                  "netProfit",
-                  "highestNet",
-                  "deviation from Estimate Reference",
-                  "highestDrugNDC",
-                  "highestDrugName",
-                  "highestScriptCode",
-                  "highestScriptDate",
+                  "Date",
+                  "Script Code",
+                  "Branch Name",
+                  "Insurance",
+                  "Drug Class",
+                  "drug Name",
+                  "NDC Code",
+                  "User",
+                  "Patient Payment",
+                  "ACQ",
+                  "Insurance Payment",
+                  "Prescriber",
+                  "Net Profit",
+                  "Highest Net",
+                  "Difference",
+                  "Highest Drug NDC",
+                  "Highest Drug Name",
+                  "Highest Script Code",
+                  "Highest Script Date",
                 ].map((col) => (
                   <th
                     key={col}
@@ -430,27 +443,63 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {new Date(item.date).toLocaleDateString("en-US")}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.scriptCode}
+                    <a
+                      href={`/scriptitems/${item.scriptCode}`}
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                    >
+                      {item.scriptCode}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.insurance === "  "
-                      ? "MARCOG"
-                      : insurance_mapping[item.insurance] || item.insurance}
+                    {item.branchCode}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    <a
+                      href={`/InsruanceDetails/${item.insurance}`}
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                    >
+                      {item.insurance === "  "
+                        ? "MARCOG"
+                        : insurance_mapping[item.insurance] || item.insurance}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.drugClass}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.drugName}
+                    <a
+                      href={`/drug/${item.drugId}`}
+                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.drugName}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.ndcCode}
+                    <a
+                      href={`https://ndclist.com/ndc/${item.ndcCode}`}
+                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.ndcCode}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.user}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    {item.prescriber}
+                    {item.patientPayment}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.acquisitionCost}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.insurancePayment}
+                  </td>
+                  <td className="px-2 py-2 text-sm text-gray-900">
+                    {item.netProfit}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.netProfit}
@@ -462,10 +511,23 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {(item.highstNet - item.netProfit).toFixed(2)}
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    {item.highstDrugNDC}
+                    <a
+                      href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
+                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.highstDrugNDC}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
-                    {item.highstDrugName}
+                    <a
+                      href={`/drug/${item.highstDrugId}`}
+                      target="_blank"
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                    >
+                      {item.highstDrugName}
+                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-blue-600 font-bold">
                     {item.highstScriptCode}
