@@ -65,9 +65,9 @@ export const Home: React.FC = () => {
         </div>
 
         <footer className="mt-12 text-center">
-          <p className="text-sm">
+          {/* <p className="text-sm">
             &copy; {new Date().getFullYear()} PharmaCare. All rights reserved.
-          </p>
+          </p> */}
         </footer>
       </div>
     </motion.div>
