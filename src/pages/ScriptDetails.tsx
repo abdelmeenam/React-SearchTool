@@ -12,7 +12,7 @@ const ScriptDetails: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const endpointUrl = `https://api.medisearchtool.com/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
+        const endpointUrl = `http://localhost:5107/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
         const response = await axios.get(endpointUrl);
         setData(response.data); // Expecting an array
         setLoading(false);

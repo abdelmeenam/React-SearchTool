@@ -25,7 +25,7 @@ export const MainDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://api.medisearchtool.com/drug/GetAllLatestScripts"
+          "http://localhost:5107/drug/GetAllLatestScripts"
         );
         setData(response.data);
       } catch (err) {

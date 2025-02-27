@@ -11,26 +11,23 @@ export interface Drug {
   rxcui: number;
 }
 export interface Prescription {
-  netProfit: any;
-  insuranceId: number;
   drugId: number;
   ndcCode: string;
   drugName: string;
-  classId: number;
+  drugClassId: number;
+  insuranceName: string;
   net: number;
-  date: string; // Consider using Date if you plan to parse it: Date | string
+  date: string; // Alternatively, use Date if you parse this value
   prescriber: string;
   quantity: number;
   acquisitionCost: number;
-  rxCui: number;
-  insuranceName: string;
   discount: number;
   insurancePayment: number;
   patientPayment: number;
   drugClass: string;
-  insurance: any | null; // Define a specific type if available
-  drug: any | null; // Define a specific type if available
+  branchName: string;
 }
+
 export interface DrugInsuranceInfo {
   insuranceId: number;
   drugId: number;
