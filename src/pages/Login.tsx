@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { api } from '../api/api';
+import axios from 'axios';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -9,20 +10,38 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const API_URL = "http://localhost:5107/user/login";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
+  
     try {
-      const response = await api.login(email, password);
-
-      localStorage.setItem('role', response.user.role);
-      localStorage.setItem('email', response.user.email);
-      console.log(response.user);
-      window.location.reload();  // Force a full page reload
-
-      navigate('/');  // Navigate to home page
+      const response = await axios.post(
+        API_URL,
+        { email, password },
+        { withCredentials: true } 
+      );
+  
+      if (response.status === 200) {
+        const { accessToken, userId, branchId, role, email } = response.data;
+        console.log(accessToken)
+        // Store access token securely (Session storage)
+        localStorage.setItem("accessToken", accessToken);
+  
+        // Store user info securely in session storage
+        localStorage.setItem("role", role);
+        localStorage.setItem("email", email);
+        localStorage.setItem("branchId", branchId);
+        localStorage.setItem("userId", userId);
+        // Navigate to home page without a full reload
+        navigate("/");
+      } else {
+        setError("Invalid credentials");
+      }
     } catch (err) {
-      setError('Invalid credentials');
+      console.error("Login error:", err);
+      setError("Login failed. Please try again.");
     }
   };
 

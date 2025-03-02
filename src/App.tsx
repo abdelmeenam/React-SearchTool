@@ -14,6 +14,7 @@ import ThirdDashBoard from "./pages/ThirdDashBoard";
 import MainDashboard from "./pages/MainDashboard";
 import ScriptDetails from "./pages/ScriptDetails";
 import InsuranceDetails from "./pages/InsuranceDetails";
+import { ProfilePage } from "./pages/profile";
 
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -103,6 +104,10 @@ function App() {
             <Route
               path="/InsruanceDetails/:insuranceName"
               element={<InsuranceDetails />}
+            />
+              <Route
+              path="/Profile"
+              element={<ProfilePage />}
             />
           </Route>
         </Routes>
