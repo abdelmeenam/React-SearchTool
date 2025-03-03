@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Layout } from "./components/Layout";
@@ -15,6 +15,9 @@ import MainDashboard from "./pages/MainDashboard";
 import ScriptDetails from "./pages/ScriptDetails";
 import InsuranceDetails from "./pages/InsuranceDetails";
 import { ProfilePage } from "./pages/profile";
+import Auth from "./Auth";
+import { Search2 } from "./pages/Search2";
+import { SearchSwitcher } from "./pages/SearchSwitcher";
 
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -23,12 +26,11 @@ const PrivateRoute: React.FC<{
   const role = localStorage.getItem("role");
 
   if (!role) {
-    // If not authenticated, redirect to login
     return <Navigate to="/login" />;
   }
 
   // If isAdmin is true, check if the user is admin
-  if (isAdmin && role !== "admin") {
+  if (isAdmin && role !== "Admin") {
     return <Navigate to="/" />;
   }
 
@@ -37,12 +39,23 @@ const PrivateRoute: React.FC<{
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = localStorage.getItem("role");
   if (isAuthenticated) {
-    // Redirect to the dashboard if the user is already logged in
     return <Navigate to="/" />;
   }
   return <>{children}</>;
 };
 function App() {
+  const [IsAuthorized, setIsAuthorized] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthenticated = await Auth();
+      setIsAuthorized(isAuthenticated);
+      if (!isAuthenticated) {
+        console.log("User not authenticated, redirecting to sign-in...");
+      }
+    };
+    checkAuth();
+  }, []);
   return (
     <ThemeProvider>
       <BrowserRouter>
@@ -61,7 +74,7 @@ function App() {
               path="search"
               element={
                 <PrivateRoute>
-                  <Search />
+                  <SearchSwitcher />
                 </PrivateRoute>
               }
             />
@@ -99,15 +112,27 @@ function App() {
             />
             <Route
               path="/scriptitems/:scriptcode"
-              element={<ScriptDetails />}
+              element={
+                <PrivateRoute>
+                  <ScriptDetails />
+                </PrivateRoute>
+              }
             />
             <Route
               path="/InsruanceDetails/:insuranceName"
-              element={<InsuranceDetails />}
+              element={
+                <PrivateRoute>
+                  <InsuranceDetails />
+                </PrivateRoute>
+              }
             />
-              <Route
+            <Route
               path="/Profile"
-              element={<ProfilePage />}
+              element={
+                <PrivateRoute>
+                  <ProfilePage />
+                </PrivateRoute>
+              }
             />
           </Route>
         </Routes>

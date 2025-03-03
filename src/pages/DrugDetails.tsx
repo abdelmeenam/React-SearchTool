@@ -6,6 +6,11 @@ import { motion } from "framer-motion";
 import { Drug, Prescription } from "../types";
 const baseUrl = "http://localhost:5107";
 
+// Helper function to retrieve the authorization header
+const getAuthHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+});
+
 // -----------------------
 // Loading & Error Components
 // -----------------------
@@ -710,48 +715,58 @@ export const DrugDetails: React.FC = () => {
           let response;
           if (ndcCode) {
             response = await axios.get(
-              `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`
+              `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
+              { headers: getAuthHeader() }
             );
           } else {
             response = await axios.get(
-              `${baseUrl}/drug/GetDrugById?id=${drugId}`
+              `${baseUrl}/drug/GetDrugById?id=${drugId}`,
+              { headers: getAuthHeader() }
             );
           }
           setDrug(response.data);
           response2 = await axios.get(
-            `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`
+            `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
           );
           setSortedAlternatives(response2.data);
           // Fetch branch drugs as well
           const response10 = await axios.get(
-            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}&branchId=${1}`
+            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
           );
           setBranchDrugs(response10.data);
           const response3 = await axios.get(
-            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`
+            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
           );
           setClassName(response3.data.name);
         } else {
           const response = await axios.get(
-            `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`
+            `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
+            { headers: getAuthHeader() }
           );
           const drugData = response.data;
           setDrug(drugData);
           response2 = await axios.get(
-            `${baseUrl}/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
+            `${baseUrl}/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`,
+            { headers: getAuthHeader() }
           );
           setDrugDetail(response2.data);
           const response3 = await axios.get(
-            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`
+            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
           );
           setClassName(response3.data.name);
           const response10 = await axios.get(
-            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}&branchId=${1}`
+            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}&branchId=${1}`,
+            { headers: getAuthHeader() }
           );
           setBranchDrugs(response10.data);
           if (response3.data.name !== "other") {
             const response4 = await axios.get(
-              `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`
+              `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
+              { headers: getAuthHeader() }
             );
             setSortedAlternatives(response4.data);
           } else {

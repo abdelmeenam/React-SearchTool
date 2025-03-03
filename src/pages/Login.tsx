@@ -17,24 +17,21 @@ export const Login: React.FC = () => {
     setError(""); // Clear previous errors
   
     try {
+      console.log("hi",email , " : ", password);
       const response = await axios.post(
         API_URL,
         { email, password },
         { withCredentials: true } 
       );
-  
+      
       if (response.status === 200) {
         const { accessToken, userId, branchId, role, email } = response.data;
         console.log(accessToken)
         // Store access token securely (Session storage)
         localStorage.setItem("accessToken", accessToken);
-  
-        // Store user info securely in session storage
-        localStorage.setItem("role", role);
-        localStorage.setItem("email", email);
-        localStorage.setItem("branchId", branchId);
-        localStorage.setItem("userId", userId);
-        // Navigate to home page without a full reload
+        localStorage.setItem("role", response.data.role);
+        window.location.reload();  
+
         navigate("/");
       } else {
         setError("Invalid credentials");
@@ -50,7 +47,6 @@ export const Login: React.FC = () => {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="text-gray-600">Sign in to access MedSearch</p>
         </div>
 
         {error && (

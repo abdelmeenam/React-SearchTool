@@ -4,68 +4,42 @@ import { Search as SearchIcon } from "lucide-react";
 import debounce from "debounce";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { Drug, DrugInsuranceInfo, Insurance } from "../types";
+import { Drug, Insurance } from "../types";
 
-const API_BASE_URL = "https://api.medisearchtool.com";
+const API_BASE_URL = "http://localhost:5107";
+
+// Helper function to retrieve the token header
+const getAuthHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+});
 
 export const Search2: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<Drug[]>([]);
+  const [insuranceSuggestions, setInsuranceSuggestions] = useState<Insurance[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedInsurance, setSelectedInsurance] = useState<Insurance | null>(null);
+  const [drugs, setDrugs] = useState<Drug[]>([]);
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
-  const [insurances, setInsurances] = useState<DrugInsuranceInfo[]>([]);
-  const [selectedInsurance, setSelectedInsurance] =
-    useState<DrugInsuranceInfo | null>(null);
   const [ndcList, setNdcList] = useState<string[]>([]);
   const [selectedNdc, setSelectedNdc] = useState("");
-  const insurance_mapping = {
-    AL: "Aetna (AL)",
-    BW: "aetna (BW)",
-    AD: "Aetna Medicare (AD)",
-    AF: "Anthem BCBS (AF)",
-    DS: "Blue Cross Blue Shield (DS)",
-    CA: "blue shield medicare (CA)",
-    FQ: "Capital Rx (FQ)",
-    BF: "Caremark (BF)",
-    ED: "CatalystRx (ED)",
-    AM: "Cigna (AM)",
-    BO: "Default Claim Format (BO)",
-    AP: "Envision Rx Options (AP)",
-    CG: "Express Scripts (CG)",
-    BI: "Horizon (BI)",
-    AJ: "Humana Medicare (AJ)",
-    BP: "informedRx (BP)",
-    AO: "MEDCO HEALTH (AO)",
-    AC: "MEDCO MEDICARE PART D (AC)",
-    AQ: "MEDGR (AQ)",
-    CC: "MY HEALTH LA (CC)",
-    AG: "Navitus Health Solutions (AG)",
-    AH: "OptumRx (AH)",
-    AS: "PACIFICARE LIFE AND H (AS)",
-    FJ: "Paramount Rx (FJ)",
-    "X ": "PF - DEFAULT (X )",
-    EA: "Pharmacy Data Management (EA)",
-    DW: "phcs (DW)",
-    AX: "PINNACLE (AX)",
-    BN: "Prescription Solutions (BN)",
-    AA: "Tri-Care Express Scripts (AA)",
-    AI: "United Healthcare (AI)",
-  };
+
+  // Debounced insurance search
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
       if (query.length >= 1) {
         try {
           const { data } = await axios.get(
-            `${API_BASE_URL}/drug/searchByName?name=${query}`
+            `${API_BASE_URL}/drug/GetInsurances?insurance=${query}`,
+            { headers: getAuthHeader() }
           );
-          setSuggestions(data);
+          setInsuranceSuggestions(data);
           setShowSuggestions(true);
         } catch (error) {
-          console.error("Error searching drugs:", error);
+          console.error("Error searching insurances:", error);
         }
       } else {
-        setSuggestions([]);
+        setInsuranceSuggestions([]);
         setShowSuggestions(false);
       }
     }, 300),
@@ -78,18 +52,38 @@ export const Search2: React.FC = () => {
     debouncedSearch(query);
   };
 
-  const handleDrugSelect = async (drug: Drug) => {
-    setSelectedDrug(drug);
-    setSearchQuery(drug.name);
+  // When an insurance is selected, fetch drugs associated with it.
+  const handleInsuranceSelect = async (insurance: Insurance) => {
+    setSelectedInsurance(insurance);
+    setSearchQuery(insurance.name);
     setShowSuggestions(false);
+    // Clear any previous selections
+    setDrugs([]);
+    setSelectedDrug(null);
     setNdcList([]);
     setSelectedNdc("");
-    setInsurances([]);
-    setSelectedInsurance(null);
 
     try {
       const { data } = await axios.get(
-        `${API_BASE_URL}/drug/getDrugNDCs?name=${drug.name}`
+        `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${insurance.name}`,
+        { headers: getAuthHeader() }
+      );
+      setDrugs(data);
+    } catch (error) {
+      console.error("Error fetching drugs by insurance:", error);
+    }
+  };
+
+  // When a drug is selected, fetch its NDC codes.
+  const handleDrugSelect = async (drug: Drug) => {
+    setSelectedDrug(drug);
+    // Clear previous NDC selection
+    setNdcList([]);
+    setSelectedNdc("");
+    try {
+      const { data } = await axios.get(
+        `${API_BASE_URL}/drug/getDrugNDCs?name=${drug.name}`,
+        { headers: getAuthHeader() }
       );
       setNdcList(data);
     } catch (error) {
@@ -97,29 +91,15 @@ export const Search2: React.FC = () => {
     }
   };
 
-  const handleNdcSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const ndc = e.target.value;
-    setSelectedNdc(ndc);
-    setInsurances([]);
-    setSelectedInsurance(null);
-
-    try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/drug/GetInsuranceByNdc?ndc=${ndc}`
-      );
-      console.log(data);
-      setInsurances(data);
-    } catch (error) {
-      console.error("Error fetching insurance:", error);
-    }
+  const handleNdcSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedNdc(e.target.value);
   };
 
   const handleSearch = () => {
     if (selectedDrug) {
+      // Passing the selected insurance name as a query parameter; adjust if needed.
       navigate(
-        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
-          selectedInsurance?.insuranceId || ""
-        }`
+        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insurance=${selectedInsurance?.name || ""}`
       );
     }
   };
@@ -128,18 +108,17 @@ export const Search2: React.FC = () => {
     <motion.div className="max-w-6xl mx-auto px-4 py-10">
       <div className="bg-gradient-to-r from-blue-500 to-green-400 rounded-lg shadow-lg p-8 text-white">
         <h1 className="text-4xl font-bold mb-6 text-center">
-          Search for Medicines
+          Search for Medicines by Insurance
         </h1>
         <div className="space-y-8">
+          {/* Insurance Search */}
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
-              onFocus={() =>
-                searchQuery.length >= 2 && setShowSuggestions(true)
-              }
-              placeholder="Search for a drug..."
+              onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
+              placeholder="Search for an Insurance..."
               className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
             />
             <button
@@ -148,24 +127,46 @@ export const Search2: React.FC = () => {
             >
               <SearchIcon className="h-6 w-6" />
             </button>
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && insuranceSuggestions.length > 0 && (
               <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md max-h-60 overflow-y-auto">
-                {[
-                  ...new Map(
-                    suggestions.map((drug) => [drug.name, drug])
-                  ).values(),
-                ].map((drug) => (
+                {insuranceSuggestions.map((insurance) => (
                   <button
-                    key={drug.id}
-                    onClick={() => handleDrugSelect(drug)}
+                    key={insurance.id}
+                    onClick={() => handleInsuranceSelect(insurance)}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
                   >
-                    <span className="font-semibold">{drug.name}</span>
+                    <span className="font-semibold">{insurance.name}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
+          {/* Drugs Dropdown */}
+          {drugs.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Select Drug</h2>
+              <select
+                value={selectedDrug?.id || ""}
+                onChange={(e) => {
+                  const drug = drugs.find(
+                    (d) => d.id.toString() === e.target.value
+                  );
+                  if (drug) {
+                    handleDrugSelect(drug);
+                  }
+                }}
+                className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="">Select Drug...</option>
+                {drugs.map((drug) => (
+                  <option key={drug.id} value={drug.id}>
+                    {drug.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {/* NDC Dropdown */}
           {ndcList.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold mb-4">Select NDC</h2>
@@ -183,32 +184,7 @@ export const Search2: React.FC = () => {
               </select>
             </div>
           )}
-          {insurances.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Select Insurance</h2>
-              <select
-                value={selectedInsurance?.insuranceId || ""}
-                onChange={(e) => {
-                  const selected =
-                    insurances.find(
-                      (i) => i.insuranceId.toString() === e.target.value
-                    ) || null;
-                  setSelectedInsurance(selected);
-                }}
-                className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
-              >
-                <option value="">Select insurance...</option>
-                {insurances.map((insurance) => (
-                  <option
-                    key={insurance.insuranceId}
-                    value={insurance.insuranceId}
-                  >
-                    {insurance_mapping[insurance.insuranceName] || insurance.insuranceName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          {/* View Details Button */}
           {selectedDrug && (
             <button
               onClick={handleSearch}

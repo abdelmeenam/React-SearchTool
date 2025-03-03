@@ -15,6 +15,11 @@ import Dashboard from "./Dashboard";
 import SecondDashBoard from "./SecondDashBoard";
 import ThirdDashBoard from "./ThirdDashBoard";
 
+// Helper function to retrieve the authorization header
+const getAuthHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+});
+
 export const MainDashboard: React.FC = () => {
   const [activeDashboard, setActiveDashboard] = useState("Dashboard");
   const [data, setData] = useState<DrugTransaction[]>([]);
@@ -25,7 +30,8 @@ export const MainDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5107/drug/GetAllLatestScripts"
+          "http://localhost:5107/drug/GetAllLatestScripts",
+          { headers: getAuthHeader() }
         );
         setData(response.data);
       } catch (err) {
@@ -38,7 +44,7 @@ export const MainDashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  const Button = ({ children, onClick }) => (
+  const Button = ({ children, onClick }: { children: React.ReactNode; onClick: () => void; }) => (
     <button
       onClick={onClick}
       className="px-6 py-2 text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition duration-300"

@@ -38,7 +38,7 @@ export const Home: React.FC = () => {
             </p>
           </Link> */}
 
-          {isAuthenticated==="admin" && (
+          {isAuthenticated==="Admin" && (
             <Link
               to="/dashboard"
               className="block bg-white text-purple-600 rounded-lg shadow-lg p-6 hover:bg-purple-100 transition-transform transform hover:-translate-y-1"

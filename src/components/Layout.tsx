@@ -23,7 +23,9 @@ export const Layout: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("role");
-    localStorage.removeItem("email")
+    localStorage.removeItem("accessToken");
+    window.location.reload();  
+
     navigate("/login");
   };
 
@@ -81,7 +83,7 @@ export const Layout: React.FC = () => {
                     <FileText className="h-5 w-5" />{" "}
                     <span className="font-medium">Logs</span>
                   </Link> */}
-                  {isLoggedIn === "admin" && (
+                  {isLoggedIn === "Admin" && (
                     <Link
                       to="/dashboard"
                       className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-500 dark:hover:text-purple-400 transition-transform"

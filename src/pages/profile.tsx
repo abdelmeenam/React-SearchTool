@@ -35,6 +35,7 @@ export const ProfilePage: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+        console.log(response.data);
 
       const data: UserReadDto = response.data;
       setUser(data);
