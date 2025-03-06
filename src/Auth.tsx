@@ -10,13 +10,13 @@ const axiosInstance = axios.create({
 });
 
 export default async function Auth() {
-  console.log("here");
+  console.log("here",);
   return await ValidateAccessToken();
 }
 
 async function ValidateAccessToken() {
   const API_URL = `${Base_API}/token-test`;
-  const BEARER_TOKEN = localStorage.getItem("AccessToken");
+  const BEARER_TOKEN = localStorage.getItem("accessToken");
 
   try {
     console.log("here2");
@@ -39,15 +39,14 @@ async function ValidateRefreshToken() {
     const response = await axiosInstance.post("/access-token");
 
     // Store only the Access Token in localStorage
-    console.log(response.data.accessToken);
+    // console.log(response.data.accessToken);
     localStorage.setItem("accessToken", response.data.accessToken);
 
     return true;
   } catch (error) {
     console.log("Refresh failed, logging out...");
-    const navigate = useNavigate();
-
-    navigate("/login");
+    localStorage.removeItem("role");
+    localStorage.removeItem("accessToken");
     return false;
   }
 }

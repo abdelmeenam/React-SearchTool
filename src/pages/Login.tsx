@@ -17,7 +17,6 @@ export const Login: React.FC = () => {
     setError(""); // Clear previous errors
   
     try {
-      console.log("hi",email , " : ", password);
       const response = await axios.post(
         API_URL,
         { email, password },
@@ -26,13 +25,12 @@ export const Login: React.FC = () => {
       
       if (response.status === 200) {
         const { accessToken, userId, branchId, role, email } = response.data;
-        console.log(accessToken)
+        console.log("hiiiiiiiiiiiiiiiiiii")
         // Store access token securely (Session storage)
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("role", response.data.role);
         window.location.reload();  
 
-        navigate("/");
       } else {
         setError("Invalid credentials");
       }

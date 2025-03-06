@@ -19,49 +19,61 @@ import Auth from "./Auth";
 import { Search2 } from "./pages/Search2";
 import { SearchSwitcher } from "./pages/SearchSwitcher";
 
-const PrivateRoute: React.FC<{
-  children: React.ReactNode;
-  isAdmin?: boolean;
-}> = ({ children, isAdmin = false }) => {
+const PrivateRoute: React.FC<{ children: React.ReactNode; isAdmin?: boolean }> = ({ children, isAdmin = false }) => {
   const role = localStorage.getItem("role");
 
+  // If role is not set, redirect to login
   if (!role) {
     return <Navigate to="/login" />;
   }
 
-  // If isAdmin is true, check if the user is admin
+  // If route requires admin and user is not admin, redirect to home
   if (isAdmin && role !== "Admin") {
     return <Navigate to="/" />;
   }
 
   return <>{children}</>;
 };
+
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = localStorage.getItem("role");
+
+  // If user is authenticated, redirect them to the home page
   if (isAuthenticated) {
     return <Navigate to="/" />;
   }
   return <>{children}</>;
 };
+
 function App() {
-  const [IsAuthorized, setIsAuthorized] = useState(true);
+  // Use null to indicate that the auth check is pending
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuthenticated = await Auth();
-      setIsAuthorized(isAuthenticated);
-      if (!isAuthenticated) {
+      const authResult = await Auth();
+      setIsAuthorized(authResult);
+      if (!authResult) {
         console.log("User not authenticated, redirecting to sign-in...");
       }
     };
     checkAuth();
   }, []);
+
+  // While waiting for authentication check, display a loading state
+  if (isAuthorized === null) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} /> {/* Default Home Page */}
+            {/* Default Home Page */}
+            <Route index element={<Home />} />
+
+            {/* Public route - if user is authenticated, they are redirected */}
             <Route
               path="login"
               element={
@@ -69,7 +81,9 @@ function App() {
                   <Login />
                 </PublicRoute>
               }
-            />{" "}
+            />
+
+            {/* Private routes - accessible only when authenticated */}
             <Route
               path="search"
               element={
@@ -119,21 +133,22 @@ function App() {
               }
             />
             <Route
-              path="/InsruanceDetails/:insuranceName"
+              path="/InsuranceDetails/:insuranceName"
               element={
                 <PrivateRoute>
                   <InsuranceDetails />
                 </PrivateRoute>
               }
             />
-            <Route
+            {/* Uncomment if needed in the future */}
+            {/* <Route
               path="/Profile"
               element={
                 <PrivateRoute>
                   <ProfilePage />
                 </PrivateRoute>
               }
-            />
+            /> */}
           </Route>
         </Routes>
       </BrowserRouter>
