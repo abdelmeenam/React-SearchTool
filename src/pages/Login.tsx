@@ -10,7 +10,7 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const API_URL = "http://localhost:5107/user/login";
+  const API_URL = "https://store.medisearchtool.com/user/login";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

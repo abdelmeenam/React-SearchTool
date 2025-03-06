@@ -10,7 +10,7 @@ interface UserReadDto {
   branchName: string;
   roleName: string;
 }
-const API_BASE_URL = "http://localhost:5107";
+const API_BASE_URL = "https://store.medisearchtool.com";
 
 export const ProfilePage: React.FC = () => {
   const token = localStorage.getItem("accessToken"); // Assuming token is stored in localStorage

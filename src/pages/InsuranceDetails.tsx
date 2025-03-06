@@ -12,7 +12,7 @@ const InsuranceDetails: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const endpointUrl = `https://api.medisearchtool.com/drug/GetInsuranceDetails?shortName=${insuranceName}`;
+        const endpointUrl = `https://store.medisearchtool.com/drug/GetInsuranceDetails?shortName=${insuranceName}`;
         const response = await axios.get(endpointUrl);
         setInsurance(response.data);
         setLoading(false);

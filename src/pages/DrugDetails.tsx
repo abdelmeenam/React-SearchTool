@@ -4,7 +4,7 @@ import { Pill, AlertCircle, Repeat, ArrowUpDown } from "lucide-react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Drug, Prescription } from "../types";
-const baseUrl = "http://localhost:5107";
+const baseUrl = "https://store.medisearchtool.com";
 
 // Helper function to retrieve the authorization header
 const getAuthHeader = () => ({

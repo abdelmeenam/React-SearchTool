@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const Base_API = "http://localhost:5107/user";
+const Base_API = "https://store.medisearchtool.com/user";
 
 // Axios instance with credentials enabled
 const axiosInstance = axios.create({

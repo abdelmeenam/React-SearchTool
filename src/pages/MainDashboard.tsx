@@ -30,7 +30,7 @@ export const MainDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5107/drug/GetAllLatestScripts",
+          "https://store.medisearchtool.com/drug/GetAllLatestScripts",
           { headers: getAuthHeader() }
         );
         setData(response.data);

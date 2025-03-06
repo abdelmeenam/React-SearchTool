@@ -6,8 +6,10 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Drug, DrugInsuranceInfo, Insurance } from "../types";
 
-const API_BASE_URL = "https://api.medisearchtool.com";
-
+const API_BASE_URL = "https://store.medisearchtool.com";
+const getAuthHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+});
 export const Search: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +59,8 @@ export const Search: React.FC = () => {
       if (query.length >= 1) {
         try {
           const { data } = await axios.get(
-            `${API_BASE_URL}/drug/searchByName?name=${query}`
+            `${API_BASE_URL}/drug/searchByName?name=${query}`,
+            { headers: getAuthHeader() }
           );
           setSuggestions(data);
           setShowSuggestions(true);
@@ -89,7 +92,8 @@ export const Search: React.FC = () => {
 
     try {
       const { data } = await axios.get(
-        `${API_BASE_URL}/drug/getDrugNDCs?name=${drug.name}`
+        `${API_BASE_URL}/drug/getDrugNDCs?name=${drug.name}`,
+        { headers: getAuthHeader() }
       );
       setNdcList(data);
     } catch (error) {
@@ -105,7 +109,8 @@ export const Search: React.FC = () => {
 
     try {
       const { data } = await axios.get(
-        `${API_BASE_URL}/drug/GetInsuranceByNdc?ndc=${ndc}`
+        `${API_BASE_URL}/drug/GetInsuranceByNdc?ndc=${ndc}`,
+        { headers: getAuthHeader() }
       );
       console.log(data);
       setInsurances(data);
