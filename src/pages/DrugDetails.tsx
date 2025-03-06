@@ -852,7 +852,7 @@ export const DrugDetails: React.FC = () => {
             />
 
             {/* Switch button to toggle between tables */}
-            <div className="flex justify-end mb-4">
+            {/* <div className="flex justify-end mb-4">
               <button
                 onClick={() =>
                   setActiveTable(
@@ -865,7 +865,7 @@ export const DrugDetails: React.FC = () => {
                   ? "Switch to Branch Drugs"
                   : "Switch to Alternative Medications with Insurance"}
               </button>
-            </div>
+            </div> */}
 
             {activeTable === "insurance" ? (
               <>
