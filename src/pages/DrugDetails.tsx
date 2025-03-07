@@ -391,6 +391,84 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
     </section>
   );
 };
+const defaultInsuranceMapping: Record<string, string> = {
+  "1": "CR",
+  "2": "GF",
+  "3": "AV",
+  "4": "CY",
+  "5": "GH",
+  "6": "EQ",
+  "7": "CM",
+  "8": "BT",
+  "9": "HE",
+  "10": "GC",
+  "11": "FT",
+  "12": "GJ",
+  "13": "HB",
+  "14": "BE",
+  "15": "HG",
+  "16": "EY",
+  "17": "EW",
+  "18": "ET",
+  "19": "FS",
+  "20": "GE",
+  "21": "GV",
+  "22": "GY",
+  "23": "GS",
+  "24": "EB",
+  "25": "CS",
+  "26": "FB",
+  "27": "FN",
+  "28": "EP",
+  "29": "HJ",
+  "30": "HC",
+  "31": "CO",
+  "32": "GP",
+  "33": "EJ",
+  "34": "AL",
+  "35": "BW",
+  "36": "AD",
+  "37": "GM",
+  "38": "AF",
+  "39": "AT",
+  "40": "EN",
+  "41": "GX",
+  "42": "DS",
+  "43": "CA",
+  "44": "CA, HK",
+  "45": "FQ",
+  "46": "AB",
+  "47": "BF",
+  "48": "",
+  "49": "AM",
+  "50": "GO",
+  "51": "BO",
+  "52": "CG",
+  "53": "BI",
+  "54": "AJ",
+  "55": "AO",
+  "56": "AC",
+  "57": "AQ",
+  "58": "CC",
+  "59": "AG",
+  "60": "FA",
+  "61": "AH",
+  "62": "AS",
+  "63": "X",
+  "64": "AX",
+  "65": "BN",
+  "66": "GI",
+  "67": "BR",
+  "68": "GZ",
+  "69": "AA",
+  "70": "AI",
+  "71": "AP",
+  "72": "BP",
+  "73": "DW",
+  "74": "EA",
+  "75": "ED",
+  "76": "FJ",
+};
 
 // -----------------------
 // Branch Drugs Table (with Insurance Filter, Pagination & Sort Toggle)
@@ -662,7 +740,16 @@ export const DrugDetails: React.FC = () => {
   const [temp, setTemp] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  useEffect(() => {
+    if (insuranceId) {
+      // Map the numeric id to an insurance abbreviation.
+      const defaultInsurance = defaultInsuranceMapping[insuranceId] || "";
+      if (defaultInsurance) {
+        setSelectedInsurance(defaultInsurance);
+        setBranchSelectedInsurance(defaultInsurance);
+      }
+    }
+  }, [insuranceId]);
   // Insurance mapping object
   const insuranceMapping: Record<string, string> = {
     AL: "Aetna (AL)",
@@ -742,6 +829,7 @@ export const DrugDetails: React.FC = () => {
           );
           setClassName(response3.data.name);
         } else {
+          console.log("hiiiiiii")
           const response = await axios.get(
             `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
             { headers: getAuthHeader() }

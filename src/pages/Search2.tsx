@@ -16,16 +16,22 @@ const getAuthHeader = () => ({
 export const Search2: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [insuranceSuggestions, setInsuranceSuggestions] = useState<Insurance[]>([]);
+  const [insuranceSuggestions, setInsuranceSuggestions] = useState<Insurance[]>(
+    []
+  );
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedInsurance, setSelectedInsurance] = useState<Insurance | null>(null);
+  const [selectedInsurance, setSelectedInsurance] = useState<Insurance | null>(
+    null
+  );
 
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
 
   // New states for drug search functionality
   const [drugSearchQuery, setDrugSearchQuery] = useState("");
-  const [filteredDrugSuggestions, setFilteredDrugSuggestions] = useState<Drug[]>([]);
+  const [filteredDrugSuggestions, setFilteredDrugSuggestions] = useState<
+    Drug[]
+  >([]);
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
 
   const [ndcList, setNdcList] = useState<string[]>([]);
@@ -141,7 +147,7 @@ export const Search2: React.FC = () => {
     const query = e.target.value;
     setDrugSearchQuery(query);
     if (query.trim() !== "") {
-      const suggestions = drugs.filter(drug =>
+      const suggestions = drugs.filter((drug) =>
         drug.name.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredDrugSuggestions(suggestions);
@@ -159,7 +165,9 @@ export const Search2: React.FC = () => {
   const handleSearch = () => {
     if (selectedDrug) {
       navigate(
-        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insurance=${selectedInsurance?.name || ""}`
+        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
+          selectedInsurance?.id || ""
+        }`
       );
     }
   };
@@ -177,7 +185,9 @@ export const Search2: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
-              onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
+              onFocus={() =>
+                searchQuery.length >= 1 && setShowSuggestions(true)
+              }
               placeholder="Search for an Insurance..."
               className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
             />
