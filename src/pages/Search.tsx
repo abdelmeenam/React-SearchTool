@@ -4,12 +4,13 @@ import { Search as SearchIcon } from "lucide-react";
 import debounce from "debounce";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { Drug, DrugInsuranceInfo, Insurance } from "../types";
+import { Drug, DrugInsuranceInfo } from "../types";
 
 const API_BASE_URL = "https://store.medisearchtool.com";
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
+
 export const Search: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +22,7 @@ export const Search: React.FC = () => {
     useState<DrugInsuranceInfo | null>(null);
   const [ndcList, setNdcList] = useState<string[]>([]);
   const [selectedNdc, setSelectedNdc] = useState("");
+
   const insurance_mapping = {
     AL: "Aetna (AL)",
     BW: "aetna (BW)",
@@ -54,6 +56,7 @@ export const Search: React.FC = () => {
     AA: "Tri-Care Express Scripts (AA)",
     AI: "United Healthcare (AI)",
   };
+
   const insuranceMapping: Record<string, string> = {
     "1": "CR",
     "2": "GF",
@@ -132,6 +135,19 @@ export const Search: React.FC = () => {
     "75": "ED",
     "76": "FJ"
   };
+
+  // Helper to compute the display name for an insurance item.
+  const getInsuranceDisplayName = (insurance: DrugInsuranceInfo) =>
+    insurance_mapping[insuranceMapping[insurance.insuranceId]] ||
+    insuranceMapping[insurance.insuranceId];
+
+  // Create a unique list of insurances based on their display name.
+  const uniqueInsurances = Array.from(
+    new Map(
+      insurances.map((insurance) => [getInsuranceDisplayName(insurance), insurance])
+    ).values()
+  );
+
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
       if (query.length >= 1) {
@@ -273,7 +289,7 @@ export const Search: React.FC = () => {
                 value={selectedInsurance?.insuranceId || ""}
                 onChange={(e) => {
                   const selected =
-                    insurances.find(
+                    uniqueInsurances.find(
                       (i) => i.insuranceId.toString() === e.target.value
                     ) || null;
                   setSelectedInsurance(selected);
@@ -281,12 +297,12 @@ export const Search: React.FC = () => {
                 className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
               >
                 <option value="">Select insurance...</option>
-                {insurances.map((insurance) => (
+                {uniqueInsurances.map((insurance) => (
                   <option
                     key={insurance.insuranceId}
                     value={insurance.insuranceId}
                   >
-                    {insurance_mapping[insuranceMapping[insurance.insuranceId]] || insuranceMapping[insurance.insuranceId]}
+                    {getInsuranceDisplayName(insurance)}
                   </option>
                 ))}
               </select>
