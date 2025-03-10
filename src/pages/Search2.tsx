@@ -166,7 +166,7 @@ export const Search2: React.FC = () => {
     if (selectedDrug) {
       navigate(
         `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
-          selectedInsurance?.id || ""
+          selectedNdc?selectedInsurance?.id : ""
         }`
       );
     }
