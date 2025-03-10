@@ -13,78 +13,103 @@ const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
 
+// Base insurance mapping with some full names.
+// Key is the insurance short code and value is the full display name.
+const insurance_mapping: { [key: string]: string } = {
+  AL: "Aetna (AL)",
+  BW: "aetna (BW)",
+  AD: "Aetna Medicare (AD)",
+  AF: "Anthem BCBS (AF)",
+  DS: "Blue Cross Blue Shield (DS)",
+  CA: "blue shield medicare (CA)",
+  FQ: "Capital Rx (FQ)",
+  BF: "Caremark (BF)",
+  ED: "CatalystRx (ED)",
+  AM: "Cigna (AM)",
+  BO: "Default Claim Format (BO)",
+  AP: "Envision Rx Options (AP)",
+  CG: "Express Scripts (CG)",
+  BI: "Horizon (BI)",
+  AJ: "Humana Medicare (AJ)",
+  BP: "informedRx (BP)",
+  AO: "MEDCO HEALTH (AO)",
+  AC: "MEDCO MEDICARE PART D (AC)",
+  AQ: "MEDGR (AQ)",
+  CC: "MY HEALTH LA (CC)",
+  AG: "Navitus Health Solutions (AG)",
+  AH: "OptumRx (AH)",
+  AS: "PACIFICARE LIFE AND H (AS)",
+  FJ: "Paramount Rx (FJ)",
+  "X ": "PF - DEFAULT (X )",
+  EA: "Pharmacy Data Management (EA)",
+  DW: "phcs (DW)",
+  AX: "PINNACLE (AX)",
+  BN: "Prescription Solutions (BN)",
+  AA: "Tri-Care Express Scripts (AA)",
+  AI: "United Healthcare (AI)",
+};
+
+// List of additional insurance codes.
+const additionalInsurances = [
+  "CR", "GF", "AV", "CY", "GH", "EQ", "CM", "BT", "HE", "GC",
+  "FT", "GJ", "HB", "BE", "HG", "EY", "EW", "ET", "FS", "GE",
+  "GV", "GY", "GS", "EB", "CS", "FB", "FN", "EP", "HJ", "HC",
+  "CO", "GP", "EJ", "AL", "BW", "AD", "GM", "AF", "AT", "EN",
+  "GX", "DS", "CA", "CA, HK", "FQ", "AB", "BF", "  ", "AM",
+  "GO", "BO", "CG", "BI", "AJ", "AO", "AC", "AQ", "CC", "AG",
+  "FA", "AH", "AS", "X ", "AX", "BN", "GI", "BR", "GZ", "AA",
+  "AI", "AP", "BP", "DW", "EA", "ED", "FJ"
+];
+
+// Merge additional codes into the mapping (using the trimmed code as display name if not defined)
+additionalInsurances.forEach((code) => {
+  const trimmedCode = code.trim();
+  if (trimmedCode && !insurance_mapping[trimmedCode]) {
+    insurance_mapping[trimmedCode] = trimmedCode;
+  }
+});
+
+// Build a local array of Insurance objects from the mapping.
+// Here, the `name` property holds the short code (to be used for backend requests)
+// and `description` holds the full display name.
+const insuranceOptions: Insurance[] = Object.entries(insurance_mapping).map(
+  ([code, fullName], index) => ({
+    id: index + 1, // local id (will be replaced by backend data when fetched)
+    name: code, // short code
+    description: fullName, // full display name
+    bin: "",
+    pcn: "",
+    helpDeskNumber: "",
+  })
+);
+
 export const Search2: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [insuranceSuggestions, setInsuranceSuggestions] = useState<Insurance[]>(
-    []
-  );
+  const [insuranceSuggestions, setInsuranceSuggestions] = useState<Insurance[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedInsurance, setSelectedInsurance] = useState<Insurance | null>(
-    null
-  );
+  const [selectedInsurance, setSelectedInsurance] = useState<Insurance | null>(null);
 
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
 
-  // New states for drug search functionality
+  // States for drug search functionality
   const [drugSearchQuery, setDrugSearchQuery] = useState("");
-  const [filteredDrugSuggestions, setFilteredDrugSuggestions] = useState<
-    Drug[]
-  >([]);
+  const [filteredDrugSuggestions, setFilteredDrugSuggestions] = useState<Drug[]>([]);
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
 
   const [ndcList, setNdcList] = useState<string[]>([]);
   const [selectedNdc, setSelectedNdc] = useState("");
 
-  const insurance_mapping = {
-    AL: "Aetna (AL)",
-    BW: "aetna (BW)",
-    AD: "Aetna Medicare (AD)",
-    AF: "Anthem BCBS (AF)",
-    DS: "Blue Cross Blue Shield (DS)",
-    CA: "blue shield medicare (CA)",
-    FQ: "Capital Rx (FQ)",
-    BF: "Caremark (BF)",
-    ED: "CatalystRx (ED)",
-    AM: "Cigna (AM)",
-    BO: "Default Claim Format (BO)",
-    AP: "Envision Rx Options (AP)",
-    CG: "Express Scripts (CG)",
-    BI: "Horizon (BI)",
-    AJ: "Humana Medicare (AJ)",
-    BP: "informedRx (BP)",
-    AO: "MEDCO HEALTH (AO)",
-    AC: "MEDCO MEDICARE PART D (AC)",
-    AQ: "MEDGR (AQ)",
-    CC: "MY HEALTH LA (CC)",
-    AG: "Navitus Health Solutions (AG)",
-    AH: "OptumRx (AH)",
-    AS: "PACIFICARE LIFE AND H (AS)",
-    FJ: "Paramount Rx (FJ)",
-    "X ": "PF - DEFAULT (X )",
-    EA: "Pharmacy Data Management (EA)",
-    DW: "phcs (DW)",
-    AX: "PINNACLE (AX)",
-    BN: "Prescription Solutions (BN)",
-    AA: "Tri-Care Express Scripts (AA)",
-    AI: "United Healthcare (AI)",
-  };
-
-  // Debounced insurance search
+  // Debounced search filtering the local insuranceOptions array by full name (description)
   const debouncedSearch = useCallback(
-    debounce(async (query: string) => {
+    debounce((query: string) => {
       if (query.length >= 1) {
-        try {
-          const { data } = await axios.get(
-            `${API_BASE_URL}/drug/GetInsurances?insurance=${query}`,
-            { headers: getAuthHeader() }
-          );
-          setInsuranceSuggestions(data);
-          setShowSuggestions(true);
-        } catch (error) {
-          console.error("Error searching insurances:", error);
-        }
+        const filtered = insuranceOptions.filter((insurance) =>
+          insurance.description.toLowerCase().includes(query.toLowerCase())
+        );
+        setInsuranceSuggestions(filtered);
+        setShowSuggestions(true);
       } else {
         setInsuranceSuggestions([]);
         setShowSuggestions(false);
@@ -99,37 +124,47 @@ export const Search2: React.FC = () => {
     debouncedSearch(query);
   };
 
-  // When an insurance is selected, fetch drugs associated with it.
+  // When an insurance is selected, fetch its full data using the short name.
+  // Then, use the returned insurance data to fetch drugs and update the selection.
   const handleInsuranceSelect = async (insurance: Insurance) => {
-    setSelectedInsurance(insurance);
-    setSearchQuery(insurance.name);
-    setShowSuggestions(false);
-    // Clear any previous selections
-    setDrugs([]);
-    setSelectedDrug(null);
-    setDrugSearchQuery("");
-    setFilteredDrugSuggestions([]);
-    setShowDrugSuggestions(false);
-    setNdcList([]);
-    setSelectedNdc("");
-
     try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${insurance.name}`,
+      // Fetch insurance data using the short name (insurance.name)
+      const { data: insuranceData } = await axios.get(
+        `${API_BASE_URL}/drug/GetInsurances?insurance=${insurance.name}`,
         { headers: getAuthHeader() }
       );
-      setDrugs(data);
+      console.log(insuranceData[0]);
+      // Assume insuranceData is a complete Insurance object with the correct id.
+      // Use a fallback in case description is undefined.
+      setSelectedInsurance(insuranceData[0]);
+      setSearchQuery( insuranceData[0].name);
+      setShowSuggestions(false);
+      // Clear previous selections.
+      setDrugs([]);
+      setSelectedDrug(null);
+      setDrugSearchQuery("");
+      setFilteredDrugSuggestions([]);
+      setShowDrugSuggestions(false);
+      setNdcList([]);
+      setSelectedNdc("");
+
+      // Fetch drugs associated with the insurance using its short name.
+      const { data: drugsData } = await axios.get(
+        `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${insuranceData[0].name}`,
+        { headers: getAuthHeader() }
+      );
+      setDrugs(drugsData);
     } catch (error) {
-      console.error("Error fetching drugs by insurance:", error);
+      console.error("Error fetching insurance or drugs data:", error);
     }
   };
 
   // When a drug is selected, fetch its NDC codes.
   const handleDrugSelect = async (drug: Drug) => {
     setSelectedDrug(drug);
-    setDrugSearchQuery(drug.name);
+    setDrugSearchQuery(drug.name || ""); // Use fallback if drug.name is undefined.
     setShowDrugSuggestions(false);
-    // Clear previous NDC selection
+    // Clear previous NDC selection.
     setNdcList([]);
     setSelectedNdc("");
     try {
@@ -162,12 +197,11 @@ export const Search2: React.FC = () => {
     setSelectedNdc(e.target.value);
   };
 
+  // When navigating to the drug details page, send the proper insurance id.
   const handleSearch = () => {
-    if (selectedDrug) {
+    if (selectedDrug && selectedInsurance) {
       navigate(
-        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
-          selectedNdc?selectedInsurance?.id : ""
-        }`
+        `/drug/${selectedDrug.id}?ndc=${selectedNdc ? selectedNdc : ndcList[0]}&insuranceId=${selectedInsurance.id}`
       );
     }
   };
@@ -185,9 +219,7 @@ export const Search2: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
-              onFocus={() =>
-                searchQuery.length >= 1 && setShowSuggestions(true)
-              }
+              onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
               placeholder="Search for an Insurance..."
               className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
             />
@@ -205,9 +237,7 @@ export const Search2: React.FC = () => {
                     onClick={() => handleInsuranceSelect(insurance)}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
                   >
-                    <span className="font-semibold">
-                      {insurance_mapping[insurance.name] || insurance.name}
-                    </span>
+                    <span className="font-semibold">{insurance.description}</span>
                   </button>
                 ))}
               </div>
@@ -223,9 +253,7 @@ export const Search2: React.FC = () => {
                   type="text"
                   value={drugSearchQuery}
                   onChange={handleDrugSearchChange}
-                  onFocus={() =>
-                    drugSearchQuery.length >= 1 && setShowDrugSuggestions(true)
-                  }
+                  onFocus={() => drugSearchQuery.length >= 1 && setShowDrugSuggestions(true)}
                   placeholder="Search for a drug..."
                   className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
                 />
@@ -266,7 +294,7 @@ export const Search2: React.FC = () => {
           )}
 
           {/* View Details Button */}
-          {selectedDrug && (
+          {selectedDrug && selectedInsurance && (
             <button
               onClick={handleSearch}
               className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"

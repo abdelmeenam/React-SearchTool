@@ -49,8 +49,8 @@ export interface DrugInsuranceInfo {
 }
 export interface Insurance {
   id: number;
-  name: string;
-  description: string;
+  name: string;//code
+  description: string;//full name
   bin: string;
   pcn: string;
   helpDeskNumber: string;
