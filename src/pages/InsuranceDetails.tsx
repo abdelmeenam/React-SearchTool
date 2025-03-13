@@ -4,6 +4,9 @@ import axios from "axios";
 import { Insurance } from "../types"; // Ensure your Insurance interface is defined with these properties
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 await loadConfig(); 
+const getAuthHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+});
 const InsuranceDetails: React.FC = () => {
   const { insuranceName } = useParams<{ insuranceName: string }>();
   const [insurance, setInsurance] = useState<Insurance | null>(null);
@@ -16,8 +19,9 @@ const InsuranceDetails: React.FC = () => {
         console.log(insuranceName);
        
         const endpointUrl = `${BaseUrlLoader.API_BASE_URL}/drug/GetInsuranceDetails?shortName=${insuranceName}`;
-        const response = await axios.get(endpointUrl);
-        setInsurance(response.data);
+        const response = await axios.get(endpointUrl,
+          { headers: getAuthHeader() }); setInsurance(response.data);
+        console.log(response.data);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch insurance details");
@@ -60,38 +64,7 @@ const InsuranceDetails: React.FC = () => {
                 {displayValue(insurance.rxGroup)}
               </td>
             </tr>
-            <tr className="bg-blue-100">
-              <td className="py-3 px-4 font-medium text-blue-700 border border-blue-300">
-                Description:
-              </td>
-              <td className="py-3 px-4 text-blue-900 border border-blue-300">
-                {displayValue(insurance.description)}
-              </td>
-            </tr>
-            <tr className="bg-white">
-              <td className="py-3 px-4 font-medium text-blue-700 border border-blue-300">
-                BIN:
-              </td>
-              <td className="py-3 px-4 text-blue-900 border border-blue-300">
-                {displayValue(insurance.bin)}
-              </td>
-            </tr>
-            <tr className="bg-blue-100">
-              <td className="py-3 px-4 font-medium text-blue-700 border border-blue-300">
-                PCN:
-              </td>
-              <td className="py-3 px-4 text-blue-900 border border-blue-300">
-                {displayValue(insurance.pcn)}
-              </td>
-            </tr>
-            <tr className="bg-white">
-              <td className="py-3 px-4 font-medium text-blue-700 border border-blue-300">
-                Help Desk Number:
-              </td>
-              <td className="py-3 px-4 text-blue-900 border border-blue-300">
-                {displayValue(insurance.helpDeskNumber)}
-              </td>
-            </tr>
+
           </tbody>
         </table>
       </div>

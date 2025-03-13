@@ -135,6 +135,24 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
               {drugDetail.quantity}
             </dd>
           </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">BIN</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {drugDetail.binFullName}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">PCN</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {drugDetail.pcn}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {drugDetail.rxgroup}
+            </dd>
+          </div>
         </dl>
       </div>
     );
@@ -180,7 +198,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
       alternatives.filter(
         (alt) =>
           (!selectedInsurance || alt.insuranceName === selectedInsurance) &&
-          (!selectedBin || alt.bin === selectedBin) &&
+          (!selectedBin || alt.binFullName === selectedBin) &&
           (!selectedPcn || alt.pcn === selectedPcn)
       ),
     [alternatives, selectedInsurance, selectedBin, selectedPcn]
@@ -209,7 +227,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
       <div className="flex flex-col gap-2 mb-4">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
           <Repeat className="h-5 w-5 mr-2" />
-          Alternative Medications with Insurance
+          Suggested Alternative Drugs with Available Insurance Price Data{" "}
         </h2>
         <div className="flex flex-wrap gap-4">
           <div>
@@ -377,7 +395,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{alt.bin}</div>
+                    <div className="text-sm text-gray-900">{alt.binFullName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{alt.pcn}</div>
@@ -494,7 +512,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
       branchDrugs.filter(
         (drug) =>
           (!selectedInsurance || drug.insuranceName === selectedInsurance) &&
-          (!selectedBin || drug.bin === selectedBin) &&
+          (!selectedBin || drug.binFullName === selectedBin) &&
           (!selectedPcn || drug.pcn === selectedPcn)
       ),
     [branchDrugs, selectedInsurance, selectedBin, selectedPcn]
@@ -703,7 +721,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{drug.bin}</div>
+                    <div className="text-sm text-gray-900">{drug.binFullName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{drug.pcn}</div>
@@ -811,7 +829,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
     () =>
       alternatives.filter(
         (alt) =>
-          (!selectedBin || alt.bin === selectedBin) &&
+          (!selectedBin || alt.binFullName === selectedBin) &&
           (!selectedPcn || alt.pcn === selectedPcn)
       ),
     [alternatives, selectedBin, selectedPcn]
@@ -838,9 +856,9 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   return (
     <section className="mt-8">
       <h3 className="text-lg font-semibold text-gray-900">
-        Alternative Medications without Insurance
+        Suggested Alternative Drugs Without Available Insurance Price Data{" "}
       </h3>
-     
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -1006,16 +1024,19 @@ export const DrugDetails: React.FC = () => {
             `${baseUrl}/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`,
             { headers: getAuthHeader() }
           );
-          setDrugDetail(response2.data);
           const response3 = await axios.get(
             `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
             { headers: getAuthHeader() }
           );
+          console.log(response2.data);
           setClassName(response3.data.name);
           const response10 = await axios.get(
             `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
             { headers: getAuthHeader() }
           );
+          console.log("this : ",insuranceId);
+
+          setDrugDetail(response2.data);
           setBranchDrugs(response10.data);
           console.log(response10.data);
           if (response3.data.name !== "other") {
@@ -1029,7 +1050,8 @@ export const DrugDetails: React.FC = () => {
             );
             setSelectedInsurance(matchingAlt?.insuranceName || "");
             setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-            
+            console.log('sdadsa : ')
+            console.log(response4.data);
             const sortedData = response4.data.sort((a, b) => b.net - a.net);
             setSortedAlternatives(sortedData);
           } else {
@@ -1049,9 +1071,9 @@ export const DrugDetails: React.FC = () => {
   // Map the provided insuranceId to the insurance name using the sorted alternatives
   useEffect(() => {
     if (insuranceId && sortedAlternatives.length > 0) {
-    const matchingInsurance = sortedAlternatives.find(
-  (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
-);
+      const matchingInsurance = sortedAlternatives.find(
+        (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
+      );
 
       if (matchingInsurance) {
         setSelectedInsurance(matchingInsurance.insuranceName);
@@ -1120,17 +1142,18 @@ export const DrugDetails: React.FC = () => {
   };
 
   const alternativesWithInsurance = sortedAlternatives.filter(
-    (alt) => alt.insuranceName
+    (alt) => alt.rxgroup
   );
+  console.log("dsadas :: ", alternativesWithInsurance);
   const alternativesWithoutInsurance = sortedAlternatives.filter(
-    (alt) => !alt.bin
+    (alt) => !alt.binFullName
   );
 
   const uniqueInsuranceNames: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
   ].sort();
   const uniqueBinValues: string[] = [
-    ...new Set(alternativesWithInsurance.map((alt) => alt.bin)),
+    ...new Set(alternativesWithInsurance.map((alt) => alt.binFullName)),
   ].sort();
   const uniquePcnValues: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.pcn)),
@@ -1140,14 +1163,14 @@ export const DrugDetails: React.FC = () => {
     ...new Set(branchDrugs.map((drug) => drug.insuranceName)),
   ].sort();
   const branchUniqueBinValues: string[] = [
-    ...new Set(branchDrugs.map((drug) => drug.bin)),
+    ...new Set(branchDrugs.map((drug) => drug.binFullName)),
   ].sort();
   const branchUniquePcnValues: string[] = [
     ...new Set(branchDrugs.map((drug) => drug.pcn)),
   ].sort();
 
   const uniqueOtherBinValues: string[] = [
-    ...new Set(alternativesWithoutInsurance.map((alt) => alt.bin)),
+    ...new Set(alternativesWithoutInsurance.map((alt) => alt.binFullName)),
   ].sort();
   const uniqueOtherPcnValues: string[] = [
     ...new Set(alternativesWithoutInsurance.map((alt) => alt.pcn)),

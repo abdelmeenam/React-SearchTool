@@ -16,7 +16,7 @@ export const SearchSwitcher: React.FC = () => {
             activeFlow === "drug" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
           }`}
         >
-          Drug Search
+          Search by Drug
         </button>
         <button
           onClick={() => setActiveFlow("insurance")}
@@ -24,7 +24,7 @@ export const SearchSwitcher: React.FC = () => {
             activeFlow === "insurance" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
           }`}
         >
-          Insurance Search
+          Search by Insurance
         </button>
       </div>
 

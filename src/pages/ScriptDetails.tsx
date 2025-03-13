@@ -4,25 +4,35 @@ import axios from "axios";
 import { ScriptData } from "../types";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 
-
-await loadConfig();
-
-const baseUrl = BaseUrlLoader.API_BASE_URL;
 const ScriptDetails: React.FC = () => {
   const { scriptcode } = useParams<{ scriptcode: string }>(); // Get script code from URL
   const [data, setData] = useState<ScriptData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-
+  const getAuthHeader = () => ({
+    Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+  });
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const endpointUrl = `${BaseUrlLoader}/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
-        const response = await axios.get(endpointUrl);
-        setData(response.data); // Expecting an array
-        setLoading(false);
+        await loadConfig(); // Ensure the config is loaded
+
+        const baseUrl = BaseUrlLoader.API_BASE_URL; // Use the correct base URL
+        const endpointUrl = `${baseUrl}/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
+
+        const response = await axios.get(endpointUrl,
+          { headers: getAuthHeader() });
+
+        if (Array.isArray(response.data)) {
+          setData(response.data); // Ensure data is an array
+          console.log(response.data);
+        } else {
+          setData([]); // Handle unexpected response format
+        }
       } catch (err) {
         setError("Failed to fetch data");
+      } finally {
         setLoading(false);
       }
     };
@@ -55,11 +65,11 @@ const ScriptDetails: React.FC = () => {
                 "User Name": script.userName,
                 PF: script.pf,
                 Quantity: script.quantity,
-                "Acquisition Cost": `$${script.acquisitionCost.toFixed(2)}`,
-                Discount: `$${script.discount.toFixed(2)}`,
-                "Insurance Payment": `$${script.insurancePayment.toFixed(2)}`,
-                "Patient Payment": `$${script.patientPayment.toFixed(2)}`,
-                "Net Profit": `$${script.netProfit.toFixed(2)}`,
+                "Acquisition Cost": `$${script.acquisitionCost?.toFixed(2)}`,
+                Discount: `$${script.discount?.toFixed(2)}`,
+                "Insurance Payment": `$${script.insurancePayment?.toFixed(2)}`,
+                "Patient Payment": `$${script.patientPayment?.toFixed(2)}`,
+                "Net Profit": `$${script.netProfit?.toFixed(2)}`,
                 "NDC Code": script.ndcCode,
               }).map(([key, value], idx) => (
                 <tr
@@ -70,7 +80,7 @@ const ScriptDetails: React.FC = () => {
                     {key}:
                   </td>
                   <td className="py-3 px-4 text-blue-900 border border-blue-300">
-                    {value}
+                    {value ?? "N/A"}
                   </td>
                 </tr>
               ))}

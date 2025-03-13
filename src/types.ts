@@ -31,6 +31,7 @@ export interface Prescription {
   bin: string;
   pcn: string;
   binFullName: string;
+  rxgroup : string
 }
 
 export interface DrugInsuranceInfo {

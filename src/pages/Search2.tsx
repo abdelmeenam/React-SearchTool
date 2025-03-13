@@ -234,7 +234,7 @@ export const InsuranceSearch: React.FC = () => {
             value={binQuery}
             onChange={handleBinInputChange}
             onFocus={() => binQuery.length > 0 && setShowBinSuggestions(true)}
-            placeholder="Type BIN..."
+            placeholder="Type BIN or Insurance Name..."
             className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
           />
           {showBinSuggestions && binSuggestions.length > 0 && (
