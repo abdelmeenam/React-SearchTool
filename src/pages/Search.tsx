@@ -5,8 +5,12 @@ import debounce from "debounce";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Drug, DrugInsuranceInfo } from "../types";
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 
-const API_BASE_URL = "https://store.medisearchtool.com";
+await loadConfig();
+
+const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
+
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
@@ -56,97 +60,6 @@ export const Search: React.FC = () => {
     AA: "Tri-Care Express Scripts (AA)",
     AI: "United Healthcare (AI)",
   };
-
-  const insuranceMapping: Record<string, string> = {
-    "1": "CR",
-    "2": "GF",
-    "3": "AV",
-    "4": "CY",
-    "5": "GH",
-    "6": "EQ",
-    "7": "CM",
-    "8": "BT",
-    "9": "HE",
-    "10": "GC",
-    "11": "FT",
-    "12": "GJ",
-    "13": "HB",
-    "14": "BE",
-    "15": "HG",
-    "16": "EY",
-    "17": "EW",
-    "18": "ET",
-    "19": "FS",
-    "20": "GE",
-    "21": "GV",
-    "22": "GY",
-    "23": "GS",
-    "24": "EB",
-    "25": "CS",
-    "26": "FB",
-    "27": "FN",
-    "28": "EP",
-    "29": "HJ",
-    "30": "HC",
-    "31": "CO",
-    "32": "GP",
-    "33": "EJ",
-    "34": "AL",
-    "35": "BW",
-    "36": "AD",
-    "37": "GM",
-    "38": "AF",
-    "39": "AT",
-    "40": "EN",
-    "41": "GX",
-    "42": "DS",
-    "43": "CA",
-    "44": "CA, HK",
-    "45": "FQ",
-    "46": "AB",
-    "47": "BF",
-    "48": "",
-    "49": "AM",
-    "50": "GO",
-    "51": "BO",
-    "52": "CG",
-    "53": "BI",
-    "54": "AJ",
-    "55": "AO",
-    "56": "AC",
-    "57": "AQ",
-    "58": "CC",
-    "59": "AG",
-    "60": "FA",
-    "61": "AH",
-    "62": "AS",
-    "63": "X",
-    "64": "AX",
-    "65": "BN",
-    "66": "GI",
-    "67": "BR",
-    "68": "GZ",
-    "69": "AA",
-    "70": "AI",
-    "71": "AP",
-    "72": "BP",
-    "73": "DW",
-    "74": "EA",
-    "75": "ED",
-    "76": "FJ"
-  };
-
-  // Helper to compute the display name for an insurance item.
-  const getInsuranceDisplayName = (insurance: DrugInsuranceInfo) =>
-    insurance_mapping[insuranceMapping[insurance.insuranceId]] ||
-    insuranceMapping[insurance.insuranceId];
-
-  // Create a unique list of insurances based on their display name.
-  const uniqueInsurances = Array.from(
-    new Map(
-      insurances.map((insurance) => [getInsuranceDisplayName(insurance), insurance])
-    ).values()
-  );
 
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
@@ -289,20 +202,20 @@ export const Search: React.FC = () => {
                 value={selectedInsurance?.insuranceId || ""}
                 onChange={(e) => {
                   const selected =
-                    uniqueInsurances.find(
-                      (i) => i.insuranceId.toString() === e.target.value
+                    insurances.find(
+                      (i) => i.insuranceId === Number(e.target.value)
                     ) || null;
                   setSelectedInsurance(selected);
                 }}
                 className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
               >
                 <option value="">Select insurance...</option>
-                {uniqueInsurances.map((insurance) => (
+                {insurances.map((insurance) => (
                   <option
                     key={insurance.insuranceId}
                     value={insurance.insuranceId}
                   >
-                    {getInsuranceDisplayName(insurance)}
+                    {insurance.insurance}
                   </option>
                 ))}
               </select>

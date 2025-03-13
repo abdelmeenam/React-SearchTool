@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { ScriptData } from "../types";
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 
+
+await loadConfig();
+
+const baseUrl = BaseUrlLoader.API_BASE_URL;
 const ScriptDetails: React.FC = () => {
   const { scriptcode } = useParams<{ scriptcode: string }>(); // Get script code from URL
   const [data, setData] = useState<ScriptData[]>([]);
@@ -12,7 +17,7 @@ const ScriptDetails: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const endpointUrl = `https://store.medisearchtool.com/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
+        const endpointUrl = `${BaseUrlLoader}/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
         const response = await axios.get(endpointUrl);
         setData(response.data); // Expecting an array
         setLoading(false);

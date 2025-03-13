@@ -16,7 +16,7 @@ import ScriptDetails from "./pages/ScriptDetails";
 import InsuranceDetails from "./pages/InsuranceDetails";
 import { ProfilePage } from "./pages/profile";
 import Auth from "./Auth";
-import { Search2 } from "./pages/Search2";
+import { InsuranceSearch } from "./pages/Search2";
 import { SearchSwitcher } from "./pages/SearchSwitcher";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode; isAdmin?: boolean }> = ({ children, isAdmin = false }) => {

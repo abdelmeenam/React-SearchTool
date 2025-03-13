@@ -14,7 +14,12 @@ import { CSVLink } from "react-csv";
 import Dashboard from "./Dashboard";
 import SecondDashBoard from "./SecondDashBoard";
 import ThirdDashBoard from "./ThirdDashBoard";
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 
+
+await loadConfig();
+
+const baseUrl = BaseUrlLoader.API_BASE_URL;
 // Helper function to retrieve the authorization header
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
@@ -30,7 +35,7 @@ export const MainDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://store.medisearchtool.com/drug/GetAllLatestScripts",
+          `${baseUrl}/drug/GetAllLatestScripts`,
           { headers: getAuthHeader() }
         );
         setData(response.data);

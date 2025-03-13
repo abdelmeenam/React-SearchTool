@@ -4,16 +4,16 @@ import { Pill, AlertCircle, Repeat, ArrowUpDown } from "lucide-react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Drug, Prescription } from "../types";
-const baseUrl = "https://store.medisearchtool.com";
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 
-// Helper function to retrieve the authorization header
+await loadConfig();
+
+const baseUrl = BaseUrlLoader.API_BASE_URL;
+
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
 
-// -----------------------
-// Loading & Error Components
-// -----------------------
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -30,9 +30,6 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => (
   </div>
 );
 
-// -----------------------
-// Header Component
-// -----------------------
 interface DrugHeaderProps {
   drug: Drug;
   padCode: (code: string) => string;
@@ -58,9 +55,6 @@ const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode, temp }) => (
   </div>
 );
 
-// -----------------------
-// Drug Information Component
-// -----------------------
 interface DrugInformationProps {
   drug: Drug;
   drugDetail?: Prescription | null;
@@ -147,42 +141,51 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
   }
 };
 
-// -----------------------
-// Alternatives Table (with Insurance) with Pagination & Sort Toggle
-// -----------------------
 interface AlternativesTableProps {
   alternatives: Prescription[];
   classNameStr: string;
   padCode: (code: string) => string;
-  insuranceMapping: Record<string, string>;
   selectedInsurance: string;
   handleInsuranceFilterChange: (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => void;
-  handleSort: () => void;
   uniqueInsuranceNames: string[];
+  selectedBin: string;
+  handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniqueBinValues: string[];
+  selectedPcn: string;
+  handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniquePcnValues: string[];
+  handleSort: () => void;
   sortOrder: "asc" | "desc";
 }
 const AlternativesTable: React.FC<AlternativesTableProps> = ({
   alternatives,
   classNameStr,
   padCode,
-  insuranceMapping,
   selectedInsurance,
   handleInsuranceFilterChange,
-  handleSort,
   uniqueInsuranceNames,
+  selectedBin,
+  handleBinFilterChange,
+  uniqueBinValues,
+  selectedPcn,
+  handlePcnFilterChange,
+  uniquePcnValues,
+  handleSort,
   sortOrder,
 }) => {
   const filteredAlternatives = useMemo(
     () =>
       alternatives.filter(
-        (alt) => !selectedInsurance || alt.insuranceName === selectedInsurance
+        (alt) =>
+          (!selectedInsurance || alt.insuranceName === selectedInsurance) &&
+          (!selectedBin || alt.bin === selectedBin) &&
+          (!selectedPcn || alt.pcn === selectedPcn)
       ),
-    [alternatives, selectedInsurance]
+    [alternatives, selectedInsurance, selectedBin, selectedPcn]
   );
 
-  // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredAlternatives.length / itemsPerPage);
@@ -195,7 +198,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedInsurance, alternatives]);
+  }, [selectedInsurance, selectedBin, selectedPcn, alternatives]);
 
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () =>
@@ -203,39 +206,84 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-2 mb-4">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
           <Repeat className="h-5 w-5 mr-2" />
           Alternative Medications with Insurance
         </h2>
+        <div className="flex flex-wrap gap-4">
+          <div>
+            <label
+              htmlFor="insuranceFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by Rx Group
+            </label>
+            <select
+              id="insuranceFilter"
+              value={selectedInsurance}
+              onChange={handleInsuranceFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300"
+            >
+              <option value="">All</option>
+              {uniqueInsuranceNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="binFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by BIN
+            </label>
+            <select
+              id="binFilter"
+              value={selectedBin}
+              onChange={handleBinFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300"
+            >
+              <option value="">All</option>
+              {uniqueBinValues.map((bin) => (
+                <option key={bin} value={bin}>
+                  {bin}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="pcnFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by PCN
+            </label>
+            <select
+              id="pcnFilter"
+              value={selectedPcn}
+              onChange={handlePcnFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300"
+            >
+              <option value="">All</option>
+              {uniquePcnValues.map((pcn) => (
+                <option key={pcn} value={pcn}>
+                  {pcn}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div
           className="flex items-center text-sm text-gray-500 cursor-pointer"
           onClick={handleSort}
         >
           <ArrowUpDown className="h-4 w-4 mr-1" />
-          Sorted by Net Price ({sortOrder === "asc" ? "Ascending" : "Descending"})
+          Sorted by Net Price (
+          {sortOrder === "asc" ? "Ascending" : "Descending"})
         </div>
-      </div>
-      <div className="mb-4">
-        <label
-          htmlFor="insuranceFilter"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Filter by Insurance Name
-        </label>
-        <select
-          id="insuranceFilter"
-          value={selectedInsurance}
-          onChange={handleInsuranceFilterChange}
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-        >
-          <option value="">All</option>
-          {uniqueInsuranceNames.map((name) => (
-            <option key={name} value={name}>
-              {insuranceMapping[name] || name}
-            </option>
-          ))}
-        </select>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -253,8 +301,14 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 NDC Codes
               </th>
+              <th className="px-10 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Rx Group
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Insurance
+                BIN
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                PCN
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Net Price
@@ -276,7 +330,10 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentItems.length > 0 ? (
               currentItems.map((alt, index) => (
-                <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50">
+                <tr
+                  key={`${alt.ndcCode}-${index}`}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <a
@@ -291,7 +348,9 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     <div className="text-sm text-gray-500">{classNameStr}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{alt.branchName}</div>
+                    <div className="text-sm text-gray-500">
+                      {alt.branchName}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500">
@@ -308,14 +367,20 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   <td className="px-10 py-4">
                     <div className="text-sm text-gray-500">
                       <a
-                        href={`/InsruanceDetails/${alt.insuranceName}`}
+                        href={`/InsuranceDetails/${alt.insuranceName}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
                       >
-                        {insuranceMapping[alt.insuranceName] || alt.insuranceName}
+                        {alt.insuranceName}
                       </a>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{alt.bin}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{alt.pcn}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
@@ -331,7 +396,9 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {alt.insuranceName ? "$" + alt.patientPayment.toFixed(2) : "NA"}
+                      {alt.insuranceName
+                        ? "$" + alt.patientPayment.toFixed(2)
+                        : "NA"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -349,7 +416,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
             ) : (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={13}
                   className="px-6 py-4 text-center text-sm text-gray-500"
                 >
                   No insurance found
@@ -391,115 +458,48 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
     </section>
   );
 };
-const defaultInsuranceMapping: Record<string, string> = {
-  "1": "CR",
-  "2": "GF",
-  "3": "AV",
-  "4": "CY",
-  "5": "GH",
-  "6": "EQ",
-  "7": "CM",
-  "8": "BT",
-  "9": "HE",
-  "10": "GC",
-  "11": "FT",
-  "12": "GJ",
-  "13": "HB",
-  "14": "BE",
-  "15": "HG",
-  "16": "EY",
-  "17": "EW",
-  "18": "ET",
-  "19": "FS",
-  "20": "GE",
-  "21": "GV",
-  "22": "GY",
-  "23": "GS",
-  "24": "EB",
-  "25": "CS",
-  "26": "FB",
-  "27": "FN",
-  "28": "EP",
-  "29": "HJ",
-  "30": "HC",
-  "31": "CO",
-  "32": "GP",
-  "33": "EJ",
-  "34": "AL",
-  "35": "BW",
-  "36": "AD",
-  "37": "GM",
-  "38": "AF",
-  "39": "AT",
-  "40": "EN",
-  "41": "GX",
-  "42": "DS",
-  "43": "CA",
-  "44": "CA, HK",
-  "45": "FQ",
-  "46": "AB",
-  "47": "BF",
-  "48": "",
-  "49": "AM",
-  "50": "GO",
-  "51": "BO",
-  "52": "CG",
-  "53": "BI",
-  "54": "AJ",
-  "55": "AO",
-  "56": "AC",
-  "57": "AQ",
-  "58": "CC",
-  "59": "AG",
-  "60": "FA",
-  "61": "AH",
-  "62": "AS",
-  "63": "X",
-  "64": "AX",
-  "65": "BN",
-  "66": "GI",
-  "67": "BR",
-  "68": "GZ",
-  "69": "AA",
-  "70": "AI",
-  "71": "AP",
-  "72": "BP",
-  "73": "DW",
-  "74": "EA",
-  "75": "ED",
-  "76": "FJ",
-};
 
-// -----------------------
-// Branch Drugs Table (with Insurance Filter, Pagination & Sort Toggle)
-// -----------------------
 interface BranchDrugsTableProps {
   branchDrugs: Prescription[];
   classNameStr: string;
   padCode: (code: string) => string;
-  insuranceMapping: Record<string, string>;
   selectedInsurance: string;
-  handleInsuranceFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleInsuranceFilterChange: (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => void;
   uniqueInsuranceNames: string[];
+  selectedBin: string;
+  handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniqueBinValues: string[];
+  selectedPcn: string;
+  handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniquePcnValues: string[];
 }
 const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
   branchDrugs,
   classNameStr,
   padCode,
-  insuranceMapping,
   selectedInsurance,
   handleInsuranceFilterChange,
   uniqueInsuranceNames,
+  selectedBin,
+  handleBinFilterChange,
+  uniqueBinValues,
+  selectedPcn,
+  handlePcnFilterChange,
+  uniquePcnValues,
 }) => {
   const filteredBranchDrugs = useMemo(
     () =>
       branchDrugs.filter(
-        (drug) => !selectedInsurance || drug.insuranceName === selectedInsurance
+        (drug) =>
+          (!selectedInsurance || drug.insuranceName === selectedInsurance) &&
+          (!selectedBin || drug.bin === selectedBin) &&
+          (!selectedPcn || drug.pcn === selectedPcn)
       ),
-    [branchDrugs, selectedInsurance]
+    [branchDrugs, selectedInsurance, selectedBin, selectedPcn]
   );
 
-  // Local sort state for branch drugs
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const sortedBranchDrugs = useMemo(() => {
@@ -508,17 +508,19 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
     );
   }, [filteredBranchDrugs, sortOrder]);
 
-  // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(sortedBranchDrugs.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = sortedBranchDrugs.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = sortedBranchDrugs.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedInsurance, branchDrugs]);
+  }, [selectedInsurance, selectedBin, selectedPcn, branchDrugs]);
 
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () =>
@@ -526,39 +528,86 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-2 mb-4">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
           <Repeat className="h-5 w-5 mr-2" />
           Branch Drugs
         </h2>
+        <div className="flex flex-wrap gap-4">
+          <div>
+            <label
+              htmlFor="branchInsuranceFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by Rx Group
+            </label>
+            <select
+              id="branchInsuranceFilter"
+              value={selectedInsurance}
+              onChange={handleInsuranceFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300"
+            >
+              <option value="">All</option>
+              {uniqueInsuranceNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="branchBinFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by BIN
+            </label>
+            <select
+              id="branchBinFilter"
+              value={selectedBin}
+              onChange={handleBinFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300"
+            >
+              <option value="">All</option>
+              {uniqueBinValues.map((bin) => (
+                <option key={bin} value={bin}>
+                  {bin}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="branchPcnFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by PCN
+            </label>
+            <select
+              id="branchPcnFilter"
+              value={selectedPcn}
+              onChange={handlePcnFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300"
+            >
+              <option value="">All</option>
+              {uniquePcnValues.map((pcn) => (
+                <option key={pcn} value={pcn}>
+                  {pcn}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div
           className="flex items-center text-sm text-gray-500 cursor-pointer"
-          onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+          onClick={() =>
+            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+          }
         >
           <ArrowUpDown className="h-4 w-4 mr-1" />
-          Sorted by Net Price ({sortOrder === "asc" ? "Ascending" : "Descending"})
+          Sorted by Net Price (
+          {sortOrder === "asc" ? "Ascending" : "Descending"})
         </div>
-      </div>
-      <div className="mb-4">
-        <label
-          htmlFor="branchInsuranceFilter"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Filter by Insurance Name
-        </label>
-        <select
-          id="branchInsuranceFilter"
-          value={selectedInsurance}
-          onChange={handleInsuranceFilterChange}
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-        >
-          <option value="">All</option>
-          {uniqueInsuranceNames.map((name) => (
-            <option key={name} value={name}>
-              {insuranceMapping[name] || name}
-            </option>
-          ))}
-        </select>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -576,8 +625,14 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 NDC Codes
               </th>
+              <th className="px-10 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Rx Group
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Insurance
+                BIN
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                PCN
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Net Price
@@ -599,7 +654,10 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentItems.length > 0 ? (
               currentItems.map((drug, index) => (
-                <tr key={`${drug.ndcCode}-${index}`} className="hover:bg-gray-50">
+                <tr
+                  key={`${drug.ndcCode}-${index}`}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <a
@@ -614,12 +672,16 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                     <div className="text-sm text-gray-500">{classNameStr}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{drug.branchName}</div>
+                    <div className="text-sm text-gray-500">
+                      {drug.branchName}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500">
                       <a
-                        href={`https://ndclist.com/ndc/${padCode(drug.ndcCode)}`}
+                        href={`https://ndclist.com/ndc/${padCode(
+                          drug.ndcCode
+                        )}`}
                         className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -631,7 +693,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                   <td className="px-10 py-4">
                     <div className="text-sm text-gray-500">
                       <a
-                        href={`/InsruanceDetails/${drug.insuranceName}`}
+                        href={`/InsuranceDetails/${drug.insuranceName}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
@@ -639,6 +701,12 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                         {drug.insuranceName}
                       </a>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{drug.bin}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{drug.pcn}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
@@ -654,7 +722,9 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {drug.insuranceName ? "$" + drug.patientPayment.toFixed(2) : "NA"}
+                      {drug.insuranceName
+                        ? "$" + drug.patientPayment.toFixed(2)
+                        : "NA"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -672,7 +742,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
             ) : (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={13}
                   className="px-6 py-4 text-center text-sm text-gray-500"
                 >
                   No branch drugs found
@@ -715,332 +785,51 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
   );
 };
 
-// -----------------------
-// Main Container Component
-// -----------------------
-export const DrugDetails: React.FC = () => {
-  const { drugId } = useParams();
-  const [searchParams] = useSearchParams();
-  const ndcCode = searchParams.get("ndc");
-  const insuranceId = searchParams.get("insuranceId");
-
-  const [drug, setDrug] = useState<Drug | null>(null);
-  const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>([]);
-  const [drugDetail, setDrugDetail] = useState<Prescription | null>(null);
-  const [branchDrugs, setBranchDrugs] = useState<Prescription[]>([]);
-  const [classNameStr, setClassName] = useState("");
-  const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
-  const [selectedInsurance, setSelectedInsurance] = useState<string>("");
-  // Separate filter state for branch drugs table:
-  const [branchSelectedInsurance, setBranchSelectedInsurance] = useState<string>("");
-  // State to switch between table views:
-  const [activeTable, setActiveTable] = useState<"insurance" | "branch">("insurance");
-  // State for sort order for alternatives table:
-  const [alternativesSortOrder, setAlternativesSortOrder] = useState<"asc" | "desc">("desc");
-  const [temp, setTemp] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    if (insuranceId) {
-      // Map the numeric id to an insurance abbreviation.
-      const defaultInsurance = defaultInsuranceMapping[insuranceId] || "";
-      if (defaultInsurance) {
-        setSelectedInsurance(defaultInsurance);
-        setBranchSelectedInsurance(defaultInsurance);
-      }
-    }
-  }, [insuranceId]);
-  // Insurance mapping object
-  const insuranceMapping: Record<string, string> = {
-    AL: "Aetna (AL)",
-    BW: "aetna (BW)",
-    AD: "Aetna Medicare (AD)",
-    AF: "Anthem BCBS (AF)",
-    DS: "Blue Cross Blue Shield (DS)",
-    CA: "blue shield medicare (CA)",
-    FQ: "Capital Rx (FQ)",
-    BF: "Caremark (BF)",
-    ED: "CatalystRx (ED)",
-    AM: "Cigna (AM)",
-    BO: "Default Claim Format (BO)",
-    AP: "Envision Rx Options (AP)",
-    CG: "Express Scripts (CG)",
-    BI: "Horizon (BI)",
-    AJ: "Humana Medicare (AJ)",
-    BP: "informedRx (BP)",
-    AO: "MEDCO HEALTH (AO)",
-    AC: "MEDCO MEDICARE PART D (AC)",
-    AQ: "MEDGR (AQ)",
-    CC: "MY HEALTH LA (CC)",
-    AG: "Navitus Health Solutions (AG)",
-    AH: "OptumRx (AH)",
-    AS: "PACIFICARE LIFE AND H (AS)",
-    FJ: "Paramount Rx (FJ)",
-    "X ": "PF - DEFAULT (X )",
-    EA: "Pharmacy Data Management (EA)",
-    DW: "phcs (DW)",
-    AX: "PINNACLE (AX)",
-    BN: "Prescription Solutions (BN)",
-    AA: "Tri-Care Express Scripts (AA)",
-    AI: "United Healthcare (AI)",
-  };
-
-  // Helper: pad NDC code to 11 digits
-  const padCode = (code: string) => code.padStart(11, "0");
-
-  // Toggle display for alternatives without insurance
-  const toggleOtherAlternatives = () => {
-    setShowOtherAlternatives((prev) => !prev);
-  };
-
-  // Fetch drug and alternatives data
-  useEffect(() => {
-    const fetchDrugDetails = async () => {
-      try {
-        let response2;
-        if (!insuranceId) {
-          let response;
-          if (ndcCode) {
-            response = await axios.get(
-              `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
-              { headers: getAuthHeader() }
-            );
-          } else {
-            response = await axios.get(
-              `${baseUrl}/drug/GetDrugById?id=${drugId}`,
-              { headers: getAuthHeader() }
-            );
-          }
-          setDrug(response.data);
-          response2 = await axios.get(
-            `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
-          );
-          setSortedAlternatives(response2.data);
-          // Fetch branch drugs as well
-          const response10 = await axios.get(
-            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
-          );
-          setBranchDrugs(response10.data);
-          const response3 = await axios.get(
-            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
-          );
-          setClassName(response3.data.name);
-        } else {
-          console.log("hiiiiiii")
-          const response = await axios.get(
-            `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
-            { headers: getAuthHeader() }
-          );
-          const drugData = response.data;
-          setDrug(drugData);
-          response2 = await axios.get(
-            `${baseUrl}/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`,
-            { headers: getAuthHeader() }
-          );
-          setDrugDetail(response2.data);
-          const response3 = await axios.get(
-            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
-          );
-          setClassName(response3.data.name);
-          const response10 = await axios.get(
-            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}&branchId=${1}`,
-            { headers: getAuthHeader() }
-          );
-          setBranchDrugs(response10.data);
-          if (response3.data.name !== "other") {
-            const response4 = await axios.get(
-              `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
-              { headers: getAuthHeader() }
-            );
-            setSortedAlternatives(response4.data);
-          } else {
-            setSortedAlternatives([]);
-          }
-        }
-      } catch (err) {
-        setError("Failed to load drug details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDrugDetails();
-  }, [drugId, ndcCode, insuranceId]);
-
-  if (loading) return <LoadingSpinner />;
-  if (error || !drug)
-    return <ErrorMessage message={error || "Drug not found"} />;
-
-  // Sort alternatives by net price toggle in parent component
-  const handleSort = () => {
-    const newSortOrder = alternativesSortOrder === "desc" ? "asc" : "desc";
-    const sorted = [...sortedAlternatives].sort((a, b) =>
-      newSortOrder === "asc" ? a.net - b.net : b.net - a.net
-    );
-    setSortedAlternatives(sorted);
-    setAlternativesSortOrder(newSortOrder);
-  };
-
-  // Handle insurance filter change for alternatives table
-  const handleInsuranceFilterChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    setSelectedInsurance(event.target.value);
-  };
-
-  // Handle insurance filter change for branch table
-  const handleBranchInsuranceFilterChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    setBranchSelectedInsurance(event.target.value);
-  };
-
-  // Split alternatives into those with and without an insurance name
-  const alternativesWithInsurance = sortedAlternatives.filter(
-    (alt) => alt.insuranceName
-  );
-  const alternativesWithoutInsurance = sortedAlternatives.filter(
-    (alt) => !alt.insuranceName
-  );
-
-  // Compute unique insurance names for the alternatives table
-  const uniqueInsuranceNames: string[] = [
-    ...new Set([
-      ...alternativesWithInsurance.map((alt) => alt.insuranceName),
-      "AA","AB","AC","AD","AF","AG","AH","AI","AJ","AL","AM",
-      "AO","AQ","AS","AT","AU","AV","AX","BE","BF","BI","BL",
-      "BM","BN","BO","BP","BR","BU","BW","CA","CC","CE","CG",
-      "CJ","CK","CL","CM","CO","CQ","CR","CU","CY","DJ","DQ",
-      "DS","DW","EA","EB","ED","EH","EJ","EO","EP","EQ","ER",
-      "ET","EW","EY","FA","FF","FG","FJ","FQ","FS","FT","GA",
-      "GC","GE","GF","GH","GI","GJ","GM","GO","GQ","GS","GT",
-      "GV","GX","GY","GZ","HB","HE","X ",
-    ]),
-  ].sort();
-
-  // Compute unique insurance names for branch drugs table
-  const branchUniqueInsuranceNames: string[] = [
-    ...new Set(branchDrugs.map((drug) => drug.insuranceName)),
-  ].sort();
-
-  return (
-    <motion.div>
-      <div className="max-w-10xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <DrugHeader drug={drug} padCode={padCode} temp={temp} />
-          <div className="p-6 space-y-6">
-            <DrugInformation
-              drug={drug}
-              drugDetail={drugDetail}
-              classNameStr={classNameStr}
-            />
-
-            {/* Switch button to toggle between tables */}
-            {/* <div className="flex justify-end mb-4">
-              <button
-                onClick={() =>
-                  setActiveTable(
-                    activeTable === "insurance" ? "branch" : "insurance"
-                  )
-                }
-                className="px-4 py-2 bg-green-600 text-white rounded-md"
-              >
-                {activeTable === "insurance"
-                  ? "Switch to Branch Drugs"
-                  : "Switch to Alternative Medications with Insurance"}
-              </button>
-            </div> */}
-
-            {activeTable === "insurance" ? (
-              <>
-                {sortedAlternatives.length > 0 && (
-                  <>
-                    <AlternativesTable
-                      alternatives={alternativesWithInsurance}
-                      classNameStr={classNameStr}
-                      padCode={padCode}
-                      insuranceMapping={insuranceMapping}
-                      selectedInsurance={selectedInsurance}
-                      handleInsuranceFilterChange={handleInsuranceFilterChange}
-                      handleSort={handleSort}
-                      uniqueInsuranceNames={uniqueInsuranceNames}
-                      sortOrder={alternativesSortOrder}
-                    />
-                    <button
-                      onClick={toggleOtherAlternatives}
-                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md"
-                    >
-                      {showOtherAlternatives
-                        ? "Hide Other Alternatives"
-                        : "Show Other Alternatives"}
-                    </button>
-                    {showOtherAlternatives && (
-                      <OtherAlternativesTable
-                        alternatives={alternativesWithoutInsurance}
-                        classNameStr={classNameStr}
-                        padCode={padCode}
-                      />
-                    )}
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                {branchDrugs.length > 0 ? (
-                  <BranchDrugsTable
-                    branchDrugs={branchDrugs}
-                    classNameStr={classNameStr}
-                    padCode={padCode}
-                    insuranceMapping={insuranceMapping}
-                    selectedInsurance={branchSelectedInsurance}
-                    handleInsuranceFilterChange={handleBranchInsuranceFilterChange}
-                    uniqueInsuranceNames={branchUniqueInsuranceNames}
-                  />
-                ) : (
-                  <div className="text-center text-gray-500">
-                    No branch drugs found
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-// -----------------------
-// Other Alternatives Table (without Insurance) with Pagination
-// -----------------------
 interface OtherAlternativesTableProps {
   alternatives: Prescription[];
   classNameStr: string;
   padCode: (code: string) => string;
+  selectedBin: string;
+  handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniqueBinValues: string[];
+  selectedPcn: string;
+  handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniquePcnValues: string[];
 }
 const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   alternatives,
   classNameStr,
   padCode,
+  selectedBin,
+  handleBinFilterChange,
+  uniqueBinValues,
+  selectedPcn,
+  handlePcnFilterChange,
+  uniquePcnValues,
 }) => {
-  const memoizedAlternatives = useMemo(() => alternatives, [alternatives]);
+  const filteredAlternatives = useMemo(
+    () =>
+      alternatives.filter(
+        (alt) =>
+          (!selectedBin || alt.bin === selectedBin) &&
+          (!selectedPcn || alt.pcn === selectedPcn)
+      ),
+    [alternatives, selectedBin, selectedPcn]
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(memoizedAlternatives.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredAlternatives.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = memoizedAlternatives.slice(
+  const currentItems = filteredAlternatives.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [memoizedAlternatives]);
+  }, [selectedBin, selectedPcn, alternatives]);
 
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () =>
@@ -1051,6 +840,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
       <h3 className="text-lg font-semibold text-gray-900">
         Alternative Medications without Insurance
       </h3>
+     
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -1063,9 +853,6 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 NDC Codes
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ACQ
               </th>
             </tr>
           </thead>
@@ -1096,9 +883,6 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                       {padCode(alt.ndcCode)}
                     </a>
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{alt.acquisitionCost}</div>
                 </td>
               </tr>
             ))}
@@ -1137,3 +921,324 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
     </section>
   );
 };
+
+export const DrugDetails: React.FC = () => {
+  const { drugId } = useParams();
+  const [searchParams] = useSearchParams();
+  const ndcCode = searchParams.get("ndc");
+  const insuranceId = searchParams.get("insuranceId");
+
+  const [drug, setDrug] = useState<Drug | null>(null);
+  const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
+    []
+  );
+  const [drugDetail, setDrugDetail] = useState<Prescription | null>(null);
+  const [branchDrugs, setBranchDrugs] = useState<Prescription[]>([]);
+  const [classNameStr, setClassName] = useState("");
+  const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
+  const [selectedInsurance, setSelectedInsurance] = useState<string>("");
+  const [selectedBin, setSelectedBin] = useState<string>("");
+  const [selectedPcn, setSelectedPcn] = useState<string>("");
+
+  const [branchSelectedInsurance, setBranchSelectedInsurance] =
+    useState<string>("");
+  const [branchSelectedBin, setBranchSelectedBin] = useState<string>("");
+  const [branchSelectedPcn, setBranchSelectedPcn] = useState<string>("");
+
+  const [otherSelectedBin, setOtherSelectedBin] = useState<string>("");
+  const [otherSelectedPcn, setOtherSelectedPcn] = useState<string>("");
+
+  const [activeTable, setActiveTable] = useState<"insurance" | "branch">(
+    "insurance"
+  );
+  const [alternativesSortOrder, setAlternativesSortOrder] = useState<
+    "asc" | "desc"
+  >("desc");
+  const [temp, setTemp] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch drug details and alternatives
+  useEffect(() => {
+    const fetchDrugDetails = async () => {
+      try {
+        let response2;
+        if (!insuranceId) {
+          let response;
+          if (ndcCode) {
+            response = await axios.get(
+              `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
+              { headers: getAuthHeader() }
+            );
+          } else {
+            response = await axios.get(
+              `${baseUrl}/drug/GetDrugById?id=${drugId}`,
+              { headers: getAuthHeader() }
+            );
+          }
+          setDrug(response.data);
+          // Get all alternatives and sort descending by net price:
+          response2 = await axios.get(
+            `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
+          );
+          const sortedData = response2.data.sort((a, b) => b.net - a.net);
+          setSortedAlternatives(sortedData);
+          const response10 = await axios.get(
+            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
+          );
+          setBranchDrugs(response10.data);
+          const response3 = await axios.get(
+            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
+          );
+          setClassName(response3.data.name);
+        } else {
+          // If an insuranceId is provided:
+          const response = await axios.get(
+            `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
+            { headers: getAuthHeader() }
+          );
+          const drugData = response.data;
+          setDrug(drugData);
+          response2 = await axios.get(
+            `${baseUrl}/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`,
+            { headers: getAuthHeader() }
+          );
+          setDrugDetail(response2.data);
+          const response3 = await axios.get(
+            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
+          );
+          setClassName(response3.data.name);
+          const response10 = await axios.get(
+            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
+            { headers: getAuthHeader() }
+          );
+          setBranchDrugs(response10.data);
+          console.log(response10.data);
+          if (response3.data.name !== "other") {
+            const response4 = await axios.get(
+              `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
+              { headers: getAuthHeader() }
+            );
+            // Sort descending by net price when alternatives are loaded:
+            const matchingAlt = response4.data.find(
+              (alt) => alt.insuranceId.toString() === insuranceId
+            );
+            setSelectedInsurance(matchingAlt?.insuranceName || "");
+            setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
+            
+            const sortedData = response4.data.sort((a, b) => b.net - a.net);
+            setSortedAlternatives(sortedData);
+          } else {
+            setSortedAlternatives([]);
+          }
+        }
+      } catch (err) {
+        setError("Failed to load drug details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDrugDetails();
+  }, [drugId, ndcCode, insuranceId]);
+
+  // Map the provided insuranceId to the insurance name using the sorted alternatives
+  useEffect(() => {
+    if (insuranceId && sortedAlternatives.length > 0) {
+      const matchingInsurance = sortedAlternatives.find(
+        (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
+      );
+      
+      if (matchingInsurance) {
+        setSelectedInsurance(matchingInsurance.insuranceName);
+        setBranchSelectedInsurance(matchingInsurance.insuranceName);
+      } else {
+        setSelectedInsurance("");
+        setBranchSelectedInsurance("");
+      }
+    }
+  }, [insuranceId, sortedAlternatives]);
+
+  if (loading) return <LoadingSpinner />;
+  if (error || !drug)
+    return <ErrorMessage message={error || "Drug not found"} />;
+
+  const handleSort = () => {
+    const newSortOrder = alternativesSortOrder === "desc" ? "asc" : "desc";
+    const sorted = [...sortedAlternatives].sort((a, b) =>
+      newSortOrder === "asc" ? a.net - b.net : b.net - a.net
+    );
+    setSortedAlternatives(sorted);
+    setAlternativesSortOrder(newSortOrder);
+  };
+
+  const handleInsuranceFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setSelectedInsurance(event.target.value);
+  };
+  const handleBinFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setSelectedBin(event.target.value);
+  };
+  const handlePcnFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setSelectedPcn(event.target.value);
+  };
+
+  const handleBranchInsuranceFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setBranchSelectedInsurance(event.target.value);
+  };
+  const handleBranchBinFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setBranchSelectedBin(event.target.value);
+  };
+  const handleBranchPcnFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setBranchSelectedPcn(event.target.value);
+  };
+
+  const handleOtherBinFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setOtherSelectedBin(event.target.value);
+  };
+  const handleOtherPcnFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setOtherSelectedPcn(event.target.value);
+  };
+
+  const alternativesWithInsurance = sortedAlternatives.filter(
+    (alt) => alt.insuranceName
+  );
+  const alternativesWithoutInsurance = sortedAlternatives.filter(
+    (alt) => !alt.bin
+  );
+
+  const uniqueInsuranceNames: string[] = [
+    ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
+  ].sort();
+  const uniqueBinValues: string[] = [
+    ...new Set(alternativesWithInsurance.map((alt) => alt.bin)),
+  ].sort();
+  const uniquePcnValues: string[] = [
+    ...new Set(alternativesWithInsurance.map((alt) => alt.pcn)),
+  ].sort();
+
+  const branchUniqueInsuranceNames: string[] = [
+    ...new Set(branchDrugs.map((drug) => drug.insuranceName)),
+  ].sort();
+  const branchUniqueBinValues: string[] = [
+    ...new Set(branchDrugs.map((drug) => drug.bin)),
+  ].sort();
+  const branchUniquePcnValues: string[] = [
+    ...new Set(branchDrugs.map((drug) => drug.pcn)),
+  ].sort();
+
+  const uniqueOtherBinValues: string[] = [
+    ...new Set(alternativesWithoutInsurance.map((alt) => alt.bin)),
+  ].sort();
+  const uniqueOtherPcnValues: string[] = [
+    ...new Set(alternativesWithoutInsurance.map((alt) => alt.pcn)),
+  ].sort();
+
+  return (
+    <motion.div>
+      <div className="max-w-10xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <DrugHeader drug={drug} padCode={padCode} temp={temp} />
+          <div className="p-6 space-y-6">
+            <DrugInformation
+              drug={drug}
+              drugDetail={drugDetail}
+              classNameStr={classNameStr}
+            />
+            {activeTable === "insurance" ? (
+              <>
+                {sortedAlternatives.length > 0 && (
+                  <>
+                    <AlternativesTable
+                      alternatives={alternativesWithInsurance}
+                      classNameStr={classNameStr}
+                      padCode={padCode}
+                      selectedInsurance={selectedInsurance}
+                      handleInsuranceFilterChange={handleInsuranceFilterChange}
+                      uniqueInsuranceNames={uniqueInsuranceNames}
+                      selectedBin={selectedBin}
+                      handleBinFilterChange={handleBinFilterChange}
+                      uniqueBinValues={uniqueBinValues}
+                      selectedPcn={selectedPcn}
+                      handlePcnFilterChange={handlePcnFilterChange}
+                      uniquePcnValues={uniquePcnValues}
+                      handleSort={handleSort}
+                      sortOrder={alternativesSortOrder}
+                    />
+                    <button
+                      onClick={() => setShowOtherAlternatives((prev) => !prev)}
+                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+                    >
+                      {showOtherAlternatives
+                        ? "Hide Other Alternatives"
+                        : "Show Other Alternatives"}
+                    </button>
+                    {showOtherAlternatives && (
+                      <OtherAlternativesTable
+                        alternatives={alternativesWithoutInsurance}
+                        classNameStr={classNameStr}
+                        padCode={padCode}
+                        selectedBin={otherSelectedBin}
+                        handleBinFilterChange={handleOtherBinFilterChange}
+                        uniqueBinValues={uniqueOtherBinValues}
+                        selectedPcn={otherSelectedPcn}
+                        handlePcnFilterChange={handleOtherPcnFilterChange}
+                        uniquePcnValues={uniqueOtherPcnValues}
+                      />
+                    )}
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {branchDrugs.length > 0 ? (
+                  <BranchDrugsTable
+                    branchDrugs={branchDrugs}
+                    classNameStr={classNameStr}
+                    padCode={padCode}
+                    selectedInsurance={branchSelectedInsurance}
+                    handleInsuranceFilterChange={
+                      handleBranchInsuranceFilterChange
+                    }
+                    uniqueInsuranceNames={branchUniqueInsuranceNames}
+                    selectedBin={branchSelectedBin}
+                    handleBinFilterChange={handleBranchBinFilterChange}
+                    uniqueBinValues={branchUniqueBinValues}
+                    selectedPcn={branchSelectedPcn}
+                    handlePcnFilterChange={handleBranchPcnFilterChange}
+                    uniquePcnValues={branchUniquePcnValues}
+                  />
+                ) : (
+                  <div className="text-center text-gray-500">
+                    No branch drugs found
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const padCode = (code: string) => code.padStart(11, "0");

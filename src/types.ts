@@ -11,6 +11,7 @@ export interface Drug {
   rxcui: number;
 }
 export interface Prescription {
+  insuranceId : string;
   drugId: number;
   ndcCode: string;
   drugName: string;
@@ -26,6 +27,10 @@ export interface Prescription {
   patientPayment: number;
   drugClass: string;
   branchName: string;
+  insurance: any | null;
+  bin: string;
+  pcn: string;
+
 }
 
 export interface DrugInsuranceInfo {
@@ -49,7 +54,7 @@ export interface DrugInsuranceInfo {
 }
 export interface Insurance {
   id: number;
-  name: string;//code
+  rxGroup: string;//code
   description: string;//full name
   bin: string;
   pcn: string;

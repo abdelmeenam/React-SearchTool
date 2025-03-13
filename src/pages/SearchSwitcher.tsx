@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search } from "./Search";      // Drug search by name
-import { Search2 } from "./Search2";    // Insurance-first search flow
+import { InsuranceSearch } from "./Search2";    // Insurance-first search flow
 
 export const SearchSwitcher: React.FC = () => {
   // "drug" for the drug search flow, "insurance" for the insurance-first flow.
@@ -29,7 +29,7 @@ export const SearchSwitcher: React.FC = () => {
       </div>
 
       {/* Render the selected search flow */}
-      {activeFlow === "drug" ? <Search /> : <Search2 />}
+      {activeFlow === "drug" ? <Search /> : <InsuranceSearch />}
     </div>
   );
 };

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Insurance } from "../types"; // Ensure your Insurance interface is defined with these properties
-
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
+await loadConfig(); 
 const InsuranceDetails: React.FC = () => {
   const { insuranceName } = useParams<{ insuranceName: string }>();
   const [insurance, setInsurance] = useState<Insurance | null>(null);
@@ -12,7 +13,9 @@ const InsuranceDetails: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const endpointUrl = `https://store.medisearchtool.com/drug/GetInsuranceDetails?shortName=${insuranceName}`;
+        console.log(insuranceName);
+       
+        const endpointUrl = `${BaseUrlLoader.API_BASE_URL}/drug/GetInsuranceDetails?shortName=${insuranceName}`;
         const response = await axios.get(endpointUrl);
         setInsurance(response.data);
         setLoading(false);
@@ -54,7 +57,7 @@ const InsuranceDetails: React.FC = () => {
                 Name:
               </td>
               <td className="py-3 px-4 text-blue-900 border border-blue-300">
-                {displayValue(insurance.name)}
+                {displayValue(insurance.rxGroup)}
               </td>
             </tr>
             <tr className="bg-blue-100">

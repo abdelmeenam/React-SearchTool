@@ -1,170 +1,202 @@
 import React, { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search as SearchIcon } from "lucide-react";
-import debounce from "debounce";
 import axios from "axios";
-import { motion } from "framer-motion";
-import { Drug, Insurance } from "../types";
+import debounce from "debounce";
+import { useNavigate } from "react-router-dom";
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import your config & loader
 
-const API_BASE_URL = "https://store.medisearchtool.com";
+// Ensure the config is loaded (using top-level await if your setup supports it)
+await loadConfig();
+const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
 
-// Helper function to retrieve the token header
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
 
-// Base insurance mapping with some full names.
-// Key is the insurance short code and value is the full display name.
-const insurance_mapping: { [key: string]: string } = {
-  AL: "Aetna (AL)",
-  BW: "aetna (BW)",
-  AD: "Aetna Medicare (AD)",
-  AF: "Anthem BCBS (AF)",
-  DS: "Blue Cross Blue Shield (DS)",
-  CA: "blue shield medicare (CA)",
-  FQ: "Capital Rx (FQ)",
-  BF: "Caremark (BF)",
-  ED: "CatalystRx (ED)",
-  AM: "Cigna (AM)",
-  BO: "Default Claim Format (BO)",
-  AP: "Envision Rx Options (AP)",
-  CG: "Express Scripts (CG)",
-  BI: "Horizon (BI)",
-  AJ: "Humana Medicare (AJ)",
-  BP: "informedRx (BP)",
-  AO: "MEDCO HEALTH (AO)",
-  AC: "MEDCO MEDICARE PART D (AC)",
-  AQ: "MEDGR (AQ)",
-  CC: "MY HEALTH LA (CC)",
-  AG: "Navitus Health Solutions (AG)",
-  AH: "OptumRx (AH)",
-  AS: "PACIFICARE LIFE AND H (AS)",
-  FJ: "Paramount Rx (FJ)",
-  "X ": "PF - DEFAULT (X )",
-  EA: "Pharmacy Data Management (EA)",
-  DW: "phcs (DW)",
-  AX: "PINNACLE (AX)",
-  BN: "Prescription Solutions (BN)",
-  AA: "Tri-Care Express Scripts (AA)",
-  AI: "United Healthcare (AI)",
-};
+// Define types
+interface BinModel {
+  id: number;
+  name?: string;
+  bin: string;
+  helpDeskNumber?: string;
+}
 
-// List of additional insurance codes.
-const additionalInsurances = [
-  "CR", "GF", "AV", "CY", "GH", "EQ", "CM", "BT", "HE", "GC",
-  "FT", "GJ", "HB", "BE", "HG", "EY", "EW", "ET", "FS", "GE",
-  "GV", "GY", "GS", "EB", "CS", "FB", "FN", "EP", "HJ", "HC",
-  "CO", "GP", "EJ", "AL", "BW", "AD", "GM", "AF", "AT", "EN",
-  "GX", "DS", "CA", "CA, HK", "FQ", "AB", "BF", "  ", "AM",
-  "GO", "BO", "CG", "BI", "AJ", "AO", "AC", "AQ", "CC", "AG",
-  "FA", "AH", "AS", "X ", "AX", "BN", "GI", "BR", "GZ", "AA",
-  "AI", "AP", "BP", "DW", "EA", "ED", "FJ"
-];
+interface PcnModel {
+  id: number;
+  pcn: string;
+  insuranceId: number;
+}
 
-// Merge additional codes into the mapping (using the trimmed code as display name if not defined)
-additionalInsurances.forEach((code) => {
-  const trimmedCode = code.trim();
-  if (trimmedCode && !insurance_mapping[trimmedCode]) {
-    insurance_mapping[trimmedCode] = trimmedCode;
-  }
-});
+interface RxGroupModel {
+  id: number;
+  rxGroup: string;
+  insurancePCNId: number;
+}
 
-// Build a local array of Insurance objects from the mapping.
-// Here, the `name` property holds the short code (to be used for backend requests)
-// and `description` holds the full display name.
-const insuranceOptions: Insurance[] = Object.entries(insurance_mapping).map(
-  ([code, fullName], index) => ({
-    id: index + 1, // local id (will be replaced by backend data when fetched)
-    name: code, // short code
-    description: fullName, // full display name
-    bin: "",
-    pcn: "",
-    helpDeskNumber: "",
-  })
-);
+interface DrugModel {
+  id: number;
+  name: string;
+  ndc: string;
+  form: string;
+  strength: string;
+  drugClassId: number;
+  drugClass?: string;
+  acq: number;
+  awp: number;
+  rxcui: number;
+}
 
-export const Search2: React.FC = () => {
+export const InsuranceSearch: React.FC = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [insuranceSuggestions, setInsuranceSuggestions] = useState<Insurance[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedInsurance, setSelectedInsurance] = useState<Insurance | null>(null);
 
-  const [drugs, setDrugs] = useState<Drug[]>([]);
-  const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
+  // --- Insurance Flow States ---
+  const [binQuery, setBinQuery] = useState("");
+  const [binSuggestions, setBinSuggestions] = useState<BinModel[]>([]);
+  const [showBinSuggestions, setShowBinSuggestions] = useState(false);
+  const [selectedBin, setSelectedBin] = useState<BinModel | null>(null);
 
-  // States for drug search functionality
+  const [pcnList, setPcnList] = useState<PcnModel[]>([]);
+  const [selectedPcn, setSelectedPcn] = useState<PcnModel | null>(null);
+
+  const [rxGroups, setRxGroups] = useState<RxGroupModel[]>([]);
+  const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(null);
+
+  // --- Drug Flow States ---
+  const [drugs, setDrugs] = useState<DrugModel[]>([]);
+  // Drug search input (client-side filtering)
   const [drugSearchQuery, setDrugSearchQuery] = useState("");
-  const [filteredDrugSuggestions, setFilteredDrugSuggestions] = useState<Drug[]>([]);
+  // Show/hide drug suggestions dropdown
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
-
+  // The selected drug from the list
+  const [selectedDrug, setSelectedDrug] = useState<DrugModel | null>(null);
+  // NDC list for the selected drug
   const [ndcList, setNdcList] = useState<string[]>([]);
+  // The selected NDC
   const [selectedNdc, setSelectedNdc] = useState("");
 
-  // Debounced search filtering the local insuranceOptions array by full name (description)
-  const debouncedSearch = useCallback(
-    debounce((query: string) => {
-      if (query.length >= 1) {
-        const filtered = insuranceOptions.filter((insurance) =>
-          insurance.description.toLowerCase().includes(query.toLowerCase())
-        );
-        setInsuranceSuggestions(filtered);
-        setShowSuggestions(true);
+  // --- Insurance Flow: BIN ---
+  const debouncedBinSearch = useCallback(
+    debounce(async (query: string) => {
+      if (query.length > 0) {
+        try {
+          const { data } = await axios.get(
+            `${API_BASE_URL}/drug/GetInsurancesBinsByName?bin=${query}`,
+            { headers: getAuthHeader() }
+          );
+          setBinSuggestions(data);
+          setShowBinSuggestions(true);
+        } catch (error) {
+          console.error("Error fetching BIN suggestions:", error);
+        }
       } else {
-        setInsuranceSuggestions([]);
-        setShowSuggestions(false);
+        setBinSuggestions([]);
+        setShowBinSuggestions(false);
       }
     }, 300),
     []
   );
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBinInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
-    setSearchQuery(query);
-    debouncedSearch(query);
+    setBinQuery(query);
+    debouncedBinSearch(query);
   };
 
-  // When an insurance is selected, fetch its full data using the short name.
-  // Then, use the returned insurance data to fetch drugs and update the selection.
-  const handleInsuranceSelect = async (insurance: Insurance) => {
-    try {
-      // Fetch insurance data using the short name (insurance.name)
-      const { data: insuranceData } = await axios.get(
-        `${API_BASE_URL}/drug/GetInsurances?insurance=${insurance.name}`,
-        { headers: getAuthHeader() }
-      );
-      console.log(insuranceData[0]);
-      // Assume insuranceData is a complete Insurance object with the correct id.
-      // Use a fallback in case description is undefined.
-      setSelectedInsurance(insuranceData[0]);
-      setSearchQuery( insuranceData[0].name);
-      setShowSuggestions(false);
-      // Clear previous selections.
-      setDrugs([]);
-      setSelectedDrug(null);
-      setDrugSearchQuery("");
-      setFilteredDrugSuggestions([]);
-      setShowDrugSuggestions(false);
-      setNdcList([]);
-      setSelectedNdc("");
+  const handleBinSelect = async (bin: BinModel) => {
+    setSelectedBin(bin);
+    setBinQuery(bin.bin);
+    setShowBinSuggestions(false);
+    // Clear downstream selections
+    setPcnList([]);
+    setSelectedPcn(null);
+    setRxGroups([]);
+    setSelectedRxGroup(null);
+    setDrugs([]);
+    setSelectedDrug(null);
+    setDrugSearchQuery("");
+    setNdcList([]);
+    setSelectedNdc("");
 
-      // Fetch drugs associated with the insurance using its short name.
-      const { data: drugsData } = await axios.get(
-        `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${insuranceData[0].name}`,
+    try {
+      const { data } = await axios.get(
+        `${API_BASE_URL}/drug/GetInsurancesPcnByBinId?binId=${bin.id}`,
         { headers: getAuthHeader() }
       );
-      setDrugs(drugsData);
+      setPcnList(data);
     } catch (error) {
-      console.error("Error fetching insurance or drugs data:", error);
+      console.error("Error fetching PCNs:", error);
     }
   };
 
-  // When a drug is selected, fetch its NDC codes.
-  const handleDrugSelect = async (drug: Drug) => {
+  // --- Insurance Flow: PCN & Rx Group ---
+  const handlePcnSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const pcnId = parseInt(e.target.value, 10);
+    const selected = pcnList.find((item) => item.id === pcnId) || null;
+    setSelectedPcn(selected);
+    // Clear downstream selections
+    setRxGroups([]);
+    setSelectedRxGroup(null);
+    setDrugs([]);
+    setSelectedDrug(null);
+    setDrugSearchQuery("");
+    setNdcList([]);
+    setSelectedNdc("");
+
+    if (selected) {
+      try {
+        const { data } = await axios.get(
+          `${API_BASE_URL}/drug/GetInsurancesRxByPcnId?pcnId=${selected.id}`,
+          { headers: getAuthHeader() }
+        );
+        setRxGroups(data);
+      } catch (error) {
+        console.error("Error fetching Rx Groups:", error);
+      }
+    }
+  };
+
+  const handleRxGroupSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const rxId = parseInt(e.target.value, 10);
+    const selected = rxGroups.find((item) => item.id === rxId) || null;
+    setSelectedRxGroup(selected);
+    // Clear downstream selections
+    setDrugs([]);
+    setSelectedDrug(null);
+    setDrugSearchQuery("");
+    setNdcList([]);
+    setSelectedNdc("");
+
+    if (selected) {
+      try {
+        const { data } = await axios.get(
+          `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${selected.rxGroup}`,
+          { headers: getAuthHeader() }
+        );
+        setDrugs(data);
+      } catch (error) {
+        console.error("Error fetching drugs:", error);
+      }
+    }
+  };
+
+  // --- Drug Flow ---
+  // Render drug search input only when no drug is selected
+  const handleDrugSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setDrugSearchQuery(query);
+    setShowDrugSuggestions(true);
+  };
+
+  const filteredDrugs = drugSearchQuery
+    ? drugs.filter((drug) =>
+        drug.name.toLowerCase().includes(drugSearchQuery.toLowerCase())
+      )
+    : drugs;
+
+  const handleDrugSelect = async (drug: DrugModel) => {
     setSelectedDrug(drug);
-    setDrugSearchQuery(drug.name || ""); // Use fallback if drug.name is undefined.
+    setDrugSearchQuery(drug.name);
     setShowDrugSuggestions(false);
-    // Clear previous NDC selection.
+    // Clear any previous NDC selections
     setNdcList([]);
     setSelectedNdc("");
     try {
@@ -178,132 +210,140 @@ export const Search2: React.FC = () => {
     }
   };
 
-  const handleDrugSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setDrugSearchQuery(query);
-    if (query.trim() !== "") {
-      const suggestions = drugs.filter((drug) =>
-        drug.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredDrugSuggestions(suggestions);
-      setShowDrugSuggestions(true);
-    } else {
-      setFilteredDrugSuggestions([]);
-      setShowDrugSuggestions(false);
-    }
-  };
-
   const handleNdcSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedNdc(e.target.value);
   };
 
-  // When navigating to the drug details page, send the proper insurance id.
-  const handleSearch = () => {
-    if (selectedDrug && selectedInsurance) {
-      navigate(
-        `/drug/${selectedDrug.id}?ndc=${selectedNdc ? selectedNdc : ndcList[0]}&insuranceId=${selectedInsurance.id}`
-      );
-    }
-  };
-
   return (
-    <motion.div className="max-w-6xl mx-auto px-4 py-10">
-      <div className="bg-gradient-to-r from-blue-500 to-green-400 rounded-lg shadow-lg p-8 text-white">
-        <h1 className="text-4xl font-bold mb-6 text-center">
-          Search for Medicines by Insurance
-        </h1>
-        <div className="space-y-8">
-          {/* Insurance Search */}
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
-              placeholder="Search for an Insurance..."
-              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
-            />
-            <button
-              onClick={handleSearch}
-              className="absolute right-3 top-3 text-blue-600 hover:text-blue-800"
-            >
-              <SearchIcon className="h-6 w-6" />
-            </button>
-            {showSuggestions && insuranceSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md max-h-60 overflow-y-auto">
-                {insuranceSuggestions.map((insurance) => (
-                  <button
-                    key={insurance.id}
-                    onClick={() => handleInsuranceSelect(insurance)}
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
-                  >
-                    <span className="font-semibold">{insurance.description}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+    <div className="max-w-4xl mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-4">Insurance Search</h1>
 
-          {/* Drug Search */}
-          {drugs.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Search Drug</h2>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={drugSearchQuery}
-                  onChange={handleDrugSearchChange}
-                  onFocus={() => drugSearchQuery.length >= 1 && setShowDrugSuggestions(true)}
-                  placeholder="Search for a drug..."
-                  className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
-                />
-                {showDrugSuggestions && filteredDrugSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md max-h-60 overflow-y-auto">
-                    {filteredDrugSuggestions.map((drug) => (
-                      <button
-                        key={drug.id}
-                        onClick={() => handleDrugSelect(drug)}
-                        className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
-                      >
-                        {drug.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* NDC Dropdown */}
-          {ndcList.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Select NDC</h2>
-              <select
-                value={selectedNdc}
-                onChange={handleNdcSelect}
-                className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
+      {/* BIN Input */}
+      <div className="mb-6 relative">
+        <label className="block mb-2 font-semibold">Enter BIN:</label>
+        <input
+          type="text"
+          value={binQuery}
+          onChange={handleBinInputChange}
+          onFocus={() => binQuery.length > 0 && setShowBinSuggestions(true)}
+          placeholder="Type BIN..."
+          className="w-full px-4 py-2 border rounded"
+        />
+        {showBinSuggestions && binSuggestions.length > 0 && (
+          <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-60 overflow-y-auto">
+            {binSuggestions.map((bin) => (
+              <button
+                key={bin.id}
+                onClick={() => handleBinSelect(bin)}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
               >
-                <option value="">Select NDC code...</option>
-                {ndcList.map((ndc) => (
-                  <option key={ndc} value={ndc}>
-                    {ndc}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+                {bin.bin} {bin.name && `- ${bin.name}`}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
-          {/* View Details Button */}
-          {selectedDrug && selectedInsurance && (
-            <button
-              onClick={handleSearch}
-              className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              View Drug Details
-            </button>
+      {/* PCN Dropdown */}
+      {pcnList.length > 0 && (
+        <div className="mb-6">
+          <label className="block mb-2 font-semibold">Select PCN:</label>
+          <select
+            value={selectedPcn ? selectedPcn.id : ""}
+            onChange={handlePcnSelect}
+            className="w-full px-4 py-2 border rounded"
+          >
+            <option value="">Select a PCN...</option>
+            {pcnList.map((pcn) => (
+              <option key={pcn.id} value={pcn.id}>
+                {pcn.pcn}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Rx Group Dropdown */}
+      {rxGroups.length > 0 && (
+        <div className="mb-6">
+          <label className="block mb-2 font-semibold">Select Rx Group:</label>
+          <select
+            value={selectedRxGroup ? selectedRxGroup.id : ""}
+            onChange={handleRxGroupSelect}
+            className="w-full px-4 py-2 border rounded"
+          >
+            <option value="">Select an Rx Group...</option>
+            {rxGroups.map((rx) => (
+              <option key={rx.id} value={rx.id}>
+                {rx.rxGroup}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Drug Search Input & Suggestions (hidden if a drug is selected) */}
+      {drugs.length > 0 && !selectedDrug && (
+        <div className="mb-6 relative">
+          <label className="block mb-2 font-semibold">Search for Drug:</label>
+          <input
+            type="text"
+            value={drugSearchQuery}
+            onChange={handleDrugSearchChange}
+            onFocus={() => setShowDrugSuggestions(true)}
+            placeholder="Type drug name..."
+            className="w-full px-4 py-2 border rounded"
+          />
+          {showDrugSuggestions && filteredDrugs.length > 0 && (
+            <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-60 overflow-y-auto">
+              {filteredDrugs.map((drug) => (
+                <button
+                  key={drug.id}
+                  onClick={() => handleDrugSelect(drug)}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  {drug.name} (NDC: {drug.ndc})
+                </button>
+              ))}
+            </div>
           )}
         </div>
-      </div>
-    </motion.div>
+      )}
+
+      {/* NDC Dropdown */}
+      {ndcList.length > 0 && (
+        <div className="mb-6">
+          <label className="block mb-2 font-semibold">Select NDC:</label>
+          <select
+            value={selectedNdc}
+            onChange={handleNdcSelect}
+            className="w-full px-4 py-2 border rounded"
+          >
+            <option value="">Select an NDC...</option>
+            {ndcList.map((ndc) => (
+              <option key={ndc} value={ndc}>
+                {ndc}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* View Drug Details Button */}
+      {selectedDrug && selectedNdc && (
+        <button
+          onClick={() =>  navigate(
+            `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
+              selectedRxGroup?.id || ""
+            }`
+          )}
+          className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          View Drug Details
+        </button>
+      )}
+    </div>
   );
 };
+
+export default InsuranceSearch;

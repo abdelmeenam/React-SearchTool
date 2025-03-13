@@ -3,14 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { api } from '../api/api';
 import axios from 'axios';
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 
+
+await loadConfig();
+
+const baseUrl = BaseUrlLoader.API_BASE_URL;
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const API_URL = "https://store.medisearchtool.com/user/login";
+
+  const API_URL = `${baseUrl}/user/login`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

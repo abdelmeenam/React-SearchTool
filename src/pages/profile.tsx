@@ -1,7 +1,12 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 
+
+await loadConfig();
+
+const baseUrl = BaseUrlLoader.API_BASE_URL;
 interface UserReadDto {
   email: string;
   name: string;
@@ -10,7 +15,6 @@ interface UserReadDto {
   branchName: string;
   roleName: string;
 }
-const API_BASE_URL = "https://store.medisearchtool.com";
 
 export const ProfilePage: React.FC = () => {
   const token = localStorage.getItem("accessToken"); // Assuming token is stored in localStorage
@@ -30,7 +34,7 @@ export const ProfilePage: React.FC = () => {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/user/UserById`, {
+      const response = await axios.get(`${baseUrl}/user/UserById`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -72,7 +76,7 @@ export const ProfilePage: React.FC = () => {
         updatedData.password = formData.password; // Include password only if it's provided
       }
   
-      await axios.put(`${API_BASE_URL}/user/UpdateUser`, updatedData, {
+      await axios.put(`${baseUrl}/user/UpdateUser`, updatedData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
