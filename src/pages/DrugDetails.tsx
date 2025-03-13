@@ -1049,10 +1049,10 @@ export const DrugDetails: React.FC = () => {
   // Map the provided insuranceId to the insurance name using the sorted alternatives
   useEffect(() => {
     if (insuranceId && sortedAlternatives.length > 0) {
-      const matchingInsurance = sortedAlternatives.find(
-        (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
-      );
-      
+    const matchingInsurance = sortedAlternatives.find(
+  (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
+);
+
       if (matchingInsurance) {
         setSelectedInsurance(matchingInsurance.insuranceName);
         setBranchSelectedInsurance(matchingInsurance.insuranceName);

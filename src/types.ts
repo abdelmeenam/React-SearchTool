@@ -30,7 +30,7 @@ export interface Prescription {
   insurance: any | null;
   bin: string;
   pcn: string;
-
+  binFullName: string;
 }
 
 export interface DrugInsuranceInfo {

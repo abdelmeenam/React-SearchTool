@@ -355,7 +355,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
             onChange={(e) => setSelectedInsurance(e.target.value)}
             className="px-4 py-2 border rounded-md bg-white"
           >
-            <option value="">All Insurance</option>
+            <option value="">All RxGroups</option>
             {[...new Set(latestScripts.map((item) => item.insurance))]
               .sort()
               .map((insurance) => (
@@ -429,7 +429,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   "Date",
                   "Script Code",
                   "Branch Name",
-                  "Insurance",
+                  "Rx Group",
                   "Drug Class",
                   "drug Name",
                   "NDC Code",

@@ -3,6 +3,7 @@ import axios from "axios";
 import debounce from "debounce";
 import { useNavigate } from "react-router-dom";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import your config & loader
+import { motion } from "framer-motion";
 
 // Ensure the config is loaded (using top-level await if your setup supports it)
 await loadConfig();
@@ -58,7 +59,9 @@ export const InsuranceSearch: React.FC = () => {
   const [selectedPcn, setSelectedPcn] = useState<PcnModel | null>(null);
 
   const [rxGroups, setRxGroups] = useState<RxGroupModel[]>([]);
-  const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(null);
+  const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(
+    null
+  );
 
   // --- Drug Flow States ---
   const [drugs, setDrugs] = useState<DrugModel[]>([]);
@@ -103,7 +106,7 @@ export const InsuranceSearch: React.FC = () => {
 
   const handleBinSelect = async (bin: BinModel) => {
     setSelectedBin(bin);
-    setBinQuery(bin.bin);
+    setBinQuery(`${bin.name} -  ${bin.bin}`);
     setShowBinSuggestions(false);
     // Clear downstream selections
     setPcnList([]);
@@ -154,7 +157,9 @@ export const InsuranceSearch: React.FC = () => {
     }
   };
 
-  const handleRxGroupSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleRxGroupSelect = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const rxId = parseInt(e.target.value, 10);
     const selected = rxGroups.find((item) => item.id === rxId) || null;
     setSelectedRxGroup(selected);
@@ -205,6 +210,7 @@ export const InsuranceSearch: React.FC = () => {
         { headers: getAuthHeader() }
       );
       setNdcList(data);
+      setSelectedNdc(data[0]);
     } catch (error) {
       console.error("Error fetching NDC list:", error);
     }
@@ -215,134 +221,147 @@ export const InsuranceSearch: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-4">Insurance Search</h1>
+    <motion.div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="bg-gradient-to-r from-blue-500 to-green-400 rounded-lg shadow-lg p-8 text-white">
+        <h1 className="text-4xl font-bold mb-6 text-center">
+          Insurance Search
+        </h1>
 
-      {/* BIN Input */}
-      <div className="mb-6 relative">
-        <label className="block mb-2 font-semibold">Enter BIN:</label>
-        <input
-          type="text"
-          value={binQuery}
-          onChange={handleBinInputChange}
-          onFocus={() => binQuery.length > 0 && setShowBinSuggestions(true)}
-          placeholder="Type BIN..."
-          className="w-full px-4 py-2 border rounded"
-        />
-        {showBinSuggestions && binSuggestions.length > 0 && (
-          <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-60 overflow-y-auto">
-            {binSuggestions.map((bin) => (
-              <button
-                key={bin.id}
-                onClick={() => handleBinSelect(bin)}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                {bin.bin} {bin.name && `- ${bin.name}`}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* PCN Dropdown */}
-      {pcnList.length > 0 && (
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold">Select PCN:</label>
-          <select
-            value={selectedPcn ? selectedPcn.id : ""}
-            onChange={handlePcnSelect}
-            className="w-full px-4 py-2 border rounded"
-          >
-            <option value="">Select a PCN...</option>
-            {pcnList.map((pcn) => (
-              <option key={pcn.id} value={pcn.id}>
-                {pcn.pcn}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Rx Group Dropdown */}
-      {rxGroups.length > 0 && (
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold">Select Rx Group:</label>
-          <select
-            value={selectedRxGroup ? selectedRxGroup.id : ""}
-            onChange={handleRxGroupSelect}
-            className="w-full px-4 py-2 border rounded"
-          >
-            <option value="">Select an Rx Group...</option>
-            {rxGroups.map((rx) => (
-              <option key={rx.id} value={rx.id}>
-                {rx.rxGroup}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Drug Search Input & Suggestions (hidden if a drug is selected) */}
-      {drugs.length > 0 && !selectedDrug && (
+        {/* BIN Input */}
         <div className="mb-6 relative">
-          <label className="block mb-2 font-semibold">Search for Drug:</label>
           <input
             type="text"
-            value={drugSearchQuery}
-            onChange={handleDrugSearchChange}
-            onFocus={() => setShowDrugSuggestions(true)}
-            placeholder="Type drug name..."
-            className="w-full px-4 py-2 border rounded"
+            value={binQuery}
+            onChange={handleBinInputChange}
+            onFocus={() => binQuery.length > 0 && setShowBinSuggestions(true)}
+            placeholder="Type BIN..."
+            className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
           />
-          {showDrugSuggestions && filteredDrugs.length > 0 && (
-            <div className="absolute z-10 w-full bg-white border rounded mt-1 max-h-60 overflow-y-auto">
-              {filteredDrugs.map((drug) => (
+          {showBinSuggestions && binSuggestions.length > 0 && (
+            <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md max-h-60 overflow-y-auto">
+              {binSuggestions.map((bin) => (
                 <button
-                  key={drug.id}
-                  onClick={() => handleDrugSelect(drug)}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  key={bin.id}
+                  onClick={() => handleBinSelect(bin)}
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
                 >
-                  {drug.name} (NDC: {drug.ndc})
+                  {bin.bin} {bin.name && `- ${bin.name}`}
                 </button>
               ))}
             </div>
           )}
         </div>
-      )}
 
-      {/* NDC Dropdown */}
-      {ndcList.length > 0 && (
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold">Select NDC:</label>
-          <select
-            value={selectedNdc}
-            onChange={handleNdcSelect}
-            className="w-full px-4 py-2 border rounded"
+        {/* PCN Dropdown */}
+        {pcnList.length > 0 && (
+          <div className="mb-6">
+            <label className="block mb-2 font-semibold text-gray-700">
+              Select PCN:
+            </label>
+            <select
+              value={selectedPcn ? selectedPcn.id : ""}
+              onChange={handlePcnSelect}
+              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
+            >
+              <option value="">Select a PCN...</option>
+              {pcnList.map((pcn) => (
+                <option key={pcn.id} value={pcn.id}>
+                  {pcn.pcn}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Rx Group Dropdown */}
+        {rxGroups.length > 0 && (
+          <div className="mb-6">
+            <label className="block mb-2 font-semibold text-gray-700">
+              Select Rx Group:
+            </label>
+            <select
+              value={selectedRxGroup ? selectedRxGroup.id : ""}
+              onChange={handleRxGroupSelect}
+              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
+            >
+              <option value="">Select an Rx Group...</option>
+              {rxGroups.map((rx) => (
+                <option key={rx.id} value={rx.id}>
+                  {rx.rxGroup}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Drug Search Input & Suggestions (hidden if a drug is selected) */}
+        {drugs.length > 0 &&  (
+          <div className="mb-6 relative">
+            <label className="block mb-2 font-semibold text-gray-700">
+              Search for Drug:
+            </label>
+            <input
+              type="text"
+              value={drugSearchQuery}
+              onChange={handleDrugSearchChange}
+              onFocus={() => setShowDrugSuggestions(true)}
+              placeholder="Type drug name..."
+              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
+            />
+            {showDrugSuggestions && filteredDrugs.length > 0 && (
+              <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md max-h-60 overflow-y-auto">
+                {filteredDrugs.map((drug) => (
+                  <button
+                    key={drug.id}
+                    onClick={() => handleDrugSelect(drug)}
+                    className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
+                    >
+                    {drug.name} (NDC: {drug.ndc})
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* NDC Dropdown */}
+        {ndcList.length > 0 && (
+          <div className="mb-6">
+            <label className="block mb-2 font-semibold text-gray-700">
+              Select NDC:
+            </label>
+            <select
+              value={selectedNdc}
+              onChange={handleNdcSelect}
+              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
+            >
+              <option value="">Select an NDC...</option>
+              {ndcList.map((ndc) => (
+                <option key={ndc} value={ndc}>
+                  {ndc}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* View Drug Details Button */}
+        {selectedDrug && selectedNdc && (
+          <button
+            onClick={() =>
+              navigate(
+                `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
+                  selectedRxGroup?.id || ""
+                }`
+              )
+            }
+            className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
           >
-            <option value="">Select an NDC...</option>
-            {ndcList.map((ndc) => (
-              <option key={ndc} value={ndc}>
-                {ndc}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* View Drug Details Button */}
-      {selectedDrug && selectedNdc && (
-        <button
-          onClick={() =>  navigate(
-            `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
-              selectedRxGroup?.id || ""
-            }`
-          )}
-          className="w-full py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          View Drug Details
-        </button>
-      )}
-    </div>
+            View Drug Details
+          </button>
+        )}
+      </div>
+    </motion.div>
   );
 };
 
