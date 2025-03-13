@@ -28,6 +28,7 @@ async function ValidateAccessToken() {
     await axiosInstance.get(API_URL, {
       headers: { Authorization: `Bearer ${BEARER_TOKEN}` },
     });
+    window.location.reload();  
     return true;
   } catch (error) {
     console.log(error);
@@ -45,7 +46,7 @@ async function ValidateRefreshToken() {
     // Store only the Access Token in localStorage
     // console.log(response.data.accessToken);
     localStorage.setItem("accessToken", response.data.accessToken);
-
+    window.location.reload();  
     return true;
   } catch (error) {
     console.log("Refresh failed, logging out...");
