@@ -4,6 +4,7 @@ import debounce from "debounce";
 import { useNavigate } from "react-router-dom";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import your config & loader
 import { motion } from "framer-motion";
+import Select from "react-select";
 
 // Ensure the config is loaded (using top-level await if your setup supports it)
 await loadConfig();
@@ -46,6 +47,26 @@ interface DrugModel {
   rxcui: number;
 }
 
+// Custom styles for react-select to make the option text black
+const customStyles = {
+  option: (provided: any, state: any) => ({
+    ...provided,
+    color: "black",
+  }),
+  singleValue: (provided: any, state: any) => ({
+    ...provided,
+    color: "black",
+  }),
+  input: (provided: any, state: any) => ({
+    ...provided,
+    color: "black",
+  }),
+  placeholder: (provided: any, state: any) => ({
+    ...provided,
+    color: "black",
+  }),
+};
+
 export const InsuranceSearch: React.FC = () => {
   const navigate = useNavigate();
 
@@ -65,15 +86,10 @@ export const InsuranceSearch: React.FC = () => {
 
   // --- Drug Flow States ---
   const [drugs, setDrugs] = useState<DrugModel[]>([]);
-  // Drug search input (client-side filtering)
   const [drugSearchQuery, setDrugSearchQuery] = useState("");
-  // Show/hide drug suggestions dropdown
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
-  // The selected drug from the list
   const [selectedDrug, setSelectedDrug] = useState<DrugModel | null>(null);
-  // NDC list for the selected drug
   const [ndcList, setNdcList] = useState<string[]>([]);
-  // The selected NDC
   const [selectedNdc, setSelectedNdc] = useState("");
 
   // --- Insurance Flow: BIN ---
@@ -131,10 +147,15 @@ export const InsuranceSearch: React.FC = () => {
   };
 
   // --- Insurance Flow: PCN & Rx Group ---
-  const handlePcnSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const pcnId = parseInt(e.target.value, 10);
-    const selected = pcnList.find((item) => item.id === pcnId) || null;
-    setSelectedPcn(selected);
+  const handlePcnSelectFromSelect = async (
+    selectedOption: { value: number; label: string } | null
+  ) => {
+    if (!selectedOption) {
+      setSelectedPcn(null);
+      return;
+    }
+    const pcn = pcnList.find((item) => item.id === selectedOption.value) || null;
+    setSelectedPcn(pcn);
     // Clear downstream selections
     setRxGroups([]);
     setSelectedRxGroup(null);
@@ -144,10 +165,10 @@ export const InsuranceSearch: React.FC = () => {
     setNdcList([]);
     setSelectedNdc("");
 
-    if (selected) {
+    if (pcn) {
       try {
         const { data } = await axios.get(
-          `${API_BASE_URL}/drug/GetInsurancesRxByPcnId?pcnId=${selected.id}`,
+          `${API_BASE_URL}/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`,
           { headers: getAuthHeader() }
         );
         setRxGroups(data);
@@ -157,12 +178,16 @@ export const InsuranceSearch: React.FC = () => {
     }
   };
 
-  const handleRxGroupSelect = async (
-    e: React.ChangeEvent<HTMLSelectElement>
+  const handleRxGroupSelectFromSelect = async (
+    selectedOption: { value: number; label: string } | null
   ) => {
-    const rxId = parseInt(e.target.value, 10);
-    const selected = rxGroups.find((item) => item.id === rxId) || null;
-    setSelectedRxGroup(selected);
+    if (!selectedOption) {
+      setSelectedRxGroup(null);
+      return;
+    }
+    const rxGroup =
+      rxGroups.find((item) => item.id === selectedOption.value) || null;
+    setSelectedRxGroup(rxGroup);
     // Clear downstream selections
     setDrugs([]);
     setSelectedDrug(null);
@@ -170,10 +195,10 @@ export const InsuranceSearch: React.FC = () => {
     setNdcList([]);
     setSelectedNdc("");
 
-    if (selected) {
+    if (rxGroup) {
       try {
         const { data } = await axios.get(
-          `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${selected.rxGroup}`,
+          `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`,
           { headers: getAuthHeader() }
         );
         setDrugs(data);
@@ -184,7 +209,6 @@ export const InsuranceSearch: React.FC = () => {
   };
 
   // --- Drug Flow ---
-  // Render drug search input only when no drug is selected
   const handleDrugSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setDrugSearchQuery(query);
@@ -216,8 +240,10 @@ export const InsuranceSearch: React.FC = () => {
     }
   };
 
-  const handleNdcSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedNdc(e.target.value);
+  const handleNdcSelectFromSelect = (
+    selectedOption: { value: string; label: string } | null
+  ) => {
+    setSelectedNdc(selectedOption ? selectedOption.value : "");
   };
 
   return (
@@ -252,50 +278,58 @@ export const InsuranceSearch: React.FC = () => {
           )}
         </div>
 
-        {/* PCN Dropdown */}
+        {/* PCN Searchable Dropdown */}
         {pcnList.length > 0 && (
           <div className="mb-6">
             <label className="block mb-2 font-semibold text-gray-700">
               Select PCN:
             </label>
-            <select
-              value={selectedPcn ? selectedPcn.id : ""}
-              onChange={handlePcnSelect}
-              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
-            >
-              <option value="">Select a PCN...</option>
-              {pcnList.map((pcn) => (
-                <option key={pcn.id} value={pcn.id}>
-                  {pcn.pcn}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={
+                selectedPcn
+                  ? { value: selectedPcn.id, label: selectedPcn.pcn }
+                  : null
+              }
+              onChange={handlePcnSelectFromSelect}
+              options={pcnList.map((pcn) => ({
+                value: pcn.id,
+                label: pcn.pcn,
+              }))}
+              placeholder="Select a PCN..."
+              styles={customStyles}
+              className="basic-single"
+              classNamePrefix="select"
+            />
           </div>
         )}
 
-        {/* Rx Group Dropdown */}
+        {/* Rx Group Searchable Dropdown */}
         {rxGroups.length > 0 && (
           <div className="mb-6">
             <label className="block mb-2 font-semibold text-gray-700">
               Select Rx Group:
             </label>
-            <select
-              value={selectedRxGroup ? selectedRxGroup.id : ""}
-              onChange={handleRxGroupSelect}
-              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
-            >
-              <option value="">Select an Rx Group...</option>
-              {rxGroups.map((rx) => (
-                <option key={rx.id} value={rx.id}>
-                  {rx.rxGroup}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={
+                selectedRxGroup
+                  ? { value: selectedRxGroup.id, label: selectedRxGroup.rxGroup }
+                  : null
+              }
+              onChange={handleRxGroupSelectFromSelect}
+              options={rxGroups.map((rx) => ({
+                value: rx.id,
+                label: rx.rxGroup,
+              }))}
+              placeholder="Select an Rx Group..."
+              styles={customStyles}
+              className="basic-single"
+              classNamePrefix="select"
+            />
           </div>
         )}
 
-        {/* Drug Search Input & Suggestions (hidden if a drug is selected) */}
-        {drugs.length > 0 &&  (
+        {/* Drug Search Input & Suggestions */}
+        {drugs.length > 0 && (
           <div className="mb-6 relative">
             <label className="block mb-2 font-semibold text-gray-700">
               Search for Drug:
@@ -315,7 +349,7 @@ export const InsuranceSearch: React.FC = () => {
                     key={drug.id}
                     onClick={() => handleDrugSelect(drug)}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
-                    >
+                  >
                     {drug.name} (NDC: {drug.ndc})
                   </button>
                 ))}
@@ -324,24 +358,21 @@ export const InsuranceSearch: React.FC = () => {
           </div>
         )}
 
-        {/* NDC Dropdown */}
+        {/* NDC Searchable Dropdown */}
         {ndcList.length > 0 && (
           <div className="mb-6">
             <label className="block mb-2 font-semibold text-gray-700">
               Select NDC:
             </label>
-            <select
-              value={selectedNdc}
-              onChange={handleNdcSelect}
-              className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-600"
-            >
-              <option value="">Select an NDC...</option>
-              {ndcList.map((ndc) => (
-                <option key={ndc} value={ndc}>
-                  {ndc}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={selectedNdc ? { value: selectedNdc, label: selectedNdc } : null}
+              onChange={handleNdcSelectFromSelect}
+              options={ndcList.map((ndc) => ({ value: ndc, label: ndc }))}
+              placeholder="Select an NDC..."
+              styles={customStyles}
+              className="basic-single"
+              classNamePrefix="select"
+            />
           </div>
         )}
 

@@ -93,69 +93,69 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
     );
   } else {
     return (
-      <div className="bg-gray-50 p-4 rounded-lg">
+      <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <dt className="text-sm font-medium text-gray-500">Class Name</dt>
-            <dd className="mt-1 text-sm text-gray-900">{classNameStr}</dd>
+            <dd className="mt-1 text-base text-gray-900">{classNameStr}</dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">ACQ</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              ${drug.acq.toFixed(2)}
-            </dd>
+            <dd className="mt-1 text-base text-gray-900">${drug.acq.toFixed(2)}</dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">AWP</dt>
-            <dd className="mt-1 text-sm text-gray-900">${drug.awp}</dd>
+            <dd className="mt-1 text-base text-gray-900">${drug.awp}</dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Strength</dt>
-            <dd className="mt-1 text-sm text-gray-900">{drug.strength}</dd>
+            <dd className="mt-1 text-base text-gray-900">{drug.strength}</dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Net</dt>
-            <dd className="mt-1 text-sm text-gray-900">${drugDetail.net}</dd>
+            <dd className="mt-1 text-base text-gray-900">${drugDetail.net}</dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Insurance Pay</dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dd className="mt-1 text-base text-gray-900">
               ${drugDetail.insurancePayment}
             </dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Patient Pay</dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dd className="mt-1 text-base text-gray-900">
               ${drugDetail.patientPayment}
             </dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Quantity</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {drugDetail.quantity}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">BIN</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {drugDetail.binFullName}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">PCN</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {drugDetail.pcn}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              {drugDetail.rxgroup}
-            </dd>
+            <dd className="mt-1 text-base text-gray-900">{drugDetail.quantity}</dd>
           </div>
         </dl>
+    
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">BIN</dt>
+              <dd className="mt-1 text-base text-gray-900">
+                {drugDetail.binFullName}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">PCN</dt>
+              <dd className="mt-1 text-base text-gray-900">{drugDetail.pcn}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
+              <dd className="mt-1 text-base text-gray-900">
+                {drugDetail.rxgroup}
+              </dd>
+            </div>
+          </dl>
+        </div>
       </div>
     );
+    
   }
 };
 
@@ -224,85 +224,84 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
 
   return (
     <section>
-      <div className="flex flex-col gap-2 mb-4">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-          <Repeat className="h-5 w-5 mr-2" />
-          Suggested Alternative Drugs with Available Insurance Price Data{" "}
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <label
-              htmlFor="insuranceFilter"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Filter by Rx Group
-            </label>
-            <select
-              id="insuranceFilter"
-              value={selectedInsurance}
-              onChange={handleInsuranceFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300"
-            >
-              <option value="">All</option>
-              {uniqueInsuranceNames.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="binFilter"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Filter by BIN
-            </label>
-            <select
-              id="binFilter"
-              value={selectedBin}
-              onChange={handleBinFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300"
-            >
-              <option value="">All</option>
-              {uniqueBinValues.map((bin) => (
-                <option key={bin} value={bin}>
-                  {bin}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="pcnFilter"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Filter by PCN
-            </label>
-            <select
-              id="pcnFilter"
-              value={selectedPcn}
-              onChange={handlePcnFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300"
-            >
-              <option value="">All</option>
-              {uniquePcnValues.map((pcn) => (
-                <option key={pcn} value={pcn}>
-                  {pcn}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div
-          className="flex items-center text-sm text-gray-500 cursor-pointer"
-          onClick={handleSort}
+      <div className="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 className="flex items-center text-xl font-semibold text-gray-900 mb-4">
+      <Repeat className="h-5 w-5 mr-2" />
+      Suggested Alternative Drugs with Available Insurance Price Data
+    </h2>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label
+          htmlFor="insuranceFilter"
+          className="block text-sm font-medium text-gray-700"
         >
-          <ArrowUpDown className="h-4 w-4 mr-1" />
-          Sorted by Net Price (
-          {sortOrder === "asc" ? "Ascending" : "Descending"})
-        </div>
+          Filter by Rx Group
+        </label>
+        <select
+          id="insuranceFilter"
+          value={selectedInsurance}
+          onChange={handleInsuranceFilterChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="">All</option>
+          {uniqueInsuranceNames.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
+      <div>
+        <label
+          htmlFor="binFilter"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Filter by BIN
+        </label>
+        <select
+          id="binFilter"
+          value={selectedBin}
+          onChange={handleBinFilterChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="">All</option>
+          {uniqueBinValues.map((bin) => (
+            <option key={bin} value={bin}>
+              {bin}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label
+          htmlFor="pcnFilter"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Filter by PCN
+        </label>
+        <select
+          id="pcnFilter"
+          value={selectedPcn}
+          onChange={handlePcnFilterChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        >
+          <option value="">All</option>
+          {uniquePcnValues.map((pcn) => (
+            <option key={pcn} value={pcn}>
+              {pcn}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <div
+      className="mt-4 flex items-center text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition"
+      onClick={handleSort}
+    >
+      <ArrowUpDown className="h-4 w-4 mr-1" />
+      Sorted by Net Price ({sortOrder === "asc" ? "Ascending" : "Descending"})
+    </div>
+  </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -395,7 +394,9 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{alt.binFullName}</div>
+                    <div className="text-sm text-gray-900">
+                      {alt.binFullName}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{alt.pcn}</div>
@@ -721,7 +722,9 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{drug.binFullName}</div>
+                    <div className="text-sm text-gray-900">
+                      {drug.binFullName}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{drug.pcn}</div>
@@ -1034,7 +1037,7 @@ export const DrugDetails: React.FC = () => {
             `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
             { headers: getAuthHeader() }
           );
-          console.log("this : ",insuranceId);
+          console.log("this : ", insuranceId);
 
           setDrugDetail(response2.data);
           setBranchDrugs(response10.data);
@@ -1050,7 +1053,7 @@ export const DrugDetails: React.FC = () => {
             );
             setSelectedInsurance(matchingAlt?.insuranceName || "");
             setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-            console.log('sdadsa : ')
+            console.log("sdadsa : ");
             console.log(response4.data);
             const sortedData = response4.data.sort((a, b) => b.net - a.net);
             setSortedAlternatives(sortedData);

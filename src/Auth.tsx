@@ -28,7 +28,6 @@ async function ValidateAccessToken() {
     await axiosInstance.get(API_URL, {
       headers: { Authorization: `Bearer ${BEARER_TOKEN}` },
     });
-    window.location.reload();  
     return true;
   } catch (error) {
     console.log(error);
