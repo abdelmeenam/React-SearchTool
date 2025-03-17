@@ -471,15 +471,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     {item.branchCode}
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
-                    <a
-                      href={`/InsuranceDetails/${item.insurance}`}
-                      target="_blank"
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                    >
+                  
                       {item.insurance === "  "
                         ? "MARCOG"
                         : insurance_mapping[item.insurance] || item.insurance}
-                    </a>
                   </td>
                   <td className="px-2 py-2 text-sm text-gray-900">
                     {item.drugClass}

@@ -34,6 +34,9 @@ export const MainDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        localStorage.removeItem("selectedRx");
+        localStorage.removeItem("selectedPcn");
+        localStorage.removeItem("selectedBin");
         const response = await axios.get(
           `${baseUrl}/drug/GetAllLatestScripts`,
           { headers: getAuthHeader() }

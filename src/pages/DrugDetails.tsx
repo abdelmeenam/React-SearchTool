@@ -128,7 +128,7 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
         <div>
           <dt className="text-sm font-medium text-gray-500">Patient Pay</dt>
           <dd className="mt-1 text-base text-gray-900">
-            { drugDetail?.patientPayment}
+            { drugDetail?.patientPayment? drugDetail.patientPayment : 0}
           </dd>
         </div>
         <div>
@@ -394,14 +394,8 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   </td>
                   <td className="px-10 py-4">
                     <div className="text-sm text-gray-500">
-                      <a
-                        href={`/InsuranceDetails/${alt.insuranceName}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                      >
+                 
                         {alt.insuranceName}
-                      </a>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -722,14 +716,8 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                   </td>
                   <td className="px-10 py-4">
                     <div className="text-sm text-gray-500">
-                      <a
-                        href={`/InsuranceDetails/${drug.insuranceName}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                      >
+                    
                         {drug.insuranceName}
-                      </a>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
