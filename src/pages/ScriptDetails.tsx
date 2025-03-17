@@ -64,7 +64,6 @@ const ScriptDetails: React.FC = () => {
                 "Prescriber Name": script.prescriberName,
                 "User Name": script.userName,
                 PF: script.pf,
-                Quantity: script.quantity,
                 "Acquisition Cost": `$${script.acquisitionCost?.toFixed(2)}`,
                 Discount: `$${script.discount?.toFixed(2)}`,
                 "Insurance Payment": `$${script.insurancePayment?.toFixed(2)}`,
