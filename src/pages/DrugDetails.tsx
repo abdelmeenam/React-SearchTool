@@ -208,7 +208,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
       alternatives.filter(
         (alt) =>
           (!selectedInsurance || alt.insuranceName === selectedInsurance) &&
-          (!selectedBin || alt.binFullName === selectedBin) &&
+          (!selectedBin || alt.bin === selectedBin) &&
           (!selectedPcn || alt.pcn === selectedPcn)
       ),
     [alternatives, selectedInsurance, selectedBin, selectedPcn]
@@ -336,6 +336,9 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                 BIN
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Insurance Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 PCN
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -396,6 +399,11 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     <div className="text-sm text-gray-500">
                  
                         {alt.insuranceName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {alt.bin}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -656,6 +664,9 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                 BIN
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Insurance Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 PCN
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -718,6 +729,11 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                     <div className="text-sm text-gray-500">
                     
                         {drug.insuranceName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {drug.bin}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -831,7 +847,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
     () =>
       alternatives.filter(
         (alt) =>
-          (!selectedBin || alt.binFullName === selectedBin) &&
+          (!selectedBin || alt.bin === selectedBin) &&
           (!selectedPcn || alt.pcn === selectedPcn)
       ),
     [alternatives, selectedBin, selectedPcn]
