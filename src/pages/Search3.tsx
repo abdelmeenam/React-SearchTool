@@ -124,22 +124,25 @@ export const Search3: React.FC = () => {
       )
     : drugs;
 
-  const handleDrugSelect = async (drug: DrugModel) => {
+  // Create a unique list of drugs based on their name
+  const uniqueFilteredDrugs = Array.from(
+    new Map(filteredDrugs.map((drug) => [drug.name, drug])).values()
+  );
+
+  // --- When a drug is selected, combine NDCs from all drugs with the same name ---
+  const handleDrugSelect = (drug: DrugModel) => {
+    // Find all drugs with the same name
+    const selectedDrugs = drugs.filter((d) => d.name === drug.name);
+    // Combine their ndc fields and remove duplicates
+    const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
     setSelectedDrug(drug);
     setDrugSearchQuery(drug.name);
     setShowDrugSuggestions(false);
-    // Clear any previous NDC selections
-    setNdcList([]);
-    setSelectedNdc("");
-    try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/drug/getDrugNDCs?name=${drug.name}`,
-        { headers: getAuthHeader() }
-      );
-      setNdcList(data);
-      setSelectedNdc(data[0]);
-    } catch (error) {
-      console.error("Error fetching NDC list:", error);
+    setNdcList(combinedNdcs);
+    if (combinedNdcs.length > 0) {
+      setSelectedNdc(combinedNdcs[0]);
+    } else {
+      console.error("No NDC found for the selected drug");
     }
   };
 
@@ -203,15 +206,15 @@ export const Search3: React.FC = () => {
               placeholder="Type drug name..."
               className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
             />
-            {showDrugSuggestions && filteredDrugs.length > 0 && (
+            {showDrugSuggestions && uniqueFilteredDrugs.length > 0 && (
               <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md max-h-60 overflow-y-auto">
-                {filteredDrugs.map((drug) => (
+                {uniqueFilteredDrugs.map((drug) => (
                   <button
                     key={drug.id}
                     onClick={() => handleDrugSelect(drug)}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
                   >
-                    {drug.name} (NDC: {drug.ndc})
+                    {drug.name}
                   </button>
                 ))}
               </div>

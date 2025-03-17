@@ -34,11 +34,11 @@ interface RxGroupModel {
   insurancePCNId: number;
 }
 
-// Updated DrugModel to include an array of NDCs instead of a single ndc field
+// DrugModel now has a single NDC string
 interface DrugModel {
   id: number;
   name: string;
-  ndcs: string[]; // Now contains an array of NDCs
+  ndc: string;
   form: string;
   strength: string;
   drugClassId: number;
@@ -48,7 +48,7 @@ interface DrugModel {
   rxcui: number;
 }
 
-// Define an interface for override selections
+// Interface for override selections
 interface SelectionOverrides {
   selectedBin?: BinModel | null;
   selectedPcn?: PcnModel | null;
@@ -159,20 +159,16 @@ export const InsuranceSearch: React.FC = () => {
   const fetchDrugsBasedOnSelection = async (
     overrides: SelectionOverrides = {}
   ) => {
-    // Use overrides if provided; otherwise, fall back to state values
     const rxGroup = overrides.selectedRxGroup ?? selectedRxGroup;
     const pcn = overrides.selectedPcn ?? selectedPcn;
     const bin = overrides.selectedBin ?? selectedBin;
     console.log("fetchDrugsBasedOnSelection", { rxGroup, pcn, bin });
     let url = "";
     if (rxGroup) {
-      // Highest priority: Rx Group
       url = `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`;
     } else if (pcn) {
-      // Next priority: PCN
       url = `${API_BASE_URL}/drug/GetDrugsByPCN?pcn=${pcn.pcn}`;
     } else if (bin) {
-      // Fallback: BIN
       url = `${API_BASE_URL}/drug/GetDrugsByBin?bin=${bin.bin}`;
     }
     if (url) {
@@ -246,26 +242,32 @@ export const InsuranceSearch: React.FC = () => {
     setShowDrugSuggestions(true);
   };
 
+  // Filter drugs based on search query
   const filteredDrugs = drugSearchQuery
     ? drugs.filter((drug) =>
         drug.name.toLowerCase().includes(drugSearchQuery.toLowerCase())
       )
     : drugs;
 
-  // When a drug is selected, use the ndcs array from the drug model instead of an extra API call
+  // Create a unique list of drugs based on their name.
+  const uniqueFilteredDrugs = Array.from(
+    new Map(filteredDrugs.map((drug) => [drug.name, drug])).values()
+  );
+
+  // When a drug is selected, loop through all drugs with the same name to combine their unique NDCs.
   const handleDrugSelect = (drug: DrugModel) => {
+    // Find all drugs with the same name
+    const selectedDrugs = drugs.filter((d) => d.name === drug.name);
+    // Combine their single ndc fields and remove duplicates
+    const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
     setSelectedDrug(drug);
     setDrugSearchQuery(drug.name);
     setShowDrugSuggestions(false);
-    // Clear any previous NDC selections
-    setNdcList([]);
-    setSelectedNdc("");
-
-    if (drug.ndcs && drug.ndcs.length > 0) {
-      setNdcList(drug.ndcs);
-      setSelectedNdc(drug.ndcs[0]);
+    setNdcList(combinedNdcs);
+    if (combinedNdcs.length > 0) {
+      setSelectedNdc(combinedNdcs[0]);
     } else {
-      console.error("No NDCs found in selected drug");
+      console.error("No NDC found for the selected drug");
     }
   };
 
@@ -278,9 +280,7 @@ export const InsuranceSearch: React.FC = () => {
   return (
     <motion.div className="max-w-6xl mx-auto px-4 py-10">
       <div className="bg-gradient-to-r from-blue-500 to-green-400 rounded-lg shadow-lg p-8 text-white">
-        <h1 className="text-4xl font-bold mb-6 text-center">
-          Insurance Search
-        </h1>
+        <h1 className="text-4xl font-bold mb-6 text-center">Insurance Search</h1>
 
         {/* BIN Input */}
         <div className="mb-6 relative">
@@ -371,18 +371,15 @@ export const InsuranceSearch: React.FC = () => {
               placeholder="Type drug name..."
               className="w-full px-4 py-3 border-2 rounded-md bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-blue-600"
             />
-            {showDrugSuggestions && filteredDrugs.length > 0 && (
+            {showDrugSuggestions && uniqueFilteredDrugs.length > 0 && (
               <div className="absolute z-10 w-full mt-2 bg-white rounded-md shadow-md max-h-60 overflow-y-auto">
-                {filteredDrugs.map((drug) => (
+                {uniqueFilteredDrugs.map((drug) => (
                   <button
                     key={drug.id}
                     onClick={() => handleDrugSelect(drug)}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
                   >
-                    {drug.name}{" "}
-                    {drug.ndcs &&
-                      drug.ndcs.length > 0 &&
-                      `(First NDC: ${drug.ndcs[0]})`}
+                    {drug.name}
                   </button>
                 ))}
               </div>
@@ -397,9 +394,7 @@ export const InsuranceSearch: React.FC = () => {
               Select NDC:
             </label>
             <Select
-              value={
-                selectedNdc ? { value: selectedNdc, label: selectedNdc } : null
-              }
+              value={selectedNdc ? { value: selectedNdc, label: selectedNdc } : null}
               onChange={handleNdcSelectFromSelect}
               options={ndcList.map((ndc) => ({ value: ndc, label: ndc }))}
               placeholder="Select an NDC..."
@@ -420,7 +415,6 @@ export const InsuranceSearch: React.FC = () => {
                 "selectedBin",
                 (selectedBin?.name || "") + " - " + (selectedBin?.bin)
               );
-
               navigate(
                 `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
                   selectedRxGroup?.id || ""
