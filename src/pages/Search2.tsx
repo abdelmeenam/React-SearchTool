@@ -34,10 +34,11 @@ interface RxGroupModel {
   insurancePCNId: number;
 }
 
+// Updated DrugModel to include an array of NDCs instead of a single ndc field
 interface DrugModel {
   id: number;
   name: string;
-  ndc: string;
+  ndcs: string[]; // Now contains an array of NDCs
   form: string;
   strength: string;
   drugClassId: number;
@@ -47,21 +48,28 @@ interface DrugModel {
   rxcui: number;
 }
 
+// Define an interface for override selections
+interface SelectionOverrides {
+  selectedBin?: BinModel | null;
+  selectedPcn?: PcnModel | null;
+  selectedRxGroup?: RxGroupModel | null;
+}
+
 // Custom styles for react-select to make the option text black
 const customStyles = {
-  option: (provided: any, state: any) => ({
+  option: (provided: any) => ({
     ...provided,
     color: "black",
   }),
-  singleValue: (provided: any, state: any) => ({
+  singleValue: (provided: any) => ({
     ...provided,
     color: "black",
   }),
-  input: (provided: any, state: any) => ({
+  input: (provided: any) => ({
     ...provided,
     color: "black",
   }),
-  placeholder: (provided: any, state: any) => ({
+  placeholder: (provided: any) => ({
     ...provided,
     color: "black",
   }),
@@ -80,9 +88,7 @@ export const InsuranceSearch: React.FC = () => {
   const [selectedPcn, setSelectedPcn] = useState<PcnModel | null>(null);
 
   const [rxGroups, setRxGroups] = useState<RxGroupModel[]>([]);
-  const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(
-    null
-  );
+  const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(null);
 
   // --- Drug Flow States ---
   const [drugs, setDrugs] = useState<DrugModel[]>([]);
@@ -121,8 +127,9 @@ export const InsuranceSearch: React.FC = () => {
   };
 
   const handleBinSelect = async (bin: BinModel) => {
+    // Update state with the newly selected bin
     setSelectedBin(bin);
-    setBinQuery(`${bin.name} -  ${bin.bin}`);
+    setBinQuery(`${bin.name} - ${bin.bin}`);
     setShowBinSuggestions(false);
     // Clear downstream selections
     setPcnList([]);
@@ -141,8 +148,40 @@ export const InsuranceSearch: React.FC = () => {
         { headers: getAuthHeader() }
       );
       setPcnList(data);
+      // Use override to pass the selected bin value to the fetch function
+      await fetchDrugsBasedOnSelection({ selectedBin: bin });
     } catch (error) {
       console.error("Error fetching PCNs:", error);
+    }
+  };
+
+  // --- Unified Drug Fetching Function with Overrides ---
+  const fetchDrugsBasedOnSelection = async (
+    overrides: SelectionOverrides = {}
+  ) => {
+    // Use overrides if provided; otherwise, fall back to state values
+    const rxGroup = overrides.selectedRxGroup ?? selectedRxGroup;
+    const pcn = overrides.selectedPcn ?? selectedPcn;
+    const bin = overrides.selectedBin ?? selectedBin;
+    console.log("fetchDrugsBasedOnSelection", { rxGroup, pcn, bin });
+    let url = "";
+    if (rxGroup) {
+      // Highest priority: Rx Group
+      url = `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`;
+    } else if (pcn) {
+      // Next priority: PCN
+      url = `${API_BASE_URL}/drug/GetDrugsByPCN?pcn=${pcn.pcn}`;
+    } else if (bin) {
+      // Fallback: BIN
+      url = `${API_BASE_URL}/drug/GetDrugsByBin?bin=${bin.bin}`;
+    }
+    if (url) {
+      try {
+        const { data } = await axios.get(url, { headers: getAuthHeader() });
+        setDrugs(data);
+      } catch (error) {
+        console.error("Error fetching drugs:", error);
+      }
     }
   };
 
@@ -154,7 +193,8 @@ export const InsuranceSearch: React.FC = () => {
       setSelectedPcn(null);
       return;
     }
-    const pcn = pcnList.find((item) => item.id === selectedOption.value) || null;
+    const pcn =
+      pcnList.find((item) => item.id === selectedOption.value) || null;
     setSelectedPcn(pcn);
     // Clear downstream selections
     setRxGroups([]);
@@ -175,6 +215,7 @@ export const InsuranceSearch: React.FC = () => {
       } catch (error) {
         console.error("Error fetching Rx Groups:", error);
       }
+      await fetchDrugsBasedOnSelection({ selectedPcn: pcn });
     }
   };
 
@@ -195,17 +236,7 @@ export const InsuranceSearch: React.FC = () => {
     setNdcList([]);
     setSelectedNdc("");
 
-    if (rxGroup) {
-      try {
-        const { data } = await axios.get(
-          `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`,
-          { headers: getAuthHeader() }
-        );
-        setDrugs(data);
-      } catch (error) {
-        console.error("Error fetching drugs:", error);
-      }
-    }
+    await fetchDrugsBasedOnSelection({ selectedRxGroup: rxGroup });
   };
 
   // --- Drug Flow ---
@@ -221,22 +252,20 @@ export const InsuranceSearch: React.FC = () => {
       )
     : drugs;
 
-  const handleDrugSelect = async (drug: DrugModel) => {
+  // When a drug is selected, use the ndcs array from the drug model instead of an extra API call
+  const handleDrugSelect = (drug: DrugModel) => {
     setSelectedDrug(drug);
     setDrugSearchQuery(drug.name);
     setShowDrugSuggestions(false);
     // Clear any previous NDC selections
     setNdcList([]);
     setSelectedNdc("");
-    try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/drug/getDrugNDCs?name=${drug.name}`,
-        { headers: getAuthHeader() }
-      );
-      setNdcList(data);
-      setSelectedNdc(data[0]);
-    } catch (error) {
-      console.error("Error fetching NDC list:", error);
+
+    if (drug.ndcs && drug.ndcs.length > 0) {
+      setNdcList(drug.ndcs);
+      setSelectedNdc(drug.ndcs[0]);
+    } else {
+      console.error("No NDCs found in selected drug");
     }
   };
 
@@ -350,7 +379,10 @@ export const InsuranceSearch: React.FC = () => {
                     onClick={() => handleDrugSelect(drug)}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-800"
                   >
-                    {drug.name} (NDC: {drug.ndc})
+                    {drug.name}{" "}
+                    {drug.ndcs &&
+                      drug.ndcs.length > 0 &&
+                      `(First NDC: ${drug.ndcs[0]})`}
                   </button>
                 ))}
               </div>
@@ -365,7 +397,9 @@ export const InsuranceSearch: React.FC = () => {
               Select NDC:
             </label>
             <Select
-              value={selectedNdc ? { value: selectedNdc, label: selectedNdc } : null}
+              value={
+                selectedNdc ? { value: selectedNdc, label: selectedNdc } : null
+              }
               onChange={handleNdcSelectFromSelect}
               options={ndcList.map((ndc) => ({ value: ndc, label: ndc }))}
               placeholder="Select an NDC..."
@@ -379,13 +413,20 @@ export const InsuranceSearch: React.FC = () => {
         {/* View Drug Details Button */}
         {selectedDrug && selectedNdc && (
           <button
-            onClick={() =>
+            onClick={() => {
+              localStorage.setItem("selectedRx", selectedRxGroup?.rxGroup || "");
+              localStorage.setItem("selectedPcn", selectedPcn?.pcn || "");
+              localStorage.setItem(
+                "selectedBin",
+                (selectedBin?.name || "") + " - " + (selectedBin?.bin)
+              );
+
               navigate(
                 `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
                   selectedRxGroup?.id || ""
                 }`
-              )
-            }
+              );
+            }}
             className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
           >
             View Drug Details

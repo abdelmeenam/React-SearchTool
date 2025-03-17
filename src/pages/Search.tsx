@@ -128,6 +128,7 @@ export const Search: React.FC = () => {
 
   const handleSearch = () => {
     if (selectedDrug) {
+      localStorage.setItem("selectedRx",selectedInsurance?.insurance);
       navigate(
         `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
           selectedInsurance?.insuranceId || ""

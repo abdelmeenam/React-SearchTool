@@ -65,98 +65,108 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
   drugDetail,
   classNameStr,
 }) => {
-  if (!drugDetail) {
-    return (
-      <>
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Class Name</dt>
-              <dd className="mt-1 text-sm text-gray-900">{classNameStr}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">AWP</dt>
-              <dd className="mt-1 text-sm text-gray-900">${drug.awp}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Strength</dt>
-              <dd className="mt-1 text-sm text-gray-900">{drug.strength}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">Form</dt>
-              <dd className="mt-1 text-sm text-gray-900">{drug.form}</dd>
-            </div>
-          </dl>
+  // if (!drugDetail) {
+  //   return (
+  //     <>
+  //       <div className="bg-gray-50 p-4 rounded-lg">
+  //         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+  //           <div>
+  //             <dt className="text-sm font-medium text-gray-500">Class Name</dt>
+  //             <dd className="mt-1 text-sm text-gray-900">{classNameStr}</dd>
+  //           </div>
+  //           <div>
+  //             <dt className="text-sm font-medium text-gray-500">AWP</dt>
+  //             <dd className="mt-1 text-sm text-gray-900">${drug.awp}</dd>
+  //           </div>
+  //           <div>
+  //             <dt className="text-sm font-medium text-gray-500">Strength</dt>
+  //             <dd className="mt-1 text-sm text-gray-900">{drug.strength}</dd>
+  //           </div>
+  //           <div>
+  //             <dt className="text-sm font-medium text-gray-500">Form</dt>
+  //             <dd className="mt-1 text-sm text-gray-900">{drug.form}</dd>
+  //           </div>
+  //         </dl>
+  //       </div>
+  //       <div className="text-center text-2xl font-bold my-4">Other Drugs</div>
+  //     </>
+  //   );
+  // } else {
+  return (
+    <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div>
+          <dt className="text-sm font-medium text-gray-500">Class Name</dt>
+          <dd className="mt-1 text-base text-gray-900">{classNameStr}</dd>
         </div>
-        <div className="text-center text-2xl font-bold my-4">Other Drugs</div>
-      </>
-    );
-  } else {
-    return (
-      <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div>
+          <dt className="text-sm font-medium text-gray-500">ACQ</dt>
+          <dd className="mt-1 text-base text-gray-900">
+            ${drug.acq.toFixed(2)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm font-medium text-gray-500">AWP</dt>
+          <dd className="mt-1 text-base text-gray-900">${drug.awp}</dd>
+        </div>
+        <div>
+          <dt className="text-sm font-medium text-gray-500">Strength</dt>
+          <dd className="mt-1 text-base text-gray-900">{drug.strength}</dd>
+        </div>
+        <div>
+          <dt className="text-sm font-medium text-gray-500">Net</dt>
+          <dd className="mt-1 text-base text-gray-900">
+            {drugDetail ? drugDetail.net : "N/A"}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm font-medium text-gray-500">Insurance Pay</dt>
+          <dd className="mt-1 text-base text-gray-900">
+            {drugDetail?.insurancePayment ? drugDetail.insurancePayment : "NA"}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm font-medium text-gray-500">Patient Pay</dt>
+          <dd className="mt-1 text-base text-gray-900">
+            { drugDetail?.patientPayment}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-sm font-medium text-gray-500">Quantity</dt>
+          <dd className="mt-1 text-base text-gray-900">{"NA"}</dd>
+        </div>
+      </dl>
+
+      <div className="mt-6 border-t border-gray-200 pt-6">
+        <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <dt className="text-sm font-medium text-gray-500">Class Name</dt>
-            <dd className="mt-1 text-base text-gray-900">{classNameStr}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">ACQ</dt>
-            <dd className="mt-1 text-base text-gray-900">${drug.acq.toFixed(2)}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">AWP</dt>
-            <dd className="mt-1 text-base text-gray-900">${drug.awp}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Strength</dt>
-            <dd className="mt-1 text-base text-gray-900">{drug.strength}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Net</dt>
-            <dd className="mt-1 text-base text-gray-900">${drugDetail.net}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Insurance Pay</dt>
+            <dt className="text-sm font-medium text-gray-500">BIN</dt>
             <dd className="mt-1 text-base text-gray-900">
-              ${drugDetail.insurancePayment}
+              {localStorage.getItem("selectedBin")
+                ? localStorage.getItem("selectedBin")
+                : "NA"}
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Patient Pay</dt>
+            <dt className="text-sm font-medium text-gray-500">PCN</dt>
             <dd className="mt-1 text-base text-gray-900">
-              ${drugDetail.patientPayment}
+              {localStorage.getItem("selectedPcn")
+                ? localStorage.getItem("selectedPcn")
+                : "NA"}
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Quantity</dt>
-            <dd className="mt-1 text-base text-gray-900">{drugDetail.quantity}</dd>
+            <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
+            <dd className="mt-1 text-base text-gray-900">
+              {localStorage.getItem("selectedRx")
+                ? localStorage.getItem("selectedRx")
+                : "NA"}
+            </dd>
           </div>
         </dl>
-    
-        <div className="mt-6 border-t border-gray-200 pt-6">
-          <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <dt className="text-sm font-medium text-gray-500">BIN</dt>
-              <dd className="mt-1 text-base text-gray-900">
-                {drugDetail.binFullName}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">PCN</dt>
-              <dd className="mt-1 text-base text-gray-900">{drugDetail.pcn}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
-              <dd className="mt-1 text-base text-gray-900">
-                {drugDetail.rxgroup}
-              </dd>
-            </div>
-          </dl>
-        </div>
       </div>
-    );
-    
-  }
+    </div>
+  );
 };
 
 interface AlternativesTableProps {
@@ -225,83 +235,84 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
   return (
     <section>
       <div className="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 className="flex items-center text-xl font-semibold text-gray-900 mb-4">
-      <Repeat className="h-5 w-5 mr-2" />
-      Suggested Alternative Drugs with Available Insurance Price Data
-    </h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label
-          htmlFor="insuranceFilter"
-          className="block text-sm font-medium text-gray-700"
+        <h2 className="flex items-center text-xl font-semibold text-gray-900 mb-4">
+          <Repeat className="h-5 w-5 mr-2" />
+          Suggested Alternative Drugs with Available Insurance Price Data
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label
+              htmlFor="insuranceFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by Rx Group
+            </label>
+            <select
+              id="insuranceFilter"
+              value={selectedInsurance}
+              onChange={handleInsuranceFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All</option>
+              {uniqueInsuranceNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="binFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by BIN
+            </label>
+            <select
+              id="binFilter"
+              value={selectedBin}
+              onChange={handleBinFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All</option>
+              {uniqueBinValues.map((bin) => (
+                <option key={bin} value={bin}>
+                  {bin}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="pcnFilter"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Filter by PCN
+            </label>
+            <select
+              id="pcnFilter"
+              value={selectedPcn}
+              onChange={handlePcnFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All</option>
+              {uniquePcnValues.map((pcn) => (
+                <option key={pcn} value={pcn}>
+                  {pcn}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div
+          className="mt-4 flex items-center text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition"
+          onClick={handleSort}
         >
-          Filter by Rx Group
-        </label>
-        <select
-          id="insuranceFilter"
-          value={selectedInsurance}
-          onChange={handleInsuranceFilterChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="">All</option>
-          {uniqueInsuranceNames.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+          <ArrowUpDown className="h-4 w-4 mr-1" />
+          Sorted by Net Price (
+          {sortOrder === "asc" ? "Ascending" : "Descending"})
+        </div>
       </div>
-      <div>
-        <label
-          htmlFor="binFilter"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Filter by BIN
-        </label>
-        <select
-          id="binFilter"
-          value={selectedBin}
-          onChange={handleBinFilterChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="">All</option>
-          {uniqueBinValues.map((bin) => (
-            <option key={bin} value={bin}>
-              {bin}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label
-          htmlFor="pcnFilter"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Filter by PCN
-        </label>
-        <select
-          id="pcnFilter"
-          value={selectedPcn}
-          onChange={handlePcnFilterChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="">All</option>
-          {uniquePcnValues.map((pcn) => (
-            <option key={pcn} value={pcn}>
-              {pcn}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-    <div
-      className="mt-4 flex items-center text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition"
-      onClick={handleSort}
-    >
-      <ArrowUpDown className="h-4 w-4 mr-1" />
-      Sorted by Net Price ({sortOrder === "asc" ? "Ascending" : "Descending"})
-    </div>
-  </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -422,7 +433,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {alt.insuranceName ? alt.quantity : "NA"}
+                      {"NA"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -983,6 +994,7 @@ export const DrugDetails: React.FC = () => {
   useEffect(() => {
     const fetchDrugDetails = async () => {
       try {
+        
         let response2;
         if (!insuranceId) {
           let response;
@@ -1051,7 +1063,7 @@ export const DrugDetails: React.FC = () => {
             const matchingAlt = response4.data.find(
               (alt) => alt.insuranceId.toString() === insuranceId
             );
-            setSelectedInsurance(matchingAlt?.insuranceName || "");
+      
             setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
             console.log("sdadsa : ");
             console.log(response4.data);
@@ -1061,10 +1073,24 @@ export const DrugDetails: React.FC = () => {
             setSortedAlternatives([]);
           }
         }
+        
       } catch (err) {
         setError("Failed to load drug details");
       } finally {
         setLoading(false);
+      //   setSelectedInsurance(
+           
+      //     localStorage.getItem("selectedRx") ||
+      //     ""
+      // );
+      // setSelectedBin(
+        
+      //     localStorage.getItem("selectedBin") ||
+      //     ""
+      // );
+      // setSelectedPcn(
+      //  localStorage.getItem("selectedPcn") || ""
+      // );
       }
     };
 
@@ -1149,14 +1175,14 @@ export const DrugDetails: React.FC = () => {
   );
   console.log("dsadas :: ", alternativesWithInsurance);
   const alternativesWithoutInsurance = sortedAlternatives.filter(
-    (alt) => !alt.binFullName
+    (alt) => !alt.bin
   );
 
   const uniqueInsuranceNames: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
   ].sort();
   const uniqueBinValues: string[] = [
-    ...new Set(alternativesWithInsurance.map((alt) => alt.binFullName)),
+    ...new Set(alternativesWithInsurance.map((alt) => alt.bin)),
   ].sort();
   const uniquePcnValues: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.pcn)),
@@ -1166,14 +1192,14 @@ export const DrugDetails: React.FC = () => {
     ...new Set(branchDrugs.map((drug) => drug.insuranceName)),
   ].sort();
   const branchUniqueBinValues: string[] = [
-    ...new Set(branchDrugs.map((drug) => drug.binFullName)),
+    ...new Set(branchDrugs.map((drug) => drug.bin)),
   ].sort();
   const branchUniquePcnValues: string[] = [
     ...new Set(branchDrugs.map((drug) => drug.pcn)),
   ].sort();
 
   const uniqueOtherBinValues: string[] = [
-    ...new Set(alternativesWithoutInsurance.map((alt) => alt.binFullName)),
+    ...new Set(alternativesWithoutInsurance.map((alt) => alt.bin)),
   ].sort();
   const uniqueOtherPcnValues: string[] = [
     ...new Set(alternativesWithoutInsurance.map((alt) => alt.pcn)),

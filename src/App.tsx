@@ -3,22 +3,17 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
-import { Search } from "./pages/Search";
-import { Upload } from "./pages/Upload";
-import { DrugDetails } from "./pages/DrugDetails";
-import { Dashboard } from "./pages/Dashboard";
 import { Home } from "./pages/Home";
 import { LogsPage } from "./pages/Logs";
-import SecondDashBoard from "./pages/SecondDashBoard";
-import ThirdDashBoard from "./pages/ThirdDashBoard";
 import MainDashboard from "./pages/MainDashboard";
+import { DrugDetails } from "./pages/DrugDetails";
 import ScriptDetails from "./pages/ScriptDetails";
 import InsuranceDetails from "./pages/InsuranceDetails";
-import { ProfilePage } from "./pages/profile";
-import Auth from "./Auth";
-import { InsuranceSearch } from "./pages/Search2";
 import { SearchSwitcher } from "./pages/SearchSwitcher";
+// import Upload from "./pages/Upload";
+import Auth from "./Auth";
 
+// Route protection components
 const PrivateRoute: React.FC<{ children: React.ReactNode; isAdmin?: boolean }> = ({ children, isAdmin = false }) => {
   const role = localStorage.getItem("role");
 
@@ -73,7 +68,7 @@ function App() {
             {/* Default Home Page */}
             <Route index element={<Home />} />
 
-            {/* Public route - if user is authenticated, they are redirected */}
+            {/* Public route */}
             <Route
               path="login"
               element={
@@ -83,7 +78,7 @@ function App() {
               }
             />
 
-            {/* Private routes - accessible only when authenticated */}
+            {/* Private routes */}
             <Route
               path="search"
               element={
@@ -92,14 +87,14 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route
+            {/* <Route
               path="upload"
               element={
                 <PrivateRoute>
                   <Upload />
                 </PrivateRoute>
               }
-            />
+            /> */}
             <Route
               path="dashboard"
               element={
@@ -140,15 +135,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            {/* Uncomment if needed in the future */}
-            {/* <Route
-              path="/Profile"
-              element={
-                <PrivateRoute>
-                  <ProfilePage />
-                </PrivateRoute>
-              }
-            /> */}
           </Route>
         </Routes>
       </BrowserRouter>
