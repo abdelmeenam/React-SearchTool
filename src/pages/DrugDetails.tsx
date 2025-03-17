@@ -65,33 +65,6 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
   drugDetail,
   classNameStr,
 }) => {
-  // if (!drugDetail) {
-  //   return (
-  //     <>
-  //       <div className="bg-gray-50 p-4 rounded-lg">
-  //         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-  //           <div>
-  //             <dt className="text-sm font-medium text-gray-500">Class Name</dt>
-  //             <dd className="mt-1 text-sm text-gray-900">{classNameStr}</dd>
-  //           </div>
-  //           <div>
-  //             <dt className="text-sm font-medium text-gray-500">AWP</dt>
-  //             <dd className="mt-1 text-sm text-gray-900">${drug.awp}</dd>
-  //           </div>
-  //           <div>
-  //             <dt className="text-sm font-medium text-gray-500">Strength</dt>
-  //             <dd className="mt-1 text-sm text-gray-900">{drug.strength}</dd>
-  //           </div>
-  //           <div>
-  //             <dt className="text-sm font-medium text-gray-500">Form</dt>
-  //             <dd className="mt-1 text-sm text-gray-900">{drug.form}</dd>
-  //           </div>
-  //         </dl>
-  //       </div>
-  //       <div className="text-center text-2xl font-bold my-4">Other Drugs</div>
-  //     </>
-  //   );
-  // } else {
   return (
     <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -128,7 +101,7 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
         <div>
           <dt className="text-sm font-medium text-gray-500">Patient Pay</dt>
           <dd className="mt-1 text-base text-gray-900">
-            { drugDetail?.patientPayment? drugDetail.patientPayment : 0}
+            {drugDetail?.patientPayment ? drugDetail.patientPayment : 0}
           </dd>
         </div>
         <div>
@@ -140,7 +113,9 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
       <div className="mt-6 border-t border-gray-200 pt-6">
         <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <dt className="text-sm font-medium text-gray-500">BIN</dt>
+            <dt className="text-sm font-medium text-gray-500">
+              Insurance Name - BIN
+            </dt>
             <dd className="mt-1 text-base text-gray-900">
               {localStorage.getItem("selectedBin")
                 ? localStorage.getItem("selectedBin")
@@ -180,7 +155,7 @@ interface AlternativesTableProps {
   uniqueInsuranceNames: string[];
   selectedBin: string;
   handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  uniqueBinValues: string[];
+  uniqueBinValues: { bin: string; binFullName: string }[];
   selectedPcn: string;
   handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   uniquePcnValues: string[];
@@ -266,7 +241,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
               htmlFor="binFilter"
               className="block text-sm font-medium text-gray-700"
             >
-              Filter by BIN
+              Filter by BIN or Insurance Name
             </label>
             <select
               id="binFilter"
@@ -275,9 +250,9 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               <option value="">All</option>
-              {uniqueBinValues.map((bin) => (
+              {uniqueBinValues.map(({ bin, binFullName }) => (
                 <option key={bin} value={bin}>
-                  {bin}
+                  {bin} - {binFullName}
                 </option>
               ))}
             </select>
@@ -361,10 +336,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentItems.length > 0 ? (
               currentItems.map((alt, index) => (
-                <tr
-                  key={`${alt.ndcCode}-${index}`}
-                  className="hover:bg-gray-50"
-                >
+                <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <a
@@ -379,9 +351,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     <div className="text-sm text-gray-500">{classNameStr}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {alt.branchName}
-                    </div>
+                    <div className="text-sm text-gray-500">{alt.branchName}</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500">
@@ -397,14 +367,11 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   </td>
                   <td className="px-10 py-4">
                     <div className="text-sm text-gray-500">
-                 
-                        {alt.insuranceName}
+                      {alt.insuranceName}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {alt.bin}
-                    </div>
+                    <div className="text-sm text-gray-900">{alt.bin}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
@@ -502,7 +469,7 @@ interface BranchDrugsTableProps {
   uniqueInsuranceNames: string[];
   selectedBin: string;
   handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  uniqueBinValues: string[];
+  uniqueBinValues: { bin: string; binFullName: string }[];
   selectedPcn: string;
   handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   uniquePcnValues: string[];
@@ -526,7 +493,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
       branchDrugs.filter(
         (drug) =>
           (!selectedInsurance || drug.insuranceName === selectedInsurance) &&
-          (!selectedBin || drug.binFullName === selectedBin) &&
+          (!selectedBin || drug.bin === selectedBin) &&
           (!selectedPcn || drug.pcn === selectedPcn)
       ),
     [branchDrugs, selectedInsurance, selectedBin, selectedPcn]
@@ -601,9 +568,9 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
               className="mt-1 block w-full rounded-md border-gray-300"
             >
               <option value="">All</option>
-              {uniqueBinValues.map((bin) => (
+              {uniqueBinValues.map(({ bin, binFullName }) => (
                 <option key={bin} value={bin}>
-                  {bin}
+                  {bin} - {binFullName}
                 </option>
               ))}
             </select>
@@ -689,10 +656,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentItems.length > 0 ? (
               currentItems.map((drug, index) => (
-                <tr
-                  key={`${drug.ndcCode}-${index}`}
-                  className="hover:bg-gray-50"
-                >
+                <tr key={`${drug.ndcCode}-${index}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <a
@@ -714,9 +678,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500">
                       <a
-                        href={`https://ndclist.com/ndc/${padCode(
-                          drug.ndcCode
-                        )}`}
+                        href={`https://ndclist.com/ndc/${padCode(drug.ndcCode)}`}
                         className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -727,14 +689,11 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                   </td>
                   <td className="px-10 py-4">
                     <div className="text-sm text-gray-500">
-                    
-                        {drug.insuranceName}
+                      {drug.insuranceName}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {drug.bin}
-                    </div>
+                    <div className="text-sm text-gray-900">{drug.bin}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
@@ -827,7 +786,7 @@ interface OtherAlternativesTableProps {
   padCode: (code: string) => string;
   selectedBin: string;
   handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  uniqueBinValues: string[];
+  uniqueBinValues: { bin: string; binFullName: string }[];
   selectedPcn: string;
   handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   uniquePcnValues: string[];
@@ -998,7 +957,6 @@ export const DrugDetails: React.FC = () => {
   useEffect(() => {
     const fetchDrugDetails = async () => {
       try {
-        
         let response2;
         if (!insuranceId) {
           let response;
@@ -1067,7 +1025,7 @@ export const DrugDetails: React.FC = () => {
             const matchingAlt = response4.data.find(
               (alt) => alt.insuranceId.toString() === insuranceId
             );
-      
+
             setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
             console.log("sdadsa : ");
             console.log(response4.data);
@@ -1077,24 +1035,10 @@ export const DrugDetails: React.FC = () => {
             setSortedAlternatives([]);
           }
         }
-        
       } catch (err) {
         setError("Failed to load drug details");
       } finally {
         setLoading(false);
-      //   setSelectedInsurance(
-           
-      //     localStorage.getItem("selectedRx") ||
-      //     ""
-      // );
-      // setSelectedBin(
-        
-      //     localStorage.getItem("selectedBin") ||
-      //     ""
-      // );
-      // setSelectedPcn(
-      //  localStorage.getItem("selectedPcn") || ""
-      // );
       }
     };
 
@@ -1107,13 +1051,10 @@ export const DrugDetails: React.FC = () => {
       const matchingInsurance = sortedAlternatives.find(
         (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
       );
-
+      setSelectedInsurance(localStorage.getItem("selectedRx") || "");
+      setSelectedPcn(localStorage.getItem("selectedPcn") || "");
       if (matchingInsurance) {
-        setSelectedInsurance(matchingInsurance.insuranceName);
-        setBranchSelectedInsurance(matchingInsurance.insuranceName);
-      } else {
-        setSelectedInsurance("");
-        setBranchSelectedInsurance("");
+        setSelectedBin(matchingInsurance?.bin || "");
       }
     }
   }, [insuranceId, sortedAlternatives]);
@@ -1185,9 +1126,14 @@ export const DrugDetails: React.FC = () => {
   const uniqueInsuranceNames: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
   ].sort();
-  const uniqueBinValues: string[] = [
-    ...new Set(alternativesWithInsurance.map((alt) => alt.bin)),
-  ].sort();
+  const uniqueBinValues = Array.from(
+    alternativesWithInsurance.reduce((binMap, alt) => {
+      if (!binMap.has(alt.bin)) {
+        binMap.set(alt.bin, alt.binFullName);
+      }
+      return binMap;
+    }, new Map<string, string>())
+  ).map(([bin, binFullName]) => ({ bin, binFullName }));
   const uniquePcnValues: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.pcn)),
   ].sort();
@@ -1195,16 +1141,26 @@ export const DrugDetails: React.FC = () => {
   const branchUniqueInsuranceNames: string[] = [
     ...new Set(branchDrugs.map((drug) => drug.insuranceName)),
   ].sort();
-  const branchUniqueBinValues: string[] = [
-    ...new Set(branchDrugs.map((drug) => drug.bin)),
-  ].sort();
+  const branchUniqueBinValues = Array.from(
+    branchDrugs.reduce((binMap, drug) => {
+      if (!binMap.has(drug.bin)) {
+        binMap.set(drug.bin, drug.binFullName);
+      }
+      return binMap;
+    }, new Map<string, string>())
+  ).map(([bin, binFullName]) => ({ bin, binFullName }));
   const branchUniquePcnValues: string[] = [
     ...new Set(branchDrugs.map((drug) => drug.pcn)),
   ].sort();
 
-  const uniqueOtherBinValues: string[] = [
-    ...new Set(alternativesWithoutInsurance.map((alt) => alt.bin)),
-  ].sort();
+  const uniqueOtherBinValues = Array.from(
+    alternativesWithoutInsurance.reduce((binMap, alt) => {
+      if (!binMap.has(alt.bin)) {
+        binMap.set(alt.bin, alt.binFullName);
+      }
+      return binMap;
+    }, new Map<string, string>())
+  ).map(([bin, binFullName]) => ({ bin, binFullName }));
   const uniqueOtherPcnValues: string[] = [
     ...new Set(alternativesWithoutInsurance.map((alt) => alt.pcn)),
   ].sort();
@@ -1272,9 +1228,7 @@ export const DrugDetails: React.FC = () => {
                     classNameStr={classNameStr}
                     padCode={padCode}
                     selectedInsurance={branchSelectedInsurance}
-                    handleInsuranceFilterChange={
-                      handleBranchInsuranceFilterChange
-                    }
+                    handleInsuranceFilterChange={handleBranchInsuranceFilterChange}
                     uniqueInsuranceNames={branchUniqueInsuranceNames}
                     selectedBin={branchSelectedBin}
                     handleBinFilterChange={handleBranchBinFilterChange}
@@ -1298,3 +1252,4 @@ export const DrugDetails: React.FC = () => {
 };
 
 const padCode = (code: string) => code.padStart(11, "0");
+export default DrugDetails;

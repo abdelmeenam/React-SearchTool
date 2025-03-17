@@ -135,6 +135,7 @@ export const Search3: React.FC = () => {
     const selectedDrugs = drugs.filter((d) => d.name === drug.name);
     // Combine their ndc fields and remove duplicates
     const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
+    
     setSelectedDrug(drug);
     setDrugSearchQuery(drug.name);
     setShowDrugSuggestions(false);
@@ -145,18 +146,30 @@ export const Search3: React.FC = () => {
       console.error("No NDC found for the selected drug");
     }
   };
-
-  const handleNdcSelectFromSelect = (
+  const handleDrugDetails = async () => {
+    const {data} = await axios.get(
+      `${API_BASE_URL}/drug/GetDetails?ndc=${selectedNdc}&insuranceId=${selectedRxGroup?.id || ""}`,
+      { headers: getAuthHeader() }
+    );
+    localStorage.setItem("selectedPcn", data.pcn);
+    localStorage.setItem(
+      "selectedBin",
+      (data?.binFullName || "") + " - " + (data?.bin)
+    );
+    console.log(data);
+  }
+  const handleNdcSelectFromSelect = async (
     selectedOption: { value: string; label: string } | null
   ) => {
     setSelectedNdc(selectedOption ? selectedOption.value : "");
+
   };
 
   return (
     <motion.div className="max-w-6xl mx-auto px-4 py-10">
       <div className="bg-gradient-to-r from-blue-500 to-green-400 rounded-lg shadow-lg p-8 text-white">
         <h1 className="text-4xl font-bold mb-6 text-center">
-          Search3: RxGroup, Drugs & NDC
+         RxGroup, Drugs & NDC
         </h1>
 
         {/* Rx Group Dropdown */}
@@ -245,10 +258,12 @@ export const Search3: React.FC = () => {
         {/* View Drug Details Button */}
         {selectedDrug && selectedNdc && (
           <button
-            onClick={() => {
+            onClick={async () => {
               if (selectedRxGroup) {
                 localStorage.setItem("selectedRx", selectedRxGroup.rxGroup);
               }
+              await handleDrugDetails();
+
               navigate(
                 `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
                   selectedRxGroup?.id || ""
