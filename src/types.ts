@@ -11,7 +11,7 @@ export interface Drug {
   rxcui: number;
 }
 export interface Prescription {
-  insuranceId : string;
+  insuranceId: string;
   drugId: number;
   ndcCode: string;
   drugName: string;
@@ -31,7 +31,11 @@ export interface Prescription {
   bin: string;
   pcn: string;
   binFullName: string;
-  rxgroup : string
+  binId: number;
+  pcnId: number;
+
+  rxgroupId: number;
+  rxgroup: string;
 }
 
 export interface DrugInsuranceInfo {
@@ -55,13 +59,20 @@ export interface DrugInsuranceInfo {
 }
 export interface Insurance {
   id: number;
-  rxGroup: string;//code
-  description: string;//full name
-  bin: string;
-  pcn: string;
+  rxGroup: string; //code
+  description: string; //full name
+  insuranceBin: string;
+  insurancePCN: string;
+  insuranceFullName: string;
   helpDeskNumber: string;
 }
-
+export interface Bin {
+  id: number;
+  rxGroup: string; //code
+  name: string; //full name
+  bin: string;
+  helpDeskNumber: string;
+}
 export interface DrugTransaction {
   date: string;
   scriptCode: string;
@@ -112,7 +123,16 @@ export interface User {
   email: string;
   name: string;
 }
-
+export interface RxGroupModel {
+  id: number;
+  rxGroup: string;
+  insurancePCNId: number;
+}
+export interface PCNModel {
+  id: number;
+  pcn: string;
+  insuranceId: number;
+}
 export interface PharmacySale {
   id: string;
   pharmacyId: string;

@@ -78,11 +78,12 @@ export const Search3: React.FC = () => {
       try {
         // Assuming an endpoint exists to fetch all Rx Groups
         const { data } = await axios.get(
-          `${API_BASE_URL}/drug/GetAllRxGroups`,
+          `${API_BASE_URL}/Insurance/GetAllRxGroups`,
           {
             headers: getAuthHeader(),
           }
         );
+        console.log(data);
         setRxGroups(data);
       } catch (error) {
         console.error("Error fetching Rx Groups:", error);

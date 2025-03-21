@@ -336,7 +336,10 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentItems.length > 0 ? (
               currentItems.map((alt, index) => (
-                <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50">
+                <tr
+                  key={`${alt.ndcCode}-${index}`}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <a
@@ -351,7 +354,9 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     <div className="text-sm text-gray-500">{classNameStr}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{alt.branchName}</div>
+                    <div className="text-sm text-gray-500">
+                      {alt.branchName}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500">
@@ -367,19 +372,53 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   </td>
                   <td className="px-10 py-4">
                     <div className="text-sm text-gray-500">
-                      {alt.insuranceName}
+                      <a
+                        href={`/InsuranceDetails/${alt.rxgroupId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.insuranceName}
+                      </a>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{alt.bin}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {alt.binFullName}
+                      {" "}
+                      <a
+                        href={`/InsuranceBINDetails/${alt.binId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.bin}
+                      </a>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{alt.pcn}</div>
+                    <div className="text-sm text-gray-900">
+                      <a
+                        href={`/InsuranceBINDetails/${alt.binId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.binFullName}
+                      </a>{" "}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {" "}
+                      <a
+                        href={`/InsurancePCNDetails/${alt.pcnId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.pcn}
+                      </a>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
@@ -656,7 +695,10 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentItems.length > 0 ? (
               currentItems.map((drug, index) => (
-                <tr key={`${drug.ndcCode}-${index}`} className="hover:bg-gray-50">
+                <tr
+                  key={`${drug.ndcCode}-${index}`}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       <a
@@ -678,7 +720,9 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500">
                       <a
-                        href={`https://ndclist.com/ndc/${padCode(drug.ndcCode)}`}
+                        href={`https://ndclist.com/ndc/${padCode(
+                          drug.ndcCode
+                        )}`}
                         className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1228,7 +1272,9 @@ export const DrugDetails: React.FC = () => {
                     classNameStr={classNameStr}
                     padCode={padCode}
                     selectedInsurance={branchSelectedInsurance}
-                    handleInsuranceFilterChange={handleBranchInsuranceFilterChange}
+                    handleInsuranceFilterChange={
+                      handleBranchInsuranceFilterChange
+                    }
                     uniqueInsuranceNames={branchUniqueInsuranceNames}
                     selectedBin={branchSelectedBin}
                     handleBinFilterChange={handleBranchBinFilterChange}

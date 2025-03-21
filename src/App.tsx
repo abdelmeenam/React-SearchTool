@@ -4,7 +4,6 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
 import { Home } from "./pages/Home";
-import { LogsPage } from "./pages/Logs";
 import MainDashboard from "./pages/MainDashboard";
 import { DrugDetails } from "./pages/DrugDetails";
 import ScriptDetails from "./pages/ScriptDetails";
@@ -12,6 +11,9 @@ import InsuranceDetails from "./pages/InsuranceDetails";
 import { SearchSwitcher } from "./pages/SearchSwitcher";
 // import Upload from "./pages/Upload";
 import Auth from "./Auth";
+import InsurancePCNDetails from "./pages/InsurancePCNDetails";
+import InsuranceBINDetails from "./pages/InsuranceBINDetails";
+import LogsPage from "./pages/Logs";
 
 // Route protection components
 const PrivateRoute: React.FC<{ children: React.ReactNode; isAdmin?: boolean }> = ({ children, isAdmin = false }) => {
@@ -135,7 +137,24 @@ function App() {
                 </PrivateRoute>
               }
             />
+             <Route
+              path="/InsurancePCNDetails/:insuranceName"
+              element={
+                <PrivateRoute>
+                  <InsurancePCNDetails />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/InsuranceBINDetails/:insuranceName"
+              element={
+                <PrivateRoute>
+                  <InsuranceBINDetails />
+                </PrivateRoute>
+              }
+            />
           </Route>
+          
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
