@@ -19,7 +19,6 @@ import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
-import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import DrugForm from "./pages/Forms/Drug";
 import BranchForm from "./pages/Forms/Branches";
@@ -36,23 +35,9 @@ import ScriptItemForm from "./pages/Forms/ScriptItem";
 import SpecialtyForm from "./pages/Forms/Specialty";
 import UserForm from "./pages/Forms/User";
 // tables
-import BranchTable from "./pages/Tables/Branches";
-import DrugTable from "./pages/Tables/Drugs";
-import ClassInsuranceTable from "./pages/Tables/ClassInsurance";
-import DrugBranchTable from "./pages/Tables/DrugBranch";
-import DrugClassTable from "./pages/Tables/DrugClass";
-import DrugCsvTable from "./pages/Tables/DrugCsv";
-import DrugInsuranceTable from "./pages/Tables/DrugInsurance";
-import InsuranceTable from "./pages/Tables/Insurance";
-import Compaany from "./pages/Tables/Company";
-import ScriptTable from "./pages/Tables/Scripts";
-import UserLogsTable from "./pages/Tables/Logs";
-import ScriptItemTable from "./pages/Tables/ScriptItem";
-import SpecialtyTable from "./pages/Tables/Specialty";
-import UserTable from "./pages/Tables/Users";
+
 import SearchComponent from "./pages/Search/bar";
 import LandingPage from "./old/Home";
-import BasicTableOne from "./pages/Tables/dashTable";
 import Dashboard from "./old/Dashboard";
 //search
 import SearchSwitcher from "./old/SearchSwitcher";
@@ -132,7 +117,6 @@ export default function App() {
             />
             <Route path="services" element={<Services />} />
             <Route path="hero" element={<LandingPage />} />
-            <Route path="dashboard2" element={<BasicTableOne />} />
             <Route path="upload" element={<Upload />} />
           </Route>
 
@@ -150,14 +134,7 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="dashboard2"
-              element={
-                <PrivateRoute isAdmin={false}>
-                  <BasicTableOne />
-                </PrivateRoute>
-              }
-            />
+     
             <Route
               path="search"
               element={
@@ -192,14 +169,7 @@ export default function App() {
             {/*search pages */}
 
             {/* Audits */}
-            <Route
-              path="/audits"
-              element={
-                <PrivateRoute>
-                  <BasicTableOne />
-                </PrivateRoute>
-              }
-            />
+         
             <Route
               path="/dashboard/:dashboardId"
               element={
@@ -262,31 +232,9 @@ export default function App() {
             <Route path="/script-item-form" element={<ScriptItemForm />} />
             <Route path="/specialty-form" element={<SpecialtyForm />} />
             <Route path="/user-form" element={<UserForm />} />
-            <Route path="/script-item-table" element={<ScriptItemTable />} />
-
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
-            <Route path="/branch-table" element={<BranchTable />} />
-            <Route path="/drug-table" element={<DrugTable />} />
-            <Route
-              path="/class-insurance-table"
-              element={<ClassInsuranceTable />}
-            />
-            <Route path="/drug-branch-table" element={<DrugBranchTable />} />
-            <Route path="/drug-class-table" element={<DrugClassTable />} />
-            <Route path="/drug-csv-table" element={<DrugCsvTable />} />
-            <Route
-              path="/drug-insurance-table"
-              element={<DrugInsuranceTable />}
-            />
-            <Route path="/insurance-table" element={<InsuranceTable />} />
-            <Route path="/company-table" element={<Compaany />} />
-            <Route path="/script-table" element={<ScriptTable />} />
-            <Route path="/specialty-table" element={<SpecialtyTable />} />
-            <Route path="/user-table" element={<UserTable />} />
+          
 
             {/* Ui Elements */}
-            <Route path="/user-logs-table" element={<UserLogsTable />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />

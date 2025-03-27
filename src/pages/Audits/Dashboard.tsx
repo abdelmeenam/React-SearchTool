@@ -7,9 +7,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { DrugTransaction } from "../types";
 import { motion } from "framer-motion";
 import { CSVLink } from "react-csv";
+import { DrugTransaction } from "../../types";
 
 interface DashboardProps {
   data: DrugTransaction[];
@@ -96,10 +96,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     let sortedData = [...latestScripts];
     if (sortConfig !== null) {
       sortedData.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        if (a[sortConfig.key as keyof DrugTransaction] < b[sortConfig.key as keyof DrugTransaction]) {
           return sortConfig.direction === "ascending" ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (a[sortConfig.key as keyof DrugTransaction] > b[sortConfig.key as keyof DrugTransaction]) {
           return sortConfig.direction === "ascending" ? 1 : -1;
         }
         return 0;

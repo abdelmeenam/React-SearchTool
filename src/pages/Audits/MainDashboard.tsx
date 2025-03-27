@@ -8,12 +8,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import axios from "axios";
-import { DrugTransaction } from "../types";
 import { motion } from "framer-motion";
 import { CSVLink } from "react-csv";
 import Dashboard from "./Dashboard";
 import SecondDashBoard from "../../old/SecondDashBoard";
 import ThirdDashBoard from "../../old/ThirdDashBoard";
+import { DrugTransaction } from "../../types";
 
 export const MainDashboard: React.FC = () => {
   const [activeDashboard, setActiveDashboard] = useState("Dashboard");
@@ -38,7 +38,7 @@ export const MainDashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  const Button = ({ children, onClick }) => (
+  const Button: React.FC<{ children: React.ReactNode; onClick: () => void }> = ({ children, onClick }) => (
     <button
       onClick={onClick}
       className="px-6 py-2 text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
