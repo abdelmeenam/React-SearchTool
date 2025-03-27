@@ -83,7 +83,7 @@ export const Layout: React.FC = () => {
                   </Link>
                   {isLoggedIn === "Admin" && (
                     <Link
-                      to="/dashboard"
+                      to="/dashboard/1"
                       className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-500 dark:hover:text-purple-400 transition-transform"
                     >
                       {/* You can add an icon or some content here */}
