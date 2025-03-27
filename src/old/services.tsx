@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FaSearch, FaUpload, FaUserCog } from "react-icons/fa";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { HelpCircle } from "lucide-react";
 
 export const Services: React.FC = () => {
   useEffect(() => {
@@ -16,17 +17,18 @@ export const Services: React.FC = () => {
       text: "Find the medicine you need, compare prices, and check insurance compatibility.",
       icon: <FaSearch className="w-12 h-12" />,
     },
+
     {
-      to: "/upload",
-      title: "Upload Prescriptions",
-      text: "Securely upload your prescription to find compatible drugs and services.",
-      icon: <FaUpload className="w-12 h-12" />,
-    },
-    {
-      to: "/dashboard",
+      to: "/dashboard/1",
       title: "Dashboard",
       text: "Manage your profile, view saved searches, and access your history.",
       icon: <FaUserCog className="w-12 h-12" />,
+    },
+    {
+      to: "/help",
+      title: "Help & Support",
+      text: "Get assistance with your queries and learn how to use our platform effectively.",
+      icon: <HelpCircle className="w-12 h-12" />,
     },
   ];
 

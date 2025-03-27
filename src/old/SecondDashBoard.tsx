@@ -32,11 +32,42 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
   const rowsPerPage = 10;
 
   // Format total revenue as currency.
-  const formattedPrice = new Intl.NumberFormat("en-US", {
+  const formattedRevenue = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
   }).format(totalRevenue ?? 0);
+
+  const formattedDeviation = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(totalNet ?? 0);
+
+  // Tooltip state to track visibility, content and position.
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    content: string;
+    x: number;
+    y: number;
+  }>({ visible: false, content: "", x: 0, y: 0 });
+
+  const handleTooltipEnter = (
+    e: React.MouseEvent<HTMLParagraphElement, MouseEvent>,
+    content: string
+  ) => {
+    setTooltip({ visible: true, content, x: e.clientX, y: e.clientY });
+  };
+
+  const handleTooltipMove = (
+    e: React.MouseEvent<HTMLParagraphElement, MouseEvent>
+  ) => {
+    setTooltip((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
+  };
+
+  const handleTooltipLeave = () => {
+    setTooltip((prev) => ({ ...prev, visible: false }));
+  };
 
   // Load data and filter for second dashboard criteria.
   useEffect(() => {
@@ -70,7 +101,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
   };
 
   // CSV headers for download.
-  const headers = [
+  const headersCSV = [
     { label: "Date", key: "date" },
     { label: "Script Code", key: "scriptCode" },
     { label: "Rx Number", key: "rxNumber" },
@@ -98,10 +129,10 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
     let sortedData = [...latestScripts];
     if (sortConfig !== null) {
       sortedData.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        if (a[sortConfig.key as keyof DrugTransaction] < b[sortConfig.key as keyof DrugTransaction]) {
           return sortConfig.direction === "ascending" ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (a[sortConfig.key as keyof DrugTransaction] > b[sortConfig.key as keyof DrugTransaction]) {
           return sortConfig.direction === "ascending" ? 1 : -1;
         }
         return 0;
@@ -243,439 +274,404 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
 
   return (
     <motion.div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
-      <h1 className="text-4xl sm:text-4xl font-extrabold text-blue-700 dark:text-blue-400 mb-6 text-center tracking-wide">
-        Estimated Best Net Differences
-      </h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 relative">
+        <h1 className="text-4xl sm:text-4xl font-extrabold text-blue-700 dark:text-blue-400 mb-6 text-center tracking-wide">
+          Estimated Best Net Differences
+        </h1>
 
+        {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-  {/* Card 1: Total Scripts */}
-  <div className="bg-white dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg shadow p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-blue-500 dark:text-blue-400">
-          Total Scripts
-        </p>
-        <p className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
-          {filteredData.length}
-        </p>
-      </div>
-      <Pill className="h-10 w-10" />
-    </div>
-  </div>
-
-  {/* Card 2: Total Prescriptions with Deviation */}
-  <div className="bg-white dark:bg-gray-800 border-l-4 border-red-500 dark:border-red-400 rounded-lg shadow p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-red-500 dark:text-red-400">
-          Total Prescriptions with Deviation
-        </p>
-        <p className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
-          {belowNetPriceCount}
-        </p>
-      </div>
-      <AlertTriangle className="h-10 w-10" />
-    </div>
-  </div>
-
-  {/* Card 3: Total Deviation */}
-  <div className="bg-white dark:bg-gray-800 border-l-4 border-green-500 dark:border-green-400 rounded-lg shadow p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-green-500 dark:text-green-400">
-          Total Deviation
-        </p>
-        <p className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
-          {new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(totalNet ?? 0)}
-        </p>
-      </div>
-      <BarChart3 className="h-10 w-10" />
-    </div>
-  </div>
-
-  {/* Card 4: Total Revenue from Matching Scripts */}
-  <div className="bg-white dark:bg-gray-800 border-l-4 border-purple-500 dark:border-purple-400 rounded-lg shadow p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-purple-500 dark:text-purple-400">
-          Total Revenue from Matching Scripts
-        </p>
-        <p className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
-          {new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(totalRevenue ?? 0)}
-        </p>
-      </div>
-      <PieChart className="h-10 w-10" />
-    </div>
-  </div>
-</div>
-
-        {/* Analytics Overview *
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-6">
+          {/* Card 1: Total Scripts */}
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Total Scripts</p>
-                <p className="text-3xl font-semibold">{filteredData.length}</p>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-blue-500 dark:text-blue-400">
+                  Total Scripts
+                </p>
+                <p
+                  className="text-3xl font-semibold text-gray-900 dark:text-gray-100 truncate"
+                  onMouseEnter={(e) => handleTooltipEnter(e, filteredData.length.toString())}
+                  onMouseMove={handleTooltipMove}
+                  onMouseLeave={handleTooltipLeave}
+                >
+                  {filteredData.length}
+                </p>
               </div>
               <Pill className="h-10 w-10" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg shadow p-6">
+
+          {/* Card 2: Total Prescriptions with Deviation */}
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-red-500 dark:border-red-400 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-red-500 dark:text-red-400">
                   Total Prescriptions with Deviation
                 </p>
-                <p className="text-3xl font-semibold">{belowNetPriceCount}</p>
+                <p
+                  className="text-3xl font-semibold text-gray-900 dark:text-gray-100 truncate"
+                  onMouseEnter={(e) => handleTooltipEnter(e, belowNetPriceCount.toString())}
+                  onMouseMove={handleTooltipMove}
+                  onMouseLeave={handleTooltipLeave}
+                >
+                  {belowNetPriceCount}
+                </p>
               </div>
               <AlertTriangle className="h-10 w-10" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg shadow p-6">
+
+          {/* Card 3: Total Deviation */}
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-green-500 dark:border-green-400 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Total Deviation</p>
-                <p className="text-3xl font-semibold">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  }).format(totalNet ?? 0)}
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-green-500 dark:text-green-400">
+                  Total Deviation
+                </p>
+                <p
+                  className="text-3xl font-semibold text-gray-900 dark:text-gray-100 truncate"
+                  onMouseEnter={(e) => handleTooltipEnter(e, formattedDeviation)}
+                  onMouseMove={handleTooltipMove}
+                  onMouseLeave={handleTooltipLeave}
+                >
+                  {formattedDeviation}
                 </p>
               </div>
               <BarChart3 className="h-10 w-10" />
             </div>
           </div>
-          <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg shadow p-6">
+
+          {/* Card 4: Total Revenue from Matching Scripts */}
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-purple-500 dark:border-purple-400 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-purple-500 dark:text-purple-400">
                   Total Revenue from Matching Scripts
                 </p>
-                <p className="text-3xl font-semibold">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  }).format(totalRevenue ?? 0)}
+                <p
+                  className="text-3xl font-semibold text-gray-900 dark:text-gray-100 truncate"
+                  onMouseEnter={(e) => handleTooltipEnter(e, formattedRevenue)}
+                  onMouseMove={handleTooltipMove}
+                  onMouseLeave={handleTooltipLeave}
+                >
+                  {formattedRevenue}
                 </p>
               </div>
               <PieChart className="h-10 w-10" />
             </div>
           </div>
         </div>
-        */}
 
-{/* Filters Section */}
-<div className="flex flex-wrap gap-4 mb-6">
-  {/* Month Input */}
-  <div className="relative inline-block w-full sm:w-auto">
-    <input
-      list="months"
-      value={selectedMonth}
-      onChange={(e) => setSelectedMonth(e.target.value)}
-      placeholder="All Months"
-      className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-    />
-    <datalist id="months">
-      <option value="">All Months</option>
-      {[...new Set(latestScripts.map((item) =>
-        new Date(item.date).toISOString().slice(0, 7)
-      ))]
-        .sort()
-        .map((month) => (
-          <option key={month} value={month} />
-        ))}
-    </datalist>
-  </div>
+        {/* Filters Section */}
+        <div className="flex flex-wrap gap-4 mb-6">
+          <div className="relative inline-block w-full sm:w-auto">
+            <input
+              list="months"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              placeholder="All Months"
+              className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            />
+            <datalist id="months">
+              <option value="">All Months</option>
+              {[...new Set(latestScripts.map((item) =>
+                new Date(item.date).toISOString().slice(0, 7)
+              ))]
+                .sort()
+                .map((month) => (
+                  <option key={month} value={month} />
+                ))}
+            </datalist>
+          </div>
 
-  {/* Class Input */}
-  <div className="relative inline-block w-full sm:w-auto">
-    <input
-      list="classes"
-      value={selectedClass}
-      onChange={(e) => setSelectedClass(e.target.value)}
-      placeholder="All Classes"
-      className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-    />
-    <datalist id="classes">
-      <option value="">All Classes</option>
-      {[...new Set(latestScripts.map((item) => item.drugClass))]
-        .sort()
-        .map((className) => (
-          <option key={className} value={className} />
-        ))}
-    </datalist>
-  </div>
+          <div className="relative inline-block w-full sm:w-auto">
+            <input
+              list="classes"
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              placeholder="All Classes"
+              className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            />
+            <datalist id="classes">
+              <option value="">All Classes</option>
+              {[...new Set(latestScripts.map((item) => item.drugClass))]
+                .sort()
+                .map((className) => (
+                  <option key={className} value={className} />
+                ))}
+            </datalist>
+          </div>
 
-  {/* Insurance (RxGroup) Input */}
-  <div className="relative inline-block w-full sm:w-auto">
-    <input
-      list="insurances"
-      value={selectedInsurance}
-      onChange={(e) => setSelectedInsurance(e.target.value)}
-      placeholder="All RxGroups"
-      className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-    />
-    <datalist id="insurances">
-      <option value="">All RxGroups</option>
-      {[...new Set(latestScripts.map((item) => item.insurance))]
-        .sort()
-        .map((insurance) => (
-          <option key={insurance} value={insurance}>
-            {insurance === "  " ? "MARCOG" : insurance_mapping[insurance] || insurance}
-          </option>
-        ))}
-    </datalist>
-  </div>
+          <div className="relative inline-block w-full sm:w-auto">
+            <input
+              list="insurances"
+              value={selectedInsurance}
+              onChange={(e) => setSelectedInsurance(e.target.value)}
+              placeholder="All RxGroups"
+              className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            />
+            <datalist id="insurances">
+              <option value="">All RxGroups</option>
+              {[...new Set(latestScripts.map((item) => item.insurance))]
+                .sort()
+                .map((insurance) => (
+                  <option key={insurance} value={insurance}>
+                    {insurance === "  " ? "MARCOG" : insurance_mapping[insurance] || insurance}
+                  </option>
+                ))}
+            </datalist>
+          </div>
 
-  {/* Prescriber Input */}
-  <div className="relative inline-block w-full sm:w-auto">
-    <input
-      list="prescribers"
-      value={selectedPrescriber}
-      onChange={(e) => setSelectedPrescriber(e.target.value)}
-      placeholder="All Prescribers"
-      className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-    />
-    <datalist id="prescribers">
-      <option value="">All Prescribers</option>
-      {[...new Set(latestScripts.map((item) => item.prescriber))]
-        .sort()
-        .map((prescriber) => (
-          <option key={prescriber} value={prescriber} />
-        ))}
-    </datalist>
-  </div>
+          <div className="relative inline-block w-full sm:w-auto">
+            <input
+              list="prescribers"
+              value={selectedPrescriber}
+              onChange={(e) => setSelectedPrescriber(e.target.value)}
+              placeholder="All Prescribers"
+              className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            />
+            <datalist id="prescribers">
+              <option value="">All Prescribers</option>
+              {[...new Set(latestScripts.map((item) => item.prescriber))]
+                .sort()
+                .map((prescriber) => (
+                  <option key={prescriber} value={prescriber} />
+                ))}
+            </datalist>
+          </div>
 
-  {/* User Input */}
-  <div className="relative inline-block w-full sm:w-auto">
-    <input
-      list="users"
-      value={selectedUser}
-      onChange={(e) => setSelectedUser(e.target.value)}
-      placeholder="All Users"
-      className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-    />
-    <datalist id="users">
-      <option value="">All Users</option>
-      {[...new Set(latestScripts.map((item) => item.user))]
-        .sort()
-        .map((user) => (
-          <option key={user} value={user} />
-        ))}
-    </datalist>
-  </div>
+          <div className="relative inline-block w-full sm:w-auto">
+            <input
+              list="users"
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              placeholder="All Users"
+              className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            />
+            <datalist id="users">
+              <option value="">All Users</option>
+              {[...new Set(latestScripts.map((item) => item.user))]
+                .sort()
+                .map((user) => (
+                  <option key={user} value={user} />
+                ))}
+            </datalist>
+          </div>
 
-{/* Branch Filter */}
-<div className="relative inline-block w-full sm:w-auto mb-6">
-  <input
-    list="branches"
-    value={selectedBranch}
-    onChange={(e) => setSelectedBranch(e.target.value)}
-    placeholder="All Branches"
-    className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
-  />
-  <datalist id="branches">
-    <option value="">All Branches</option>
-    {[...new Set(latestScripts.map((item) => item.branchCode))]
-      .sort()
-      .map((branch) => (
-        <option key={branch} value={branch} />
-      ))}
-  </datalist>
-</div>
-</div>
+          <div className="relative inline-block w-full sm:w-auto mb-6">
+            <input
+              list="branches"
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              placeholder="All Branches"
+              className="block appearance-none w-full px-4 py-2 border border-blue-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+            />
+            <datalist id="branches">
+              <option value="">All Branches</option>
+              {[...new Set(latestScripts.map((item) => item.branchCode))]
+                .sort()
+                .map((branch) => (
+                  <option key={branch} value={branch} />
+                ))}
+            </datalist>
+          </div>
+        </div>
 
-{/* CSV Download Button */}
-<div className="mb-4">
-  <button
-    onClick={downloadCSV}
-    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-150"
-  >
-    Download CSV
-  </button>
-</div>
-
-        {/* Filters */}
-      {/* Data Table */}
-<div className="overflow-x-auto">
-  <table className="table-auto min-w-full border-collapse">
-    <thead className="bg-gray-200 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600 sticky top-0 z-10">
-      <tr>
-        {[
-          "Date",
-          "Script Code",
-          "Branch Name",
-          "Rx Group",
-          "Drug Class",
-          "Drug Name",
-          "NDC Code",
-          "User",
-          "Patient Payment",
-          "ACQ",
-          "Insurance Payment",
-          "Prescriber",
-          "Net Profit",
-          "Highest Net",
-          "Difference",
-          "Highest Drug NDC",
-          "Highest Drug Name",
-          "Highest Script Code",
-          "Highest Script Date",
-        ].map((col) => (
-          <th
-            key={col}
-            onClick={() => requestSort(col)}
-            className="px-4 py-3 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase cursor-pointer whitespace-nowrap transition-colors duration-150 hover:bg-gray-300 dark:hover:bg-gray-600"
+        {/* CSV Download Button */}
+        <div className="mb-4">
+          <button
+            onClick={downloadCSV}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-150"
           >
-            {col}
-          </th>
-        ))}
-      </tr>
-    </thead>
-    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-      {currentRecords.map((item, index) => (
-        <tr
-          key={index}
-          className="transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700"
-        >
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {new Date(item.date).toLocaleDateString("en-US")}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            <a
-              href={`/scriptitems/${item.scriptCode}`}
-              className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-150"
-            >
-              {item.scriptCode}
-            </a>
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.branchCode}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            <a
-              href={`/InsruanceDetails/${item.insurance}`}
-              target="_blank"
-              className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-150"
-            >
-              {item.insurance === "  "
-                ? "MARCOG"
-                : insurance_mapping[item.insurance] || item.insurance}
-            </a>
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.drugClass}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            <a
-              href={`/drug/${item.drugId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
-            >
-              {item.drugName}
-            </a>
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            <a
-              href={`https://ndclist.com/ndc/${item.ndcCode}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
-            >
-              {item.ndcCode}
-            </a>
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.user}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.patientPayment}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.acquisitionCost}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.insurancePayment}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {normalizeName(item.prescriber)}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.netProfit}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {item.highstNet}
-          </td>
-          <td className="px-4 py-2 text-sm text-red-600 whitespace-nowrap">
-            {(item.highstNet - item.netProfit).toFixed(2)}
-          </td>
-          <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
-            <a
-              href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline transition-colors duration-150"
-            >
-              {item.highstDrugNDC}
-            </a>
-          </td>
-          <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
-            <a
-              href={`/drug/${item.highstDrugId}`}
-              target="_blank"
-              className="hover:underline transition-colors duration-150"
-            >
-              {item.highstDrugName}
-            </a>
-          </td>
-          <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
-            {item.highstScriptCode}
-          </td>
-          <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
-            {new Date(item.highstScriptDate).toLocaleDateString("en-US")}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+            Download CSV
+          </button>
+        </div>
 
-{/* Pagination Controls */}
-<div className="flex flex-col sm:flex-row justify-between items-center mt-4">
-  <button
-    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-    disabled={currentPage === 1}
-    className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md mb-2 sm:mb-0 transition-colors duration-150 ${
-      currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300 dark:hover:bg-gray-600"
-    }`}
-  >
-    <ChevronLeft className="inline-block w-4 h-4 mr-1" />
-    Previous
-  </button>
-  <p className="text-sm text-gray-700 dark:text-gray-300">
-    Page {currentPage} of {totalPages}
-  </p>
-  <button
-    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-    disabled={currentPage === totalPages}
-    className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md transition-colors duration-150 ${
-      currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300 dark:hover:bg-gray-600"
-    }`}
-  >
-    Next <ChevronRight className="inline-block w-4 h-4 ml-1" />
-  </button>
-</div>
+        {/* Data Table */}
+        <div className="overflow-x-auto">
+          <table className="table-auto min-w-full border-collapse">
+            <thead className="bg-gray-200 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600 sticky top-0 z-10">
+              <tr>
+                {[
+                  "Date",
+                  "Script Code",
+                  "Branch Name",
+                  "Rx Group",
+                  "Drug Class",
+                  "Drug Name",
+                  "NDC Code",
+                  "User",
+                  "Patient Payment",
+                  "ACQ",
+                  "Insurance Payment",
+                  "Prescriber",
+                  "Net Profit",
+                  "Highest Net",
+                  "Difference",
+                  "Highest Drug NDC",
+                  "Highest Drug Name",
+                  "Highest Script Code",
+                  "Highest Script Date",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    onClick={() => requestSort(col)}
+                    className="px-4 py-3 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase cursor-pointer whitespace-nowrap transition-colors duration-150 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {currentRecords.map((item, index) => (
+                <tr
+                  key={index}
+                  className="transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {new Date(item.date).toLocaleDateString("en-US")}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    <a
+                      href={`/scriptitems/${item.scriptCode}`}
+                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-150"
+                    >
+                      {item.scriptCode}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.branchCode}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    <a
+                      href={`/InsruanceDetails/${item.insurance}`}
+                      target="_blank"
+                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-150"
+                    >
+                      {item.insurance === "  "
+                        ? "MARCOG"
+                        : insurance_mapping[item.insurance] || item.insurance}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.drugClass}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    <a
+                      href={`/drug/${item.drugId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
+                    >
+                      {item.drugName}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    <a
+                      href={`https://ndclist.com/ndc/${item.ndcCode}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
+                    >
+                      {item.ndcCode}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.user}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.patientPayment}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.acquisitionCost}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.insurancePayment}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {normalizeName(item.prescriber)}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.netProfit}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {item.highstNet}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-red-600 whitespace-nowrap">
+                    {(item.highstNet - item.netProfit).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                    <a
+                      href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline transition-colors duration-150"
+                    >
+                      {item.highstDrugNDC}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                    <a
+                      href={`/drug/${item.highstDrugId}`}
+                      target="_blank"
+                      className="hover:underline transition-colors duration-150"
+                    >
+                      {item.highstDrugName}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                    {item.highstScriptCode}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                    {new Date(item.highstScriptDate).toLocaleDateString("en-US")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
+        {/* Pagination Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md mb-2 sm:mb-0 transition-colors duration-150 ${
+              currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            <ChevronLeft className="inline-block w-4 h-4 mr-1" />
+            Previous
+          </button>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            Page {currentPage} of {totalPages}
+          </p>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md transition-colors duration-150 ${
+              currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            Next <ChevronRight className="inline-block w-4 h-4 ml-1" />
+          </button>
+        </div>
 
-
+        {/* Tooltip Rendering */}
+        {tooltip.visible && (
+          <div
+            style={{
+              position: "fixed",
+              top: tooltip.y + 10,
+              left: tooltip.x + 10,
+              zIndex: 1000,
+            }}
+            className="bg-gray-800 text-white text-xs p-1 rounded shadow"
+          >
+            {tooltip.content}
+          </div>
+        )}
       </div>
     </motion.div>
   );

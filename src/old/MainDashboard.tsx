@@ -22,7 +22,7 @@ export const MainDashboard: React.FC = () => {
   // Destructure the parameter from the URL (e.g., /dashboard/:dashboardId)
   const { dashboardId } = useParams<{ dashboardId: string }>();
   console.log(dashboardId)
-  // Initialize activeDashboard state with the URL parameter or default to "Dashboard"
+  // Initialize activeDashboard state with the URL parameter or default to "1"
   const [activeDashboard, setActiveDashboard] = useState(dashboardId || "1");
   const [data, setData] = useState<DrugTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,9 @@ export const MainDashboard: React.FC = () => {
         });
         setData(response.data);
       } catch (err) {
-        setError("Sorry, you don’t have access. Please contact your system administrator.");
+        setError(
+          "Access Denied. Sorry, you don’t have permission to view this page.\nPlease contact the system administrator if you believe this is an error."
+        );
       } finally {
         setLoading(false);
       }
@@ -97,7 +99,18 @@ export const MainDashboard: React.FC = () => {
 
         {/* Loading/Error States */}
         {loading && <p className="text-center text-gray-500">Loading data...</p>}
-        {error && <p className="text-center text-red-500">{error}</p>}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-2xl mx-auto mb-6" role="alert">
+            <strong className="font-bold">Access Denied!</strong>
+            <span className="block sm:inline">
+              {" "}Sorry, you don’t have permission to view this page.
+            </span>
+            <br />
+            <span className="block sm:inline">
+              Please contact the system administrator if you believe this is an error.
+            </span>
+          </div>
+        )}
 
         {/* Render the appropriate dashboard when data is ready */}
         {!loading && !error && (

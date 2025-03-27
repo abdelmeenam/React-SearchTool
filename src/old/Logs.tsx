@@ -36,6 +36,36 @@ const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
 
+// Action mapping (moved above usage for clarity)
+const actionNameMap: Record<string, string> = {
+  GetLogs: "View Logs",
+  GetAllLatestScripts: "Latest Scripts",
+  searchByName: "Search Drug by Name",
+  getDrugNDCs: "Search Drug by NDC",
+  GetInsuranceByNdc: "Get Insurance by NDC",
+  SearchByNdc: "Search by NDC",
+  GetDetails: "View Drug Details",
+  GetClassById: "View Drug Class",
+  GetAlternativesByClassIdBranchId: "Get Drug Alternatives",
+  GetAllDrugs: "View All Drugs",
+  GetInsurancesBinsByName: "Get BINs by Insurance Name",
+  GetDrugsByBin: "Get Drugs by BIN",
+  GetAllRxGroups: "View All RxGroups",
+  GetInsuranceDetails: "View Insurance Details",
+  GetInsurancePCNDetails: "View PCN Details",
+  GetInsuranceBINDetails: "View BIN Details",
+  GetAllPCNsByBINId: "List PCNs by BIN",
+  GetAllRxGroupsByBINId: "List RxGroups by BIN",
+  GetAllRxGroupsByPcnId: "List RxGroups by PCN",
+  GetScriptByScriptCode: "Get Script by Code",
+  UserById: "View User Profile",
+  UpdateUser: "Update User Info",
+  GetInsurancesPcnByBinId: "Get PCNs by BIN",
+  GetDrugsByInsuranceName: "Get Drugs by Insurance",
+  GetInsurancesRxByPcnId: "Get RxGroups by PCN",
+  GetDrugsByPCN: "Get Drugs by PCN",
+};
+
 const LogsPage: React.FC = () => {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -160,7 +190,6 @@ const LogsPage: React.FC = () => {
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
   const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
-  console.log("sdsa : ", currentLogs);
   const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
 
   // Group logs by day for the line chart (logs per day)
@@ -202,34 +231,6 @@ const LogsPage: React.FC = () => {
         text: filterUser ? `Activity for ${filterUser}` : "Logs Per Day",
       },
     },
-  };
-  const actionNameMap: Record<string, string> = {
-    GetLogs: "View Logs",
-    GetAllLatestScripts: "Latest Scripts",
-    searchByName: "Search Drug by Name",
-    getDrugNDCs: "Search Drug by NDC",
-    GetInsuranceByNdc: "Get Insurance by NDC",
-    SearchByNdc: "Search by NDC",
-    GetDetails: "View Drug Details",
-    GetClassById: "View Drug Class",
-    GetAlternativesByClassIdBranchId: "Get Drug Alternatives",
-    GetAllDrugs: "View All Drugs",
-    GetInsurancesBinsByName: "Get BINs by Insurance Name",
-    GetDrugsByBin: "Get Drugs by BIN",
-    GetAllRxGroups: "View All RxGroups",
-    GetInsuranceDetails: "View Insurance Details",
-    GetInsurancePCNDetails: "View PCN Details",
-    GetInsuranceBINDetails: "View BIN Details",
-    GetAllPCNsByBINId: "List PCNs by BIN",
-    GetAllRxGroupsByBINId: "List RxGroups by BIN",
-    GetAllRxGroupsByPcnId: "List RxGroups by PCN",
-    GetScriptByScriptCode: "Get Script by Code",
-    UserById: "View User Profile",
-    UpdateUser: "Update User Info",
-    GetInsurancesPcnByBinId: "Get PCNs by BIN",
-    GetDrugsByInsuranceName: "Get Drugs by Insurance",
-    GetInsurancesRxByPcnId: "Get RxGroups by PCN",
-    GetDrugsByPCN: "Get Drugs by PCN",
   };
 
   // Group logs by action for the bar chart, using only the last word of each action
@@ -273,6 +274,35 @@ const LogsPage: React.FC = () => {
     },
   };
 
+  // Function to download CSV of filtered logs
+  const downloadCSV = () => {
+    const headers = ["ID", "User Name", "Action", "Date"];
+    const csvRows = [];
+    csvRows.push(headers.join(","));
+
+    filteredLogs.forEach((log) => {
+      // Use the mapped action name if available
+      const actionText = actionNameMap[log.action] || log.action;
+      const dateFormatted = new Date(log.date).toLocaleString();
+      const row = [
+        log.id,
+        log.userName,
+        `"${actionText}"`,
+        `"${dateFormatted}"`,
+      ];
+      csvRows.push(row.join(","));
+    });
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "logs.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen dark:bg-gray-900 dark:text-white">
@@ -283,8 +313,20 @@ const LogsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen dark:bg-gray-900 dark:text-white">
-        <p className="text-red-500">{error}</p>
+      <div
+        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-2xl mx-auto mb-6"
+        role="alert"
+      >
+        <strong className="font-bold">Access Denied!</strong>
+        <span className="block sm:inline">
+          {" "}
+          Sorry, you don’t have permission to view this page.
+        </span>
+        <br />
+        <span className="block sm:inline">
+          Please contact the system administrator if you believe this is an
+          error.
+        </span>
       </div>
     );
   }
@@ -417,6 +459,15 @@ const LogsPage: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
               <Bar data={barData} options={barOptions} />
             </div>
+          </div>
+          {/* Download CSV Button */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={downloadCSV}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Download CSV
+            </button>
           </div>
           {/* Logs List Section */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-x-auto">

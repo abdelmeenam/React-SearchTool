@@ -68,6 +68,7 @@ import InsuranceDetails from "./old/InsuranceDetails";
 import { AboutUs } from "./old/about";
 import { Services } from "./old/services";
 import InsurancePCNDetails from "./old/InsurancePCNDetails";
+import HelpPage from "./old/HelpPage";
 // PrivateRoute and PublicRoute components
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -105,7 +106,7 @@ export default function App() {
         <Routes>
           {/* New Routes */}
           <Route path="/" element={<Layout />}>
-            <Route index element={<LandingPage />} /> {/* Default Home Page  */}
+            <Route index element={<Services />} /> {/* Default Home Page  */}
             <Route path="about" element={<AboutUs />} />
             <Route
               path="login"
@@ -116,7 +117,7 @@ export default function App() {
               }
             />
             <Route path="services" element={<Services />} />
-            <Route path="hero" element={<LandingPage />} />
+            <Route path="hero" element={<Services />} />
             <Route path="upload" element={<Upload />} />
           </Route>
 
@@ -194,6 +195,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <InsuranceDetails />
+                </PrivateRoute>
+              }
+            />
+             <Route
+              path="/Help"
+              element={
+                <PrivateRoute>
+                  <HelpPage />
                 </PrivateRoute>
               }
             />
