@@ -28,6 +28,7 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
+  pro?: boolean;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
@@ -65,8 +66,8 @@ const navItems: NavItem[] = [
         path: "/dashboard/1",
         pro: false,
       },
-      { name: " Matching Scripts Audit Dashboard", path: "/dashboard/2", pro: false },
-      { name: " Mismatching Scripts Audit", path: "/dashboard/3", pro: false },
+      { name: " Scripts matched Medisearch tool output Audit Dashboard", path: "/dashboard/2", pro: false },
+      { name: " Scripts mismatched Medisearch tool output Audit Dashboard", path: "/dashboard/3", pro: false },
 
       { name: "Users Logs", path: "/logs", pro: false },
     ],
@@ -124,20 +125,20 @@ const navItems: NavItem[] = [
   },
 
   */
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "about", path: "/about", pro: false },
-      { name: "services", path: "/services", pro: false },
-      { name: "Help & Support", path: "/help", pro: false },
+  // {
+  //   name: "Pages",
+  //   icon: <PageIcon />,
+  //   subItems: [
+  //     { name: "about", path: "/about", pro: false },
+  //     { name: "services", path: "/services", pro: false },
+  //     { name: "Help & Support", path: "/help", pro: false },
 
-      /*
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-       */
-    ],
-  },
+  //     /*
+  //     { name: "Blank Page", path: "/blank", pro: false },
+  //     { name: "404 Error", path: "/error-404", pro: false },
+  //      */
+  //   ],
+  // },
 
   // {
   //   name: "Logs",
@@ -147,6 +148,18 @@ const navItems: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
+  {
+    name: "About", path: "/about", pro: false,
+    icon: undefined
+  },
+  {
+    name: "Services", path: "/services", pro: false,
+    icon: undefined
+  },
+  {
+    name: "Help & Support", path: "/help", pro: false,
+    icon: undefined
+  },
   /*
   {
     icon: <PieChartIcon />,
@@ -395,7 +408,7 @@ const AppSidebar: React.FC = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <span className="flex items-center text-2xl font-extrabold tracking-wide text-blue-600 dark:text-blue-400">
-                medsearch
+                Medsearch
                 <Pill className="ml-2 w-6 h-6 text-blue-600 dark:text-blue-400" />
               </span>
             </>

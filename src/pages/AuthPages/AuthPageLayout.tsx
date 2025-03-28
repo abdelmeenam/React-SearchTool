@@ -21,13 +21,13 @@ export default function AuthLayout({
               <Link to="/" className="block mb-4">
 
 <span className="flex items-center text-2xl font-extrabold tracking-wide text-blue-600 dark:text-blue-400">
-  medsearch
+  Medsearch
   <Pill className="ml-2 w-6 h-6 text-blue-600 dark:text-blue-400" />
 </span>
 
               </Link>
               <p className="text-center text-gray-400 dark:text-white/60">
-Your Gude For better Medication Experience              </p>
+Your Guide For better Medication Experience              </p>
             </div>
           </div>
         </div>

@@ -144,7 +144,7 @@ export const Search: React.FC = () => {
         </div>
 
         {/* Search Section */}
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+        <div className="mb-6 p-4  rounded-lg">
           <label
             htmlFor="drugSearch"
             className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
