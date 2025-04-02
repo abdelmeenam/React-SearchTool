@@ -35,7 +35,10 @@ export const SignInForm: React.FC = () => {
       if (response.status === 200) {
         console.log("✅ Login successful:", response.data);
         const { accessToken, userId, branchId, role, email } = response.data;
-        
+        // const response2 = await axios.get(`${baseUrl}/user/UserById`, {
+        //   headers: { Authorization: `Bearer ${accessToken}` },
+        // });
+        // console.log(response2);
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("role", role);
         localStorage.setItem("email", email);
@@ -114,8 +117,6 @@ export const SignInForm: React.FC = () => {
                   </span>
                 </div>
               </div>
-
-
               <div>
                 <Button  className="w-full" size="sm">
                   Sign in

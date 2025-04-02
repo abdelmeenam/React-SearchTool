@@ -54,7 +54,11 @@ const navItems: NavItem[] = [
   {
     name: "Search",
     icon: <SearchIcon />, // Make sure you import SearchIcon
-    subItems: [{ name: "Search Page", path: "/search", pro: false }],
+    subItems: [
+      { name: "Search by Drug", path: "/search/1", pro: false },
+      { name: "Search by Insurance", path: "/search/2", pro: false },
+      { name: "Search by Rx Group", path: "/search/3", pro: false },
+    ],
   },
 
   {
@@ -66,8 +70,16 @@ const navItems: NavItem[] = [
         path: "/dashboard/1",
         pro: false,
       },
-      { name: " Scripts matched Medisearch tool output Audit Dashboard", path: "/dashboard/2", pro: false },
-      { name: " Scripts mismatched Medisearch tool output Audit Dashboard", path: "/dashboard/3", pro: false },
+      {
+        name: " Scripts matched Medisearch tool output Audit Dashboard",
+        path: "/dashboard/2",
+        pro: false,
+      },
+      {
+        name: " Scripts mismatched Medisearch tool output Audit Dashboard",
+        path: "/dashboard/3",
+        pro: false,
+      },
 
       { name: "Users Logs", path: "/logs", pro: false },
     ],
@@ -149,16 +161,22 @@ const navItems: NavItem[] = [
 
 const othersItems: NavItem[] = [
   {
-    name: "About", path: "/about", pro: false,
-    icon: undefined
+    name: "About",
+    path: "/about",
+    pro: false,
+    icon: undefined,
   },
   {
-    name: "Services", path: "/services", pro: false,
-    icon: undefined
+    name: "Services",
+    path: "/services",
+    pro: false,
+    icon: undefined,
   },
   {
-    name: "Help & Support", path: "/help", pro: false,
-    icon: undefined
+    name: "Help & Support",
+    path: "/help",
+    pro: false,
+    icon: undefined,
   },
   /*
   {

@@ -12,7 +12,7 @@ export const Services: React.FC = () => {
 
   const services = [
     {
-      to: "/search",
+      to: "/search/1",
       title: "Search for Medicines",
       text: "Find the medicine you need, compare prices, and check insurance compatibility.",
       icon: <FaSearch className="w-12 h-12" />,
@@ -52,7 +52,6 @@ export const Services: React.FC = () => {
 
       {/* Header Section */}
       <div className="mx-auto max-w-4xl text-center">
-        <h2 className="text-base font-semibold text-blue-600">Services</h2>
         <p className="mt-2 text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">
           Enhance Your Healthcare Experience
         </p>

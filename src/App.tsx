@@ -105,7 +105,7 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* New Routes */}
-          <Route path="/" element={<Layout />}>
+          <Route path="/" element={<AppLayout />}>
             <Route index element={<Services />} /> {/* Default Home Page  */}
             <Route path="about" element={<AboutUs />} />
             <Route
@@ -137,7 +137,7 @@ export default function App() {
             />
      
             <Route
-              path="search"
+              path="search/:id"
               element={
                 <PrivateRoute>
                   <SearchSwitcher />
@@ -224,7 +224,7 @@ export default function App() {
             />
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
-            <Route path="/drug-form" element={<DrugForm />} />
+            {/* <Route path="/drug-form" element={<DrugForm />} />
             <Route path="/branch-form" element={<BranchForm />} />
             <Route path="/ens-branch-form" element={<ClassInsuranceForm />} />
             <Route path="/drug-branch-form" element={<DrugBranchForm />} />
@@ -240,7 +240,7 @@ export default function App() {
             <Route path="/scripts-form" element={<ScriptForm />} />
             <Route path="/script-item-form" element={<ScriptItemForm />} />
             <Route path="/specialty-form" element={<SpecialtyForm />} />
-            <Route path="/user-form" element={<UserForm />} />
+            <Route path="/user-form" element={<UserForm />} /> */}
           
 
             {/* Ui Elements */}

@@ -1,16 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useParams } from "react-router-dom";
 import { Search } from "./Search"; // Drug search by name
 import { InsuranceSearch } from "./Search2"; // Insurance-first search flow
 import { Search3 } from "./Search3"; // Rx Group–first search flow
 
 export const SearchSwitcher: React.FC = () => {
-  // Clear stored selections on mount
+  // Remove any previously stored selections on mount
   useEffect(() => {
     localStorage.removeItem("selectedRx");
     localStorage.removeItem("selectedPcn");
     localStorage.removeItem("selectedBin");
   }, []);
+
+  // Get the id from the route parameters
+  const { id } = useParams<{ id: string }>();
+
+  // "drug" for the drug search flow, "insurance" for the insurance-first flow,
+  // "rx" for the Rx Group–first search flow.
+  const [activeFlow, setActiveFlow] = useState<"drug" | "insurance" | "rx">("drug");
+
+  // Update activeFlow based on the id from the URL
+  useEffect(() => {
+    if (id === "1") {
+      setActiveFlow("drug");
+    } else if (id === "2") {
+      setActiveFlow("insurance");
+    } else if (id === "3") {
+      setActiveFlow("rx");
+    }
+  }, [id]);
+
   const ResponsiveButton = ({
     children,
     onClick,
@@ -30,57 +50,22 @@ export const SearchSwitcher: React.FC = () => {
       {children}
     </motion.button>
   );
-  // "drug" for the drug search flow, "insurance" for the insurance-first flow,
-  // "rx" for the Rx Group–first search flow.
-  const [activeFlow, setActiveFlow] = useState<"drug" | "insurance" | "rx">(
-    "drug"
-  );
-
-  // Base styles for the toggle buttons
-  const buttonBase = "px-4 py-2 rounded-md transition-colors duration-150";
-  const activeButton = "bg-blue-600 text-white";
-  const inactiveButton =
-    "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       {/* Toggle Buttons */}
-      <div className="flex justify-center mb-6 space-x-4">
-        <div className="flex flex-col sm:flex-row justify-center mb-6 gap-4">
-          <ResponsiveButton onClick={() => setActiveFlow("drug")}>
-            Search by Drug
-          </ResponsiveButton>
-          <ResponsiveButton onClick={() => setActiveFlow("insurance")}>
-            Search by Insurance
-          </ResponsiveButton>
-          <ResponsiveButton onClick={() => setActiveFlow("rx")}>
-            Search by Rx Group
-          </ResponsiveButton>
-        </div>
-      </div>
-
-      {/*
-      <div className="flex justify-center mb-6 space-x-4">
-        <button
-          onClick={() => setActiveFlow("drug")}
-          className={`${buttonBase} ${activeFlow === "drug" ? activeButton : inactiveButton}`}
-        >
+      {/* <div className="flex flex-col sm:flex-row justify-center mb-6 gap-4">
+        <ResponsiveButton onClick={() => setActiveFlow("drug")}>
           Search by Drug
-        </button>
-        <button
-          onClick={() => setActiveFlow("insurance")}
-          className={`${buttonBase} ${activeFlow === "insurance" ? activeButton : inactiveButton}`}
-        >
+        </ResponsiveButton>
+        <ResponsiveButton onClick={() => setActiveFlow("insurance")}>
           Search by Insurance
-        </button>
-        <button
-          onClick={() => setActiveFlow("rx")}
-          className={`${buttonBase} ${activeFlow === "rx" ? activeButton : inactiveButton}`}
-        >
+        </ResponsiveButton>
+        <ResponsiveButton onClick={() => setActiveFlow("rx")}>
           Search by Rx Group
-        </button>
-      </div>
-*/}
+        </ResponsiveButton>
+      </div> */}
+
       {/* Render the selected search flow with smooth fade transitions */}
       <AnimatePresence mode="wait">
         {activeFlow === "drug" && (

@@ -4,8 +4,6 @@ export interface AppConfig {
   
   const BaseUrlLoader: AppConfig = {
     API_BASE_URL: ""
-
-    
     
   };
   

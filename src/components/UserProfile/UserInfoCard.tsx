@@ -16,7 +16,6 @@ interface UserReadDto {
 }
 
 import BaseUrlLoader from "../../BaseUrlLoader";
-const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -27,7 +26,8 @@ export default function UserInfoCard() {
     name: "",
     email: "",
     password: "",
-  });
+  });const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
+
 
   const fetchUserData = async () => {
     try {
@@ -35,7 +35,7 @@ export default function UserInfoCard() {
         console.error("No token found");
         return;
       }
-      
+      console.log("why : ",API_BASE_URL);
       const response = await axios.get(`${API_BASE_URL}/user/UserById`, {
         headers: {
           Authorization: `Bearer ${token}`,

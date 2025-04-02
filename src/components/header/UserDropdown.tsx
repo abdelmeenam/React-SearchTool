@@ -4,7 +4,6 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link, useNavigate } from "react-router-dom";
 import BaseUrlLoader from "../../BaseUrlLoader";
-const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
 
 interface UserReadDto {
   email: string;
@@ -25,6 +24,7 @@ export default function UserInfoCard() {
     email: "",
     password: "",
   });
+  const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
 
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
@@ -41,11 +41,13 @@ export default function UserInfoCard() {
       }
 
       try {
+        console.log("why");
         const response = await axios.get(`${API_BASE_URL}/user/UserById`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const data: UserReadDto = response.data;
+        console.log(data);
         setUser(data);
         setFormData({ name: data.name, email: data.email, password: "" });
       } catch (error) {
@@ -111,7 +113,7 @@ export default function UserInfoCard() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
-        <span className="block mr-1 font-medium text-theme-sm">Welcome</span>
+        <span className="block mr-1 font-medium text-theme-sm">{user.name}</span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -137,29 +139,29 @@ export default function UserInfoCard() {
         onClose={closeDropdown}
         className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >
-        {/* <div>
+        <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
             {user.name}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
             {user.email}
           </span>
-        </div> */}
+        </div>
 
-        {/* <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
+        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
           <li>
             <DropdownItem onItemClick={closeDropdown} tag="a" to="/profile">
               Edit Profile
             </DropdownItem>
           </li>
           
-          <li>
+          {/* <li>
             <DropdownItem onItemClick={closeDropdown} tag="a" to="/support">
               Support
             </DropdownItem>
-          </li>
+          </li> */}
          
-        </ul> */}
+        </ul>
 
         {/* Updated Logout Button */}
         <button

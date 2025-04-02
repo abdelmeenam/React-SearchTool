@@ -34,6 +34,7 @@ export const Login: React.FC = () => {
         // Store access token securely
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("role", role);
+      
         window.location.reload();
       } else {
         setError("Invalid credentials");
