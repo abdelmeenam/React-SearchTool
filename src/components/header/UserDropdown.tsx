@@ -98,10 +98,14 @@ export default function UserInfoCard() {
   };
 
   // Logout handler
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const response = await axios.get(`${API_BASE_URL}/user/Logout`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     localStorage.removeItem("role");
     localStorage.removeItem("accessToken");
     // Optionally remove any other user-related data here
+  
     navigate("/signin");
   };
 
