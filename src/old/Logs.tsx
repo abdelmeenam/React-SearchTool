@@ -13,9 +13,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-// New imports for PDF functionality
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 ChartJS.register(
   CategoryScale,
@@ -90,11 +87,6 @@ const LogsPage: React.FC = () => {
   const userInputRef = useRef<HTMLDivElement>(null);
   const actionInputRef = useRef<HTMLDivElement>(null);
 
-  // Ref for the charts container (used for PDF capture)
-  const chartsContainerRef = useRef<HTMLDivElement>(null);
-  // State to indicate PDF generation is in progress
-  const [pdfLoading, setPdfLoading] = useState<boolean>(false);
-
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
   const logsPerPage = 10;
@@ -155,8 +147,7 @@ const LogsPage: React.FC = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Compute unique users for suggestions
@@ -314,29 +305,6 @@ const LogsPage: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Function to capture the charts and download them as a PDF
-  const downloadPDF = async () => {
-    if (!chartsContainerRef.current) return;
-    setPdfLoading(true);
-    try {
-      // Use html2canvas to capture the charts container as a canvas
-      const canvas = await html2canvas(chartsContainerRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-
-      // Create a new PDF with dimensions based on the canvas size
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "px",
-        format: [canvas.width, canvas.height],
-      });
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-      pdf.save("charts.pdf");
-    } catch (err) {
-      console.error("Failed to generate PDF", err);
-    }
-    setPdfLoading(false);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen dark:bg-gray-900 dark:text-white">
@@ -485,38 +453,23 @@ const LogsPage: React.FC = () => {
 
       {filterUser ? (
         <div className="flex flex-col gap-6">
-          {/* Charts and PDF Download Section */}
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Activity Charts</h2>
-            <div className="flex gap-4">
-              {/* CSV Download Button */}
-              <button
-                onClick={downloadCSV}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Download CSV
-              </button>
-              {/* PDF Download Button */}
-              <button
-                onClick={downloadPDF}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                disabled={pdfLoading}
-              >
-                {pdfLoading ? "Generating PDF..." : "Download PDF"}
-              </button>
-            </div>
-          </div>
-          {/* Charts Section wrapped in a ref container */}
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-            ref={chartsContainerRef}
-          >
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
               <Line data={lineData} options={lineOptions} />
             </div>
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
               <Bar data={barData} options={barOptions} />
             </div>
+          </div>
+          {/* Download CSV Button */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={downloadCSV}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Download CSV
+            </button>
           </div>
           {/* Logs List Section */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-x-auto">

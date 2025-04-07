@@ -345,13 +345,105 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
                       {alt.drugName}
                     </a>
                   </div>
+                  
                 </td>
-                {/* Additional columns go here – include as needed */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {alt.insuranceName ? "$" + alt.net.toFixed(2) : "NA"}
-                  </div>
+                    <div className="text-sm text-gray-500">{alt.drugClass}</div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{alt.branchName}</div>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="text-sm text-gray-500">
+                      <a
+                        href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
+                        className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {padCode(alt.ndcCode)}
+                      </a>
+                    </div>
+                  </td>
+                  <td className="px-10 py-4">
+                    <div className="text-sm text-gray-500">
+                      <a
+                        href={`/InsuranceDetails/${alt.rxgroupId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.insuranceName}
+                      </a>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {" "}
+                      <a
+                        href={`/InsuranceBINDetails/${alt.binId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.bin}
+                      </a>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      <a
+                        href={`/InsuranceBINDetails/${alt.binId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.binFullName}
+                      </a>{" "}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {" "}
+                      <a
+                        href={`/InsurancePCNDetails/${alt.pcnId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      >
+                        {alt.pcn}
+                      </a>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {alt.insuranceName ? "$" + alt.net.toFixed(2) : "NA"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-1">
+                      {alt.insuranceName
+                        ? "$" + alt.insurancePayment.toFixed(2)
+                        : "NA"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {alt.insuranceName
+                        ? "$" + alt.patientPayment.toFixed(2)
+                        : "NA"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {"NA"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {alt.acquisitionCost}
+                    </div>
+                  </td>
               </tr>
             ))}
           </tbody>
@@ -566,25 +658,117 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {currentItems.map((drug, index) => (
-              <tr key={`${drug.ndcCode}-${index}`} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    <a
-                      href={`/drug/${drug.drugId}?ndc=${drug.ndcCode}&insuranceId=${drug.rxgroupId}`}
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                    >
-                      {drug.drugName}
-                    </a>
-                  </div>
-                </td>
-                {/* Additional columns can be added similarly */}
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {drug.insuranceName ? "$" + drug.net.toFixed(2) : "NA"}
-                  </div>
-                </td>
-              </tr>
+            {currentItems.map((alt, index) => (
+             <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50">
+             <td className="px-6 py-4 whitespace-nowrap">
+               <div className="text-sm font-medium text-gray-900">
+                 <a
+                   href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}&insuranceId=${alt.rxgroupId}`}
+                   className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                 >
+                   {alt.drugName}
+                 </a>
+               </div>
+               
+             </td>
+             <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm text-gray-500">{alt.drugClass}</div>
+             </td>
+             <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm text-gray-500">{alt.branchName}</div>
+             </td>
+             <td className="px-6 py-4">
+                 <div className="text-sm text-gray-500">
+                   <a
+                     href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
+                     className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                   >
+                     {padCode(alt.ndcCode)}
+                   </a>
+                 </div>
+               </td>
+               <td className="px-10 py-4">
+                 <div className="text-sm text-gray-500">
+                   <a
+                     href={`/InsuranceDetails/${alt.rxgroupId}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                   >
+                     {alt.insuranceName}
+                   </a>
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm text-gray-900">
+                   {" "}
+                   <a
+                     href={`/InsuranceBINDetails/${alt.binId}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                   >
+                     {alt.bin}
+                   </a>
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm text-gray-900">
+                   <a
+                     href={`/InsuranceBINDetails/${alt.binId}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                   >
+                     {alt.binFullName}
+                   </a>{" "}
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm text-gray-900">
+                   {" "}
+                   <a
+                     href={`/InsurancePCNDetails/${alt.pcnId}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                   >
+                     {alt.pcn}
+                   </a>
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm font-medium text-gray-900">
+                   {alt.insuranceName ? "$" + alt.net.toFixed(2) : "NA"}
+                 </div>
+               </td>
+               <td className="px-6 py-4">
+                 <div className="space-y-1">
+                   {alt.insuranceName
+                     ? "$" + alt.insurancePayment.toFixed(2)
+                     : "NA"}
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm font-medium text-gray-900">
+                   {alt.insuranceName
+                     ? "$" + alt.patientPayment.toFixed(2)
+                     : "NA"}
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm font-medium text-gray-900">
+                   {"NA"}
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="text-sm font-medium text-gray-900">
+                   {alt.acquisitionCost}
+                 </div>
+               </td>
+           </tr>
             ))}
           </tbody>
         </table>
