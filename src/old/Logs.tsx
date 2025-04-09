@@ -64,8 +64,8 @@ const actionNameMap: Record<string, string> = {
   GetDrugsByInsuranceName: "Get Drugs by Insurance",
   GetInsurancesRxByPcnId: "Get RxGroups by PCN",
   GetDrugsByPCN: "Get Drugs by PCN",
-  Login:"User Sign in",
-  Logout:"User Sign out",
+  Login: "User Sign in",
+  Logout: "User Sign out",
 };
 
 const LogsPage: React.FC = () => {
@@ -276,6 +276,64 @@ const LogsPage: React.FC = () => {
     },
   };
 
+  // Compute working hours per day for the selected user
+  const workingHoursData = useMemo(() => {
+    if (!filterUser) return [];
+    // Filter logs for the selected user that are either a Login or Logout
+    const userLogs = logs.filter(
+      (log) =>
+        log.userName.toLowerCase() === filterUser.toLowerCase() &&
+        (log.action === "Login" || log.action === "Logout")
+    );
+    // Group logs by day using locale date string (this assumes the local day is acceptable)
+    const groupedByDay: { [day: string]: Log[] } = userLogs.reduce((acc, log) => {
+      const day = new Date(log.date).toLocaleDateString();
+      if (!acc[day]) {
+        acc[day] = [];
+      }
+      acc[day].push(log);
+      return acc;
+    }, {} as { [day: string]: Log[] });
+
+    const results: {
+      day: string;
+      signIn: string;
+      signOut: string;
+      hours: string;
+    }[] = [];
+
+    Object.keys(groupedByDay).forEach((day) => {
+      const logsForDay = groupedByDay[day];
+      // Filter login and logout events
+      const loginLogs = logsForDay.filter((log) => log.action === "Login");
+      const logoutLogs = logsForDay.filter((log) => log.action === "Logout");
+
+      // Only compute if we have at least one login and one logout
+      if (loginLogs.length > 0 && logoutLogs.length > 0) {
+        // Get the earliest login and the latest logout
+        const firstLogin = loginLogs.reduce((a, b) =>
+          new Date(a.date) < new Date(b.date) ? a : b
+        );
+        const lastLogout = logoutLogs.reduce((a, b) =>
+          new Date(a.date) > new Date(b.date) ? a : b
+        );
+        // Calculate the difference in hours
+        const diffMs = new Date(lastLogout.date).getTime() - new Date(firstLogin.date).getTime();
+        const diffHours = diffMs / (1000 * 60 * 60); // converting milliseconds to hours
+
+        results.push({
+          day,
+          signIn: new Date(firstLogin.date).toLocaleTimeString(),
+          signOut: new Date(lastLogout.date).toLocaleTimeString(),
+          hours: diffHours.toFixed(2),
+        });
+      }
+    });
+    // Sort by day in ascending order
+    results.sort((a, b) => new Date(a.day).getTime() - new Date(b.day).getTime());
+    return results;
+  }, [logs, filterUser]);
+
   // Function to download CSV of filtered logs
   const downloadCSV = () => {
     const headers = ["ID", "User Name", "Action", "Date"];
@@ -462,6 +520,54 @@ const LogsPage: React.FC = () => {
               <Bar data={barData} options={barOptions} />
             </div>
           </div>
+
+          {/* Working Hours Table */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mt-6">
+            <h2 className="text-2xl font-semibold mb-4">Daily Working Hours</h2>
+            {workingHoursData.length > 0 ? (
+              <table className="min-w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      First Sign In
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Last Sign Out
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Total Hours
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {workingHoursData.map((item, index) => (
+                    <tr key={index} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.day}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.signIn}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.signOut}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.hours}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+                No working hours data available for this user.
+              </div>
+            )}
+          </div>
+
           {/* Download CSV Button */}
           <div className="flex justify-end mb-4">
             <button

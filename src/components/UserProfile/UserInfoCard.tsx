@@ -5,6 +5,7 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import BaseUrlLoader from "../../BaseUrlLoader";
 
 interface UserReadDto {
   email: string;
@@ -15,37 +16,38 @@ interface UserReadDto {
   roleName: string;
 }
 
-import BaseUrlLoader from "../../BaseUrlLoader";
-
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const token = localStorage.getItem("accessToken"); // Assuming token is stored in localStorage
+  const token = localStorage.getItem("accessToken"); 
   const [user, setUser] = useState<UserReadDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    password: "",
-  });const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
 
-
+  // Fetch user data on mount
   const fetchUserData = async () => {
     try {
       if (!token) {
         console.error("No token found");
         return;
       }
-      console.log("why : ",API_BASE_URL);
       const response = await axios.get(`${API_BASE_URL}/user/UserById`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data: UserReadDto = response.data;
-      console.log(data)
       setUser(data);
-      setFormData({ name: data.name, email: data.email, password: "" });
+      // Prepopulate form data with user name and email
+      setFormData((prev) => ({
+        ...prev,
+        name: data.name,
+        email: data.email,
+      }));
     } catch (error) {
       console.error("Error fetching user:", error);
     } finally {
@@ -53,32 +55,54 @@ export default function UserInfoCard() {
     }
   };
 
-  // Fetch user data on component mount
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
+  // Update input state on change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async () => {
+  // Form submit handler
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission
     try {
       if (!token) {
-        console.error("No token found");
+        alert("User is not authenticated.");
         return;
       }
 
-      // Construct the payload dynamically to avoid sending an empty password
+      // Check new password confirmation if a new password is provided
+      if (formData.newPassword.trim()) {
+        if (formData.newPassword !== formData.confirmPassword) {
+          alert("New password and confirm password do not match.");
+          return;
+        }
+        if (!formData.oldPassword.trim()) {
+          alert("Please enter your old password to change your password.");
+          return;
+        }
+      }
+
+      // Validate the old password by attempting a login
+      const loginResponse = await axios.post(
+        `${API_BASE_URL}/user/login`,
+        { email: formData.email, password: formData.oldPassword },
+        { withCredentials: true }
+      );
+      if (loginResponse.status !== 200) {
+        alert("Wrong old password.");
+        return;
+      }
+
+      // Build the update payload
       const updatedData: { name: string; email: string; password?: string } = {
         name: formData.name,
         email: formData.email,
       };
-
-      if (formData.password.trim() !== "") {
-        updatedData.password = formData.password; // Include password only if it's provided
+      if (formData.newPassword.trim()) {
+        updatedData.password = formData.newPassword;
       }
 
+      // Send update request to the server
       await axios.put(`${API_BASE_URL}/user/UpdateUser`, updatedData, {
         headers: {
           "Content-Type": "application/json",
@@ -86,16 +110,37 @@ export default function UserInfoCard() {
         },
       });
 
+      // Update the local user state
       setUser((prev) =>
         prev ? { ...prev, name: formData.name, email: formData.email } : null
       );
-      closeModal(); // Close the modal after saving
-      setFormData({ ...formData, password: "" }); // Reset password field after submission
+
+      // Show an appropriate alert message
+      if (formData.newPassword.trim()) {
+        alert("Password changed successfully.");
+      } else {
+        alert("User updated successfully.");
+      }
+
+      closeModal();
+      // Reset password fields after submission
+      setFormData((prev) => ({
+        ...prev,
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
     } catch (error) {
       console.error("Error updating user:", error);
+      alert("Error updating user. Please try again.");
     }
   };
 
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
   if (!user) return <p className="text-center text-gray-500">User not found</p>;
 
   return (
@@ -105,37 +150,33 @@ export default function UserInfoCard() {
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
             Personal Information
           </h4>
-
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.name}
               </p>
             </div>
-
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 Email
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.email}
               </p>
             </div>
-
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 Branch
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.branchName}
               </p>
             </div>
-
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 Role
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
@@ -144,10 +185,9 @@ export default function UserInfoCard() {
             </div>
           </div>
         </div>
-
         <button
           onClick={openModal}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+          className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:w-auto"
         >
           <svg
             className="fill-current"
@@ -161,62 +201,79 @@ export default function UserInfoCard() {
               fillRule="evenodd"
               clipRule="evenodd"
               d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-              fill=""
             />
           </svg>
           Edit
         </button>
       </div>
-
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+        <div className="relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Edit Personal Information
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your details to keep your profile up-to-date.
+              Reset Your Password
             </p>
           </div>
-          <form className="flex flex-col">
+          <form onSubmit={handleSubmit} className="flex flex-col">
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                <div className="col-span-2 lg:col-span-1">
-                  <Label>Name</Label>
+                {/*
+                  To allow updating name and email, uncomment the lines below:
+                  <div className="col-span-2">
+                    <Label>Name</Label>
+                    <Input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
+                  </div>
+                */}
+                <div className="col-span-2">
+                  <Label>Old Password</Label>
                   <Input
-                    type="text"
-                    name="name"
-                    value={formData.name}
+                    type="password"
+                    name="oldPassword"
+                    value={formData.oldPassword}
                     onChange={handleChange}
                   />
                 </div>
-
-                <div className="col-span-2 lg:col-span-1">
-                  <Label>Email</Label>
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                </div>
-
                 <div className="col-span-2">
                   <Label>New Password</Label>
                   <Input
                     type="password"
-                    name="password"
-                    value={formData.password}
+                    name="newPassword"
+                    value={formData.newPassword}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Confirm New Password</Label>
+                  <Input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
                     onChange={handleChange}
                   />
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button  size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSubmit}>
+              <Button size="sm">
                 Save Changes
               </Button>
             </div>

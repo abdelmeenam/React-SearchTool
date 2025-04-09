@@ -576,7 +576,7 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     <a
-                      href={`/InsruanceDetails/${item.insurance}`}
+                      href={`/InsuranceDetails/${item.insuranceId}`}
                       target="_blank"
                       className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-150"
                     >

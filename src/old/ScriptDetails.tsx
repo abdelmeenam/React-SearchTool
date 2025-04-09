@@ -12,7 +12,7 @@ const ScriptDetails: React.FC = () => {
   const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
   });
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -21,8 +21,9 @@ const ScriptDetails: React.FC = () => {
         const baseUrl = BaseUrlLoader.API_BASE_URL; // Use the correct base URL
         const endpointUrl = `${baseUrl}/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
 
-        const response = await axios.get(endpointUrl,
-          { headers: getAuthHeader() });
+        const response = await axios.get(endpointUrl, {
+          headers: getAuthHeader(),
+        });
 
         if (Array.isArray(response.data)) {
           setData(response.data); // Ensure data is an array
@@ -31,7 +32,10 @@ const ScriptDetails: React.FC = () => {
           setData([]); // Handle unexpected response format
         }
       } catch (err) {
-        setError("Failed to fetch data");
+        setError(
+          "Access Denied. Sorry, you don’t have permission to view this page.\nPlease contact the system administrator if you believe this is an error."
+        );
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -41,7 +45,24 @@ const ScriptDetails: React.FC = () => {
   }, [scriptcode]);
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (error)
+    return (
+      <div
+        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-2xl mx-auto mb-6"
+        role="alert"
+      >
+        <strong className="font-bold">Access Denied!</strong>
+        <span className="block sm:inline">
+          {" "}
+          Sorry, you don’t have permission to view this page.
+        </span>
+        <br />
+        <span className="block sm:inline">
+          Please contact the system administrator if you believe this is an
+          error.
+        </span>
+      </div>
+    );
   if (!data.length) return <div>No data available.</div>;
 
   return (
