@@ -202,9 +202,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const normalizeName = (name: string) =>
     name
       .split(/\s+/)
-      .map(
-        (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      )
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ")
       .replace(/[.,]/g, "");
 
@@ -380,9 +378,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             />
             <datalist id="months">
               <option value="">All Months</option>
-              {[...new Set(latestScripts.map((item) =>
-                new Date(item.date).toISOString().slice(0, 7)
-              ))]
+              {[
+                ...new Set(
+                  latestScripts.map((item) =>
+                    new Date(item.date).toISOString().slice(0, 7)
+                  )
+                ),
+              ]
                 .sort()
                 .map((month) => (
                   <option key={month} value={month} />
@@ -496,24 +498,75 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               <tr>
                 {[
                   { label: "Date", key: "date" as keyof DrugTransaction },
-                  { label: "Script Code", key: "scriptCode" as keyof DrugTransaction },
-                  { label: "Branch Name", key: "branchCode" as keyof DrugTransaction },
-                  { label: "Rx Group", key: "insurance" as keyof DrugTransaction },
-                  { label: "Drug Class", key: "drugClass" as keyof DrugTransaction },
-                  { label: "Drug Name", key: "drugName" as keyof DrugTransaction },
-                  { label: "NDC Code", key: "ndcCode" as keyof DrugTransaction },
+                  {
+                    label: "Script Code",
+                    key: "scriptCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Branch Name",
+                    key: "branchCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Rx Group",
+                    key: "insurance" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Drug Class",
+                    key: "drugClass" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Drug Name",
+                    key: "drugName" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "NDC Code",
+                    key: "ndcCode" as keyof DrugTransaction,
+                  },
                   { label: "User", key: "user" as keyof DrugTransaction },
-                  { label: "Patient Payment", key: "patientPayment" as keyof DrugTransaction },
-                  { label: "ACQ", key: "acquisitionCost" as keyof DrugTransaction },
-                  { label: "Insurance Payment", key: "insurancePayment" as keyof DrugTransaction },
-                  { label: "Prescriber", key: "prescriber" as keyof DrugTransaction },
-                  { label: "Net Profit", key: "netProfit" as keyof DrugTransaction },
-                  { label: "Highest Net", key: "highstNet" as keyof DrugTransaction },
-                  { label: "Difference", key: "difference" as keyof DrugTransaction },
-                  { label: "Highest Drug NDC", key: "highstDrugNDC" as keyof DrugTransaction },
-                  { label: "Highest Drug Name", key: "highstDrugName" as keyof DrugTransaction },
-                  { label: "Highest Script Code", key: "highstScriptCode" as keyof DrugTransaction },
-                  { label: "Highest Script Date", key: "highstScriptDate" as keyof DrugTransaction },
+                  {
+                    label: "Patient Payment",
+                    key: "patientPayment" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "ACQ",
+                    key: "acquisitionCost" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Insurance Payment",
+                    key: "insurancePayment" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Prescriber",
+                    key: "prescriber" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Net Profit",
+                    key: "netProfit" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Net",
+                    key: "highstNet" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Difference",
+                    key: "difference" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Drug NDC",
+                    key: "highstDrugNDC" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Drug Name",
+                    key: "highstDrugName" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Script Code",
+                    key: "highstScriptCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Script Date",
+                    key: "highstScriptDate" as keyof DrugTransaction,
+                  },
                 ].map(({ label, key }) => (
                   <th
                     key={key}
@@ -561,10 +614,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     <a
-                      href={`/drug/${item.drugId}`}
-                      className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors duration-150"
+                      href={`/drug/${item.drugId}?ndc=${item.ndcCode}&insuranceId=${item.insuranceId}`}
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
                       target="_blank"
-                      rel="noopener noreferrer"
                     >
                       {item.drugName}
                     </a>
@@ -615,9 +667,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
                     <a
-                      href={`/drug/${item.highstDrugId}`}
+                      href={`/drug/${item.highstDrugId}?ndc=${item.highstDrugNDC}&insuranceId=${item.insuranceId}`}
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
                       target="_blank"
-                      className="hover:underline transition-colors duration-150"
                     >
                       {item.highstDrugName}
                     </a>
@@ -626,7 +678,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     {item.highstScriptCode}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
-                    {new Date(item.highstScriptDate).toLocaleDateString("en-US")}
+                    {new Date(item.highstScriptDate).toLocaleDateString(
+                      "en-US"
+                    )}
                   </td>
                 </tr>
               ))}
@@ -651,7 +705,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               Page {currentPage} of {totalPages}
             </p>
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md ${
                 currentPage === totalPages

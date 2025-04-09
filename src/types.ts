@@ -81,6 +81,7 @@ export interface DrugTransaction {
   drugName: string;
   drugId: number;
   insurance: string;
+  insuranceId : number;
   pf: string;
   prescriber: string;
   quantity: number;

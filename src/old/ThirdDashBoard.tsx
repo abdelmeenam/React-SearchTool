@@ -22,7 +22,10 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
   const [selectedInsurance, setSelectedInsurance] = useState("");
   const [filteredData, setFilteredData] = useState<DrugTransaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: string } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: string;
+  } | null>(null);
   const [belowNetPriceCount, setBelowNetPriceCount] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalNet, setTotalNet] = useState<number>(0);
@@ -68,12 +71,19 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
     const fetchData = async () => {
       try {
         // Filter where ndcCode is not equal to highstDrugNDC
-        const filters = data.filter((item) => item.ndcCode !== item.highstDrugNDC);
+        const filters = data.filter(
+          (item) => item.ndcCode !== item.highstDrugNDC
+        );
         setLatestScripts(filters);
 
-        const belowNetCount = filters.filter((item) => item.netProfit < item.highstNet).length;
+        const belowNetCount = filters.filter(
+          (item) => item.netProfit < item.highstNet
+        ).length;
         const totalRev = filters.reduce((sum, item) => sum + item.netProfit, 0);
-        const totalNetProfit = filters.reduce((sum, item) => sum + item.highstNet, 0);
+        const totalNetProfit = filters.reduce(
+          (sum, item) => sum + item.highstNet,
+          0
+        );
 
         setBelowNetPriceCount(belowNetCount);
         setTotalRevenue(totalRev);
@@ -123,10 +133,16 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
     let sortedData = [...latestScripts];
     if (sortConfig !== null) {
       sortedData.sort((a, b) => {
-        if (a[sortConfig.key as keyof DrugTransaction] < b[sortConfig.key as keyof DrugTransaction]) {
+        if (
+          a[sortConfig.key as keyof DrugTransaction] <
+          b[sortConfig.key as keyof DrugTransaction]
+        ) {
           return sortConfig.direction === "ascending" ? -1 : 1;
         }
-        if (a[sortConfig.key as keyof DrugTransaction] > b[sortConfig.key as keyof DrugTransaction]) {
+        if (
+          a[sortConfig.key as keyof DrugTransaction] >
+          b[sortConfig.key as keyof DrugTransaction]
+        ) {
           return sortConfig.direction === "ascending" ? 1 : -1;
         }
         return 0;
@@ -147,9 +163,14 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
     });
     setFilteredData(filtered);
 
-    const belowNetCount = filtered.filter((item) => item.netProfit < item.highstNet).length;
+    const belowNetCount = filtered.filter(
+      (item) => item.netProfit < item.highstNet
+    ).length;
     const totalRev = filtered.reduce((sum, item) => sum + item.netProfit, 0);
-    const totalNetProfit = filtered.reduce((sum, item) => sum + item.highstNet, 0);
+    const totalNetProfit = filtered.reduce(
+      (sum, item) => sum + item.highstNet,
+      0
+    );
 
     setBelowNetPriceCount(belowNetCount);
     setTotalRevenue(totalRev);
@@ -168,7 +189,11 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
   // Sorting helper function.
   const requestSort = (key: string) => {
     let direction = "ascending";
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "ascending") {
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "ascending"
+    ) {
       direction = "descending";
     }
     setSortConfig({ key, direction });
@@ -374,9 +399,13 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
             />
             <datalist id="months">
               <option value="">All Months</option>
-              {[...new Set(latestScripts.map((item) =>
-                new Date(item.date).toISOString().slice(0, 7)
-              ))]
+              {[
+                ...new Set(
+                  latestScripts.map((item) =>
+                    new Date(item.date).toISOString().slice(0, 7)
+                  )
+                ),
+              ]
                 .sort()
                 .map((month) => (
                   <option key={month} value={month} />
@@ -416,7 +445,9 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                 .sort()
                 .map((insurance) => (
                   <option key={insurance} value={insurance}>
-                    {insurance === "  " ? "MARCOG" : insurance_mapping[insurance] || insurance}
+                    {insurance === "  "
+                      ? "MARCOG"
+                      : insurance_mapping[insurance] || insurance}
                   </option>
                 ))}
             </datalist>
@@ -476,7 +507,7 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
             </datalist>
           </div>
         </div>
-        
+
         {/* CSV Download Button */}
         <div className="mb-4">
           <button
@@ -535,7 +566,7 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     <a
                       href={`/scriptitems/${item.scriptCode}`}
-                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-600 dark:hover:text-blue-500 transition-colors duration-150"
+                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-150"
                     >
                       {item.scriptCode}
                     </a>
@@ -545,10 +576,9 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     <a
-                      href={`/InsuranceDetails/${item.insurance}`}
+                      href={`/InsruanceDetails/${item.insurance}`}
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-600 dark:hover:text-blue-500 transition-colors duration-150"
+                      className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-150"
                     >
                       {item.insurance === "  "
                         ? "MARCOG"
@@ -560,10 +590,9 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     <a
-                      href={`/drug/${item.drugId}`}
+                      href={`/drug/${item.drugId}?ndc=${item.ndcCode}&insuranceId=${item.insuranceId}`}
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-600 dark:hover:text-blue-500 transition-colors duration-150"
                     >
                       {item.drugName}
                     </a>
@@ -571,9 +600,9 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     <a
                       href={`https://ndclist.com/ndc/${item.ndcCode}`}
+                      className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors duration-150"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-600 dark:hover:text-blue-500 transition-colors duration-150"
                     >
                       {item.ndcCode}
                     </a>
@@ -605,18 +634,18 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
                     <a
                       href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
+                      className="hover:underline transition-colors duration-150"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:underline transition-colors duration-150"
                     >
                       {item.highstDrugNDC}
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
                     <a
-                      href={`/drug/${item.highstDrugId}`}
+                      href={`/drug/${item.highstDrugId}?ndc=${item.highstDrugNDC}&insuranceId=${item.insuranceId}`}
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
                       target="_blank"
-                      className="hover:underline transition-colors duration-150"
                     >
                       {item.highstDrugName}
                     </a>
@@ -625,7 +654,9 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {item.highstScriptCode}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
-                    {new Date(item.highstScriptDate).toLocaleDateString("en-US")}
+                    {new Date(item.highstScriptDate).toLocaleDateString(
+                      "en-US"
+                    )}
                   </td>
                 </tr>
               ))}
@@ -651,7 +682,9 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
             Page {currentPage} of {totalPages}
           </p>
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
             disabled={currentPage === totalPages}
             className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md transition-colors duration-150 ${
               currentPage === totalPages
