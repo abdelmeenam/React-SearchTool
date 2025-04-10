@@ -1187,7 +1187,7 @@ export const DrugDetails: React.FC = () => {
               drugDetail={drugDetail}
               classNameStr={classNameStr}
             />
-            <div className="flex justify-end mb-4">
+            {/* <div className="flex justify-end mb-4">
               <button
                 onClick={() =>
                   setActiveTable(
@@ -1200,7 +1200,7 @@ export const DrugDetails: React.FC = () => {
                   ? "Switch to Branch Drugs"
                   : "Switch to Alternative Medications with Insurance"}
               </button>
-            </div>
+            </div> */}
             {activeTable === "insurance" ? (
               <>
                 {sortedAlternatives.length > 0 && (
