@@ -8,13 +8,9 @@ import { Drug, DrugInsuranceInfo } from "../types";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
+import axiosInstance from "../api/axiosInstance";
 
-await loadConfig();
-const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
 
-const getAuthHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-});
 
 // A simple fade variant that only animates opacity:
 const fadeVariant = {
@@ -38,9 +34,9 @@ export const Search: React.FC = () => {
     debounce(async (query: string) => {
       if (query.length >= 1) {
         try {
-          const { data } = await axios.get(
-            `${API_BASE_URL}/drug/searchByName?name=${query}`,
-            { headers: getAuthHeader() }
+          const { data } = await axiosInstance.get(
+            `/drug/searchByName?name=${query}`,
+           
           );
           setSuggestions(data);
           setShowSuggestions(true);
@@ -83,9 +79,8 @@ export const Search: React.FC = () => {
     setSelectedInsurance(null);
 
     try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/drug/getDrugNDCs?name=${drug.name}`,
-        { headers: getAuthHeader() }
+      const { data } = await axiosInstance.get(
+        `/drug/getDrugNDCs?name=${drug.name}`
       );
       setNdcList(data);
     } catch (error) {
@@ -100,9 +95,8 @@ export const Search: React.FC = () => {
     setInsurances([]);
     setSelectedInsurance(null);
 
-    axios
-      .get(`${API_BASE_URL}/drug/GetInsuranceByNdc?ndc=${ndc}`, {
-        headers: getAuthHeader(),
+    axiosInstance
+      .get(`/drug/GetInsuranceByNdc?ndc=${ndc}`, {
       })
       .then(({ data }) => {
         setInsurances(data);

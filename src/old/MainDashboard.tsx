@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { DrugTransaction } from "../types";
 import Dashboard from "./Dashboard";
 import SecondDashBoard from "./SecondDashBoard";
 import ThirdDashBoard from "./ThirdDashBoard";
-import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
+import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import {
   Pill,
   AlertTriangle,
@@ -15,16 +14,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useParams } from "react-router";
+import axiosInstance from "../api/axiosInstance"; // Import the customized axios instance
 
 // Ensure configuration is loaded before making API calls
 await loadConfig();
-
-const baseUrl = BaseUrlLoader.API_BASE_URL;
-
-// Helper function to retrieve the authorization header
-const getAuthHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-});
+// The BaseUrlLoader.API_BASE_URL is already used inside axiosInstance,
+// so there's no need to refer to it again here.
 
 export const MainDashboard: React.FC = () => {
   // Destructure the parameter from the URL (e.g., /dashboard/:dashboardId)
@@ -52,12 +47,11 @@ export const MainDashboard: React.FC = () => {
         localStorage.removeItem("selectedPcn");
         localStorage.removeItem("selectedBin");
 
-        const pageSize = 2000;
-        // Fetch the first page (initial 1000 rows)
-        const firstResponse = await axios.get(
-          `${baseUrl}/drug/GetAllLatestScriptsPaginated`,
+        const pageSize = 3000;
+        // Fetch the first page (initial data set)
+        const firstResponse = await axiosInstance.get(
+          "/drug/GetAllLatestScriptsPaginated",
           {
-            headers: getAuthHeader(),
             params: { pageNumber: 1, pageSize },
           }
         );
@@ -71,19 +65,17 @@ export const MainDashboard: React.FC = () => {
         let page = 2;
         let continueFetching = true;
         while (continueFetching) {
-          const response = await axios.get(
-            `${baseUrl}/drug/GetAllLatestScriptsPaginated`,
+          const response = await axiosInstance.get(
+            "/drug/GetAllLatestScriptsPaginated",
             {
-              headers: getAuthHeader(),
               params: { pageNumber: page, pageSize },
             }
           );
-          console.log("page : ", page);
+          console.log("page:", page);
           const pageData: DrugTransaction[] = response.data;
-          // Append additional data to existing state
+          // Append additional data and filter out duplicates (by ndcCode and scriptCode)
           setData((prevData) => {
             const combined = [...prevData, ...pageData];
-            // Use a Map with a composite key of ndcCode and scriptCode
             const distinctItems = Array.from(
               new Map(
                 combined.map((item) => [
@@ -139,18 +131,6 @@ export const MainDashboard: React.FC = () => {
         <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
           Pharmacy Dashboard
         </h1>
-        {/* Button Container */}
-        {/* <div className="flex flex-wrap justify-center gap-4 mb-6">
-          <ResponsiveButton onClick={() => setActiveDashboard("1")}>
-            All Scripts Audit
-          </ResponsiveButton>
-          <ResponsiveButton onClick={() => setActiveDashboard("2")}>
-            Matching Scripts Audit
-          </ResponsiveButton>
-          <ResponsiveButton onClick={() => setActiveDashboard("3")}>
-            Mismatching Scripts Audit
-          </ResponsiveButton>
-        </div> */}
 
         {/* Loading/Error States */}
         {loading && (

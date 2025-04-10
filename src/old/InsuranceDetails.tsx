@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Insurance } from "../types"; // Ensure your Insurance interface is defined with these properties
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
-await loadConfig(); 
+import axiosInstance from "../api/axiosInstance";
+await loadConfig();
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
@@ -17,10 +18,10 @@ const InsuranceDetails: React.FC = () => {
     const fetchData = async () => {
       try {
         console.log(insuranceName);
-       
-        const endpointUrl = `${BaseUrlLoader.API_BASE_URL}/Insurance/GetInsuranceDetails?id=${insuranceName}`;
-        const response = await axios.get(endpointUrl,
-          { headers: getAuthHeader() }); setInsurance(response.data);
+
+        const endpointUrl = `/Insurance/GetInsuranceDetails?id=${insuranceName}`;
+        const response = await axiosInstance.get(endpointUrl);
+        setInsurance(response.data);
         console.log(response.data);
         setLoading(false);
       } catch (err) {
@@ -34,7 +35,9 @@ const InsuranceDetails: React.FC = () => {
 
   // Helper to display a value or "NA" if the value is null/empty.
   const displayValue = (value: any): string =>
-    value === null || value === undefined || value === "" ? "NA" : value.toString();
+    value === null || value === undefined || value === ""
+      ? "NA"
+      : value.toString();
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -48,7 +51,6 @@ const InsuranceDetails: React.FC = () => {
       <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-2xl border-2 border-blue-500 mb-6">
         <table className="w-full border-collapse border border-blue-300 rounded-lg overflow-hidden">
           <tbody>
-         
             <tr className="bg-white">
               <td className="py-3 px-4 font-medium text-blue-700 border border-blue-300">
                 Name:

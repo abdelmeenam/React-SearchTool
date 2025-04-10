@@ -6,14 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import Select from "react-select";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
+import axiosInstance from "../api/axiosInstance";
 
 // Ensure the config is loaded
-await loadConfig();
-const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
-
-const getAuthHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-});
 
 // Define types
 interface RxGroupModel {
@@ -82,8 +77,7 @@ export const Search3: React.FC = () => {
   useEffect(() => {
     const fetchRxGroups = async () => {
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/Insurance/GetAllRxGroups`, {
-          headers: getAuthHeader(),
+        const { data } = await axiosInstance.get(`/Insurance/GetAllRxGroups`, {
         });
         setRxGroups(data);
       } catch (error) {
@@ -98,9 +92,8 @@ export const Search3: React.FC = () => {
     const fetchDrugs = async () => {
       if (selectedRxGroup) {
         try {
-          const { data } = await axios.get(
-            `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${selectedRxGroup.rxGroup}`,
-            { headers: getAuthHeader() }
+          const { data } = await axiosInstance.get(
+            `/drug/GetDrugsByInsuranceName?insurance=${selectedRxGroup.rxGroup}`
           );
           setDrugs(data);
         } catch (error) {
@@ -146,11 +139,10 @@ export const Search3: React.FC = () => {
   };
 
   const handleDrugDetails = async () => {
-    const { data } = await axios.get(
-      `${API_BASE_URL}/drug/GetDetails?ndc=${selectedNdc}&insuranceId=${
+    const { data } = await axiosInstance.get(
+      `/drug/GetDetails?ndc=${selectedNdc}&insuranceId=${
         selectedRxGroup?.id || ""
-      }`,
-      { headers: getAuthHeader() }
+      }`
     );
     localStorage.setItem("selectedPcn", data.pcn);
     localStorage.setItem("selectedBin", (data?.binFullName || "") + " - " + data?.bin);

@@ -6,6 +6,7 @@ import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import BaseUrlLoader from "../../BaseUrlLoader";
+import axiosInstance from "../../api/axiosInstance";
 
 interface UserReadDto {
   email: string;
@@ -37,9 +38,8 @@ export default function UserInfoCard() {
         console.error("No token found");
         return;
       }
-      const response = await axios.get(`${API_BASE_URL}/user/UserById`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axiosInstance.get(`/user/UserById`
+      );
       const data: UserReadDto = response.data;
       setUser(data);
       // Prepopulate form data with user name and email

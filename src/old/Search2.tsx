@@ -7,13 +7,9 @@ import Select from "react-select";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
+import axiosInstance from "../api/axiosInstance";
 
-await loadConfig();
-const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
 
-const getAuthHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-});
 
 // Define types
 interface BinModel {
@@ -111,9 +107,8 @@ export const InsuranceSearch: React.FC = () => {
     debounce(async (query: string) => {
       if (query.length > 0) {
         try {
-          const { data } = await axios.get(
-            `${API_BASE_URL}/drug/GetInsurancesBinsByName?bin=${query}`,
-            { headers: getAuthHeader() }
+          const { data } = await axiosInstance.get(
+            `/drug/GetInsurancesBinsByName?bin=${query}`
           );
           setBinSuggestions(data);
           setShowBinSuggestions(true);
@@ -150,9 +145,8 @@ export const InsuranceSearch: React.FC = () => {
     setSelectedNdc("");
 
     try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/drug/GetInsurancesPcnByBinId?binId=${bin.id}`,
-        { headers: getAuthHeader() }
+      const { data } = await axiosInstance.get(
+        `/drug/GetInsurancesPcnByBinId?binId=${bin.id}`
       );
       setPcnList(data);
       await fetchDrugsBasedOnSelection({ selectedBin: bin });
@@ -170,15 +164,15 @@ export const InsuranceSearch: React.FC = () => {
     const bin = overrides.selectedBin ?? selectedBin;
     let url = "";
     if (rxGroup) {
-      url = `${API_BASE_URL}/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`;
+      url = `/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`;
     } else if (pcn) {
-      url = `${API_BASE_URL}/drug/GetDrugsByPCN?pcn=${pcn.pcn}`;
+      url = `/drug/GetDrugsByPCN?pcn=${pcn.pcn}`;
     } else if (bin) {
-      url = `${API_BASE_URL}/drug/GetDrugsByBin?bin=${bin.bin}`;
+      url = `/drug/GetDrugsByBin?bin=${bin.bin}`;
     }
     if (url) {
       try {
-        const { data } = await axios.get(url, { headers: getAuthHeader() });
+        const { data } = await axiosInstance.get(url);
         setDrugs(data);
       } catch (error) {
         console.error("Error fetching drugs:", error);
@@ -208,9 +202,8 @@ export const InsuranceSearch: React.FC = () => {
 
     if (pcn) {
       try {
-        const { data } = await axios.get(
-          `${API_BASE_URL}/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`,
-          { headers: getAuthHeader() }
+        const { data } = await axiosInstance.get(
+          `/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`
         );
         setRxGroups(data);
       } catch (error) {

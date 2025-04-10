@@ -5,6 +5,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Drug, Prescription } from "../types";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
+import axiosInstance from "../api/axiosInstance";
 
 // Load configuration before using the API
 await loadConfig();
@@ -980,63 +981,54 @@ export const DrugDetails: React.FC = () => {
         if (!insuranceId) {
           let response;
           if (ndcCode) {
-            response = await axios.get(
-              `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
-              { headers: getAuthHeader() }
+            response = await axiosInstance.get(
+              `/drug/SearchByNdc?ndc=${ndcCode}`
+              
             );
           } else {
-            response = await axios.get(
-              `${baseUrl}/drug/GetDrugById?id=${drugId}`,
-              { headers: getAuthHeader() }
+            response = await axiosInstance.get(
+              `/drug/GetDrugById?id=${drugId}`
             );
           }
           setDrug(response.data);
           // Get all alternatives and sort descending by net price:
-          response2 = await axios.get(
-            `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
+          response2 = await axiosInstance.get(
+            `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
           );
           const sortedData = response2.data.sort(
             (a: Prescription, b: Prescription) => b.net - a.net
           );
           setSortedAlternatives(sortedData);
-          const response10 = await axios.get(
-            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
+          const response10 = await axiosInstance.get(
+            `/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`
           );
           setBranchDrugs(response10.data);
-          const response3 = await axios.get(
-            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
+          const response3 = await axiosInstance.get(
+            `/drug/GetClassById?id=${response.data.drugClassId}`
           );
           setClassName(response3.data.name);
         } else {
           // If an insuranceId is provided:
-          const response = await axios.get(
-            `${baseUrl}/drug/SearchByNdc?ndc=${ndcCode}`,
-            { headers: getAuthHeader() }
+          const response = await axiosInstance.get(
+            `/drug/SearchByNdc?ndc=${ndcCode}`
           );
           const drugData = response.data;
           setDrug(drugData);
-          response2 = await axios.get(
-            `${baseUrl}/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`,
-            { headers: getAuthHeader() }
+          response2 = await axiosInstance.get(
+            `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
           );
-          const response3 = await axios.get(
-            `${baseUrl}/drug/GetClassById?id=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
+          const response3 = await axiosInstance.get(
+            `/drug/GetClassById?id=${response.data.drugClassId}`
           );
           setClassName(response3.data.name);
-          const response10 = await axios.get(
-            `${baseUrl}/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`,
-            { headers: getAuthHeader() }
+          const response10 = await axiosInstance.get(
+            `/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`
           );
           setDrugDetail(response2.data);
           setBranchDrugs(response10.data);
           if (response3.data.name !== "other") {
-            const response4 = await axios.get(
-              `${baseUrl}/drug/GetAllDrugs?classId=${response.data.drugClassId}`,
-              { headers: getAuthHeader() }
+            const response4 = await axiosInstance.get(
+              `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
             );
             const matchingAlt = response4.data.find(
               (alt: Prescription) => alt.insuranceId.toString() === insuranceId

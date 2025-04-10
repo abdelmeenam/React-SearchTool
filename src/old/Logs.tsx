@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import axiosInstance from "../api/axiosInstance";
 
 ChartJS.register(
   CategoryScale,
@@ -95,12 +96,9 @@ const LogsPage: React.FC = () => {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const response = await axios.get(
-          `${BaseUrlLoader.API_BASE_URL}/Logs/GetLogs`,
-          {
-            headers: getAuthHeader(),
-          }
-        );
+        const response = await axiosInstance.get(`/Logs/GetLogs`, {
+          headers: getAuthHeader(),
+        });
         const processedLogs = response.data
           // Exclude logs with "token-test" in the action
           .filter(
@@ -147,7 +145,8 @@ const LogsPage: React.FC = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Compute unique users for suggestions
@@ -245,13 +244,13 @@ const LogsPage: React.FC = () => {
     });
     const labels = Object.keys(counts);
     const data = labels.map((action) => counts[action]);
-    const newLables = labels.map((x) => actionNameMap[x] || "others");
-    console.log(newLables);
-    return { newLables, data };
+    const newLabels = labels.map((x) => actionNameMap[x] || "others");
+    console.log(newLabels);
+    return { newLabels, data };
   }, [filteredLogs]);
 
   const barData = {
-    labels: actionChartData.newLables,
+    labels: actionChartData.newLabels,
     datasets: [
       {
         label: "Action Usage Count",
@@ -276,63 +275,119 @@ const LogsPage: React.FC = () => {
     },
   };
 
-  // Compute working hours per day for the selected user
+  // Compute working hours per day for the selected user based on first Login and last activity.
+  // Also, calculate extra hours if total hours exceed 8 hours.
   const workingHoursData = useMemo(() => {
     if (!filterUser) return [];
-    // Filter logs for the selected user that are either a Login or Logout
+    // Filter logs for the selected user (any activity)
     const userLogs = logs.filter(
-      (log) =>
-        log.userName.toLowerCase() === filterUser.toLowerCase() &&
-        (log.action === "Login" || log.action === "Logout")
+      (log) => log.userName.toLowerCase() === filterUser.toLowerCase()
     );
-    // Group logs by day using locale date string (this assumes the local day is acceptable)
-    const groupedByDay: { [day: string]: Log[] } = userLogs.reduce((acc, log) => {
-      const day = new Date(log.date).toLocaleDateString();
-      if (!acc[day]) {
-        acc[day] = [];
-      }
-      acc[day].push(log);
-      return acc;
-    }, {} as { [day: string]: Log[] });
+    // Group logs by day (using local date string)
+    const groupedByDay: { [day: string]: Log[] } = userLogs.reduce(
+      (acc, log) => {
+        const day = new Date(log.date).toLocaleDateString();
+        if (!acc[day]) {
+          acc[day] = [];
+        }
+        acc[day].push(log);
+        return acc;
+      },
+      {} as { [day: string]: Log[] }
+    );
 
     const results: {
       day: string;
       signIn: string;
-      signOut: string;
+      lastActivity: string;
       hours: string;
+      normalHours: string;
+      extra: string;
     }[] = [];
 
     Object.keys(groupedByDay).forEach((day) => {
       const logsForDay = groupedByDay[day];
-      // Filter login and logout events
+      // Ensure there is a Login event to determine the start of the day.
       const loginLogs = logsForDay.filter((log) => log.action === "Login");
-      const logoutLogs = logsForDay.filter((log) => log.action === "Logout");
-
-      // Only compute if we have at least one login and one logout
-      if (loginLogs.length > 0 && logoutLogs.length > 0) {
-        // Get the earliest login and the latest logout
+      if (loginLogs.length > 0) {
+        // Find the earliest login
         const firstLogin = loginLogs.reduce((a, b) =>
           new Date(a.date) < new Date(b.date) ? a : b
         );
-        const lastLogout = logoutLogs.reduce((a, b) =>
+        // Find the last activity (any action) in the day
+        const lastActivity = logsForDay.reduce((a, b) =>
           new Date(a.date) > new Date(b.date) ? a : b
         );
-        // Calculate the difference in hours
-        const diffMs = new Date(lastLogout.date).getTime() - new Date(firstLogin.date).getTime();
-        const diffHours = diffMs / (1000 * 60 * 60); // converting milliseconds to hours
+        const diffMs =
+          new Date(lastActivity.date).getTime() -
+          new Date(firstLogin.date).getTime();
+        const diffHours = diffMs / (1000 * 60 * 60); // total hours worked
+        // Calculate normal hours (max 8) and extra hours (beyond 8)
+        const normalHours = diffHours > 8 ? 8 : diffHours;
+        const extraHours = diffHours > 8 ? diffHours - 8 : 0;
 
         results.push({
           day,
           signIn: new Date(firstLogin.date).toLocaleTimeString(),
-          signOut: new Date(lastLogout.date).toLocaleTimeString(),
+          lastActivity: new Date(lastActivity.date).toLocaleTimeString(),
           hours: diffHours.toFixed(2),
+          normalHours: normalHours.toFixed(2),
+          extra: extraHours.toFixed(2),
         });
       }
     });
-    // Sort by day in ascending order
-    results.sort((a, b) => new Date(a.day).getTime() - new Date(b.day).getTime());
+
+    // Sort results by day (ascending)
+    results.sort(
+      (a, b) => new Date(a.day).getTime() - new Date(b.day).getTime()
+    );
     return results;
   }, [logs, filterUser]);
+
+  // Prepare working hours bar chart data (Normal Hours and Extra Hours)
+  const workingHoursChartData = useMemo(() => {
+    const labels = workingHoursData.map((item) => item.day);
+    const normalData = workingHoursData.map((item) =>
+      parseFloat(item.normalHours)
+    );
+    const extraData = workingHoursData.map((item) => parseFloat(item.extra));
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Normal Hours",
+          data: normalData,
+          backgroundColor: "rgba(54, 162, 235, 0.6)",
+        },
+        {
+          label: "Extra Hours",
+          data: extraData,
+          backgroundColor: "rgba(255, 99, 132, 0.6)",
+        },
+      ],
+    };
+  }, [workingHoursData]);
+
+  const workingHoursChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: "Working Hours Breakdown per Day",
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
+      },
+    },
+  };
 
   // Function to download CSV of filtered logs
   const downloadCSV = () => {
@@ -344,12 +399,7 @@ const LogsPage: React.FC = () => {
       // Use the mapped action name if available
       const actionText = actionNameMap[log.action] || log.action;
       const dateFormatted = new Date(log.date).toLocaleString();
-      const row = [
-        log.id,
-        log.userName,
-        `"${actionText}"`,
-        `"${dateFormatted}"`,
-      ];
+      const row = [log.id, log.userName, `"${actionText}"`, `"${dateFormatted}"`];
       csvRows.push(row.join(","));
     });
 
@@ -384,8 +434,7 @@ const LogsPage: React.FC = () => {
         </span>
         <br />
         <span className="block sm:inline">
-          Please contact the system administrator if you believe this is an
-          error.
+          Please contact the system administrator if you believe this is an error.
         </span>
       </div>
     );
@@ -535,10 +584,13 @@ const LogsPage: React.FC = () => {
                       First Sign In
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
-                      Last Sign Out
+                      Last Activity
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
                       Total Hours
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Extra Hours
                     </th>
                   </tr>
                 </thead>
@@ -552,10 +604,13 @@ const LogsPage: React.FC = () => {
                         {item.signIn}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                        {item.signOut}
+                        {item.lastActivity}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                         {item.hours}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.extra}
                       </td>
                     </tr>
                   ))}
@@ -568,6 +623,12 @@ const LogsPage: React.FC = () => {
             )}
           </div>
 
+          {/* Working Hours Bar Chart */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mt-6">
+            <h2 className="text-2xl font-semibold mb-4">Working Hours Overview</h2>
+            <Bar data={workingHoursChartData} options={workingHoursChartOptions} />
+          </div>
+
           {/* Download CSV Button */}
           <div className="flex justify-end mb-4">
             <button
@@ -577,6 +638,7 @@ const LogsPage: React.FC = () => {
               Download CSV
             </button>
           </div>
+
           {/* Logs List Section */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-x-auto">
             <table className="min-w-full">
@@ -598,10 +660,7 @@ const LogsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {currentLogs.map((log, index) => (
-                  <tr
-                    key={`${log.id}-${index}`}
-                    className="hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
+                  <tr key={`${log.id}-${index}`} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {log.id}
                     </td>

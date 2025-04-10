@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { ScriptData } from "../types";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
+import axiosInstance from "../api/axiosInstance";
 
 const ScriptDetails: React.FC = () => {
   const { scriptcode } = useParams<{ scriptcode: string }>(); // Get script code from URL
@@ -19,11 +20,9 @@ const ScriptDetails: React.FC = () => {
         await loadConfig(); // Ensure the config is loaded
 
         const baseUrl = BaseUrlLoader.API_BASE_URL; // Use the correct base URL
-        const endpointUrl = `${baseUrl}/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
+        const endpointUrl = `/drug/GetScriptByScriptCode?scriptCode=${scriptcode}`;
 
-        const response = await axios.get(endpointUrl, {
-          headers: getAuthHeader(),
-        });
+        const response = await axiosInstance.get(endpointUrl);
 
         if (Array.isArray(response.data)) {
           setData(response.data); // Ensure data is an array

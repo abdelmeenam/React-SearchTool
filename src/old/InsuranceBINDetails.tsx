@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Bin, Insurance, PCNModel, RxGroupModel } from "../types"; // Ensure your interfaces are defined appropriately
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
+import axiosInstance from "../api/axiosInstance";
 
 await loadConfig();
 
@@ -24,23 +25,20 @@ const InsuranceBINDetails: React.FC = () => {
       try {
         console.log(insuranceName);
 
-        const endpointUrl = `${BaseUrlLoader.API_BASE_URL}/Insurance/GetAllRxGroupsByBINId?id=${insuranceName}`;
-        const response = await axios.get(endpointUrl, {
-          headers: getAuthHeader(),
+        const endpointUrl = `/Insurance/GetAllRxGroupsByBINId?id=${insuranceName}`;
+        const response = await axiosInstance.get(endpointUrl, {
         });
         setRxGroups(response.data);
         console.log("Rx Groups: ", response.data);
 
-        const endpointUrl2 = `${BaseUrlLoader.API_BASE_URL}/Insurance/GetInsuranceBINDetails?id=${insuranceName}`;
-        const response2 = await axios.get(endpointUrl2, {
-          headers: getAuthHeader(),
+        const endpointUrl2 = `/Insurance/GetInsuranceBINDetails?id=${insuranceName}`;
+        const response2 = await axiosInstance.get(endpointUrl2, {
         });
         setInsurance(response2.data);
         console.log("Insurance BIN Details: ", response2.data);
 
-        const endpointUrl3 = `${BaseUrlLoader.API_BASE_URL}/Insurance/GetAllPCNsByBINId?id=${insuranceName}`;
-        const response3 = await axios.get(endpointUrl3, {
-          headers: getAuthHeader(),
+        const endpointUrl3 = `/Insurance/GetAllPCNsByBINId?id=${insuranceName}`;
+        const response3 = await axiosInstance.get(endpointUrl3, {
         });
         setPCNS(response3.data);
         console.log("PCNs: ", response3.data);

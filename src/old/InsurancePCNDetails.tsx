@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Insurance, RxGroupModel } from "../types"; // Ensure your Insurance interface is defined with these properties
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
+import axiosInstance from "../api/axiosInstance";
 
 await loadConfig();
 
@@ -23,17 +24,13 @@ const InsurancePCNDetails: React.FC = () => {
       try {
         console.log(insuranceName);
 
-        const endpointUrl = `${BaseUrlLoader.API_BASE_URL}/Insurance/GetAllRxGroupsByPcnId?id=${insuranceName}`;
-        const response = await axios.get(endpointUrl, {
-          headers: getAuthHeader(),
-        });
+        const endpointUrl = `/Insurance/GetAllRxGroupsByPcnId?id=${insuranceName}`;
+        const response = await axiosInstance.get(endpointUrl);
         setRxGroups(response.data);
         console.log(response.data);
 
-        const endpointUrl2 = `${BaseUrlLoader.API_BASE_URL}/Insurance/GetInsurancePCNDetails?id=${insuranceName}`;
-        const response2 = await axios.get(endpointUrl2, {
-          headers: getAuthHeader(),
-        });
+        const endpointUrl2 = `/Insurance/GetInsurancePCNDetails?id=${insuranceName}`;
+        const response2 = await axiosInstance.get(endpointUrl2);
         setInsurance(response2.data);
         console.log(response2.data);
 

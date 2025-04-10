@@ -5,6 +5,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader"; // Import the config and loader
 import { SignInForm } from '.././components/auth/SignInForm';
+import axiosInstance from "../api/axiosInstance";
 
 await loadConfig();
 const baseUrl = BaseUrlLoader.API_BASE_URL;
@@ -16,14 +17,14 @@ export const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const API_URL = `${baseUrl}/user/login`;
+  const API_URL = `/user/login`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); // Clear previous errors
 
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         API_URL,
         { email, password },
         { withCredentials: true }
