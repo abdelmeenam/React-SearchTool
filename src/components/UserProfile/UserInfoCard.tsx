@@ -19,9 +19,10 @@ interface UserReadDto {
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const token = localStorage.getItem("accessToken"); 
+  const token = localStorage.getItem("accessToken");
   const [user, setUser] = useState<UserReadDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,8 +39,7 @@ export default function UserInfoCard() {
         console.error("No token found");
         return;
       }
-      const response = await axiosInstance.get(`/user/UserById`
-      );
+      const response = await axiosInstance.get(`/user/UserById`);
       const data: UserReadDto = response.data;
       setUser(data);
       // Prepopulate form data with user name and email
@@ -55,33 +55,48 @@ export default function UserInfoCard() {
     }
   };
 
-  // Update input state on change
+  // Update input state on change and clear error message when the user starts typing
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
   };
 
-  // Form submit handler
+  // Form submit handler with empty field check and error message display
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
+    setError(""); // Clear previous error messages
+
+    if (!token) {
+      setError("User is not authenticated.");
+      return;
+    }
+
+    // Check if any password field is empty
+    if (
+      !formData.oldPassword.trim() ||
+      !formData.newPassword.trim() ||
+      !formData.confirmPassword.trim()
+    ) {
+      setError("All password fields are required.");
+      return;
+    }
+
+    // Password requirements: minimum length 5, at least one letter, one number, and one symbol
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{5,}$/;
+    if (!passwordRegex.test(formData.newPassword)) {
+      setError(
+        "Password must be at least 5 characters long and include letters, numbers, and symbols."
+      );
+      return;
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError("New password and confirm password do not match.");
+      return;
+    }
+
     try {
-      if (!token) {
-        alert("User is not authenticated.");
-        return;
-      }
-
-      // Check new password confirmation if a new password is provided
-      if (formData.newPassword.trim()) {
-        if (formData.newPassword !== formData.confirmPassword) {
-          alert("New password and confirm password do not match.");
-          return;
-        }
-        if (!formData.oldPassword.trim()) {
-          alert("Please enter your old password to change your password.");
-          return;
-        }
-      }
-
       // Validate the old password by attempting a login
       const loginResponse = await axios.post(
         `${API_BASE_URL}/user/login`,
@@ -89,7 +104,7 @@ export default function UserInfoCard() {
         { withCredentials: true }
       );
       if (loginResponse.status !== 200) {
-        alert("Wrong old password.");
+        setError("Wrong old password.");
         return;
       }
 
@@ -115,7 +130,7 @@ export default function UserInfoCard() {
         prev ? { ...prev, name: formData.name, email: formData.email } : null
       );
 
-      // Show an appropriate alert message
+      // Optionally, you can add a success message here or use an alert
       if (formData.newPassword.trim()) {
         alert("Password changed successfully.");
       } else {
@@ -132,7 +147,7 @@ export default function UserInfoCard() {
       }));
     } catch (error) {
       console.error("Error updating user:", error);
-      alert("Error updating user. Please try again.");
+      setError("Wrong password. Please try again!");
     }
   };
 
@@ -140,8 +155,10 @@ export default function UserInfoCard() {
     fetchUserData();
   }, []);
 
-  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
-  if (!user) return <p className="text-center text-gray-500">User not found</p>;
+  if (loading)
+    return <p className="text-center text-gray-500">Loading...</p>;
+  if (!user)
+    return <p className="text-center text-gray-500">User not found</p>;
 
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
@@ -210,17 +227,22 @@ export default function UserInfoCard() {
         <div className="relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Personal Information
+              Edit Password Information
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Reset Your Password
+              Change Your Password
             </p>
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col">
+            {/* Error Message Display */}
+            {error && (
+              <div className="mb-4 text-red-500 text-sm font-medium">
+                {error}
+              </div>
+            )}
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                {/*
-                  To allow updating name and email, uncomment the lines below:
+                {/* Uncomment these lines if you want to allow updating name and email:
                   <div className="col-span-2">
                     <Label>Name</Label>
                     <Input
@@ -247,6 +269,8 @@ export default function UserInfoCard() {
                     name="oldPassword"
                     value={formData.oldPassword}
                     onChange={handleChange}
+                    aria-required="true"
+
                   />
                 </div>
                 <div className="col-span-2">
@@ -256,6 +280,7 @@ export default function UserInfoCard() {
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleChange}
+                    aria-required="true"
                   />
                 </div>
                 <div className="col-span-2">
@@ -265,17 +290,17 @@ export default function UserInfoCard() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    aria-required="true"
+                    
                   />
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button  size="sm" variant="outline" onClick={closeModal}>
+              <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm">
-                Save Changes
-              </Button>
+              <Button size="sm">Save Changes</Button>
             </div>
           </form>
         </div>
