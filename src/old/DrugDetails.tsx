@@ -1,24 +1,42 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { JSX, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Pill, AlertCircle, Repeat, ArrowUpDown } from "lucide-react";
-import axios from "axios";
+import {
+  Pill,
+  AlertCircle,
+  Repeat,
+  ArrowUpDown,
+  Activity,
+  Shield,
+  Barcode,
+  MapPin,
+  Info,
+  Table,
+  Layers,
+  Key,
+  Wallet,
+  UserCheck,
+  Hash,
+  Link2Icon,
+} from "lucide-react";
+import {
+  Tag,
+  DollarSign,
+  Percent,
+  Zap,
+  BarChart,
+  CreditCard,
+  User,
+  Package,
+  Building,
+  FileText,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { Drug, Prescription } from "../types";
-import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import axiosInstance from "../api/axiosInstance";
-
-// Load configuration before using the API
-await loadConfig();
-
-const baseUrl = BaseUrlLoader.API_BASE_URL;
-
-const getAuthHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-});
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-500"></div>
   </div>
 );
 
@@ -26,7 +44,7 @@ interface ErrorMessageProps {
   message: string;
 }
 const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => (
-  <div className="text-center text-red-600 p-8">
+  <div className="text-center text-red-600 dark:text-red-400 p-8">
     <AlertCircle className="h-12 w-12 mx-auto mb-4" />
     <p>{message}</p>
   </div>
@@ -38,7 +56,7 @@ interface DrugHeaderProps {
   temp: string;
 }
 const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode, temp }) => (
-  <div className="bg-blue-600 p-6 text-white">
+  <div className="bg-blue-600 dark:bg-blue-800 p-6 text-white">
     <div className="flex items-center space-x-4">
       <Pill className="h-8 w-8" />
       <div>
@@ -47,7 +65,7 @@ const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode, temp }) => (
           href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-100"
+          className="text-blue-100 hover:underline"
         >
           NDC: {padCode(drug.ndc)}
         </a>
@@ -68,79 +86,150 @@ const DrugInformation: React.FC<DrugInformationProps> = ({
   classNameStr,
 }) => {
   return (
-    <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div>
-          <dt className="text-sm font-medium text-gray-500">Class Name</dt>
-          <dd className="mt-1 text-base text-gray-900">{classNameStr}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">ACQ</dt>
-          <dd className="mt-1 text-base text-gray-900">
-            ${drug.acq.toFixed(2)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">AWP</dt>
-          <dd className="mt-1 text-base text-gray-900">${drug.awp}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">Strength</dt>
-          <dd className="mt-1 text-base text-gray-900">{drug.strength}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">Net</dt>
-          <dd className="mt-1 text-base text-gray-900">
-            {drugDetail ? drugDetail.net : "N/A"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">Insurance Pay</dt>
-          <dd className="mt-1 text-base text-gray-900">
-            {drugDetail?.insurancePayment ? drugDetail.insurancePayment : "NA"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">Patient Pay</dt>
-          <dd className="mt-1 text-base text-gray-900">
-            {drugDetail?.patientPayment ? drugDetail.patientPayment : 0}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">Quantity</dt>
-          <dd className="mt-1 text-base text-gray-900">NA</dd>
-        </div>
-      </dl>
+    <div className="max-w-4xl mx-auto p-6">
+      <div
+        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg rounded-lg p-6
+                   transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+      >
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="flex items-center">
+            <Tag className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Class Name
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                {classNameStr}
+              </dd>
+            </div>
+          </div>
 
-      <div className="mt-6 border-t border-gray-200 pt-6">
-        <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <dt className="text-sm font-medium text-gray-500">
-              Insurance Name - BIN
-            </dt>
-            <dd className="mt-1 text-base text-gray-900">
-              {localStorage.getItem("selectedBin")
-                ? localStorage.getItem("selectedBin")
-                : "NA"}
-            </dd>
+          <div className="flex items-center">
+            <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                ACQ
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                ${drug.acq.toFixed(2)}
+              </dd>
+            </div>
           </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">PCN</dt>
-            <dd className="mt-1 text-base text-gray-900">
-              {localStorage.getItem("selectedPcn")
-                ? localStorage.getItem("selectedPcn")
-                : "NA"}
-            </dd>
+
+          <div className="flex items-center">
+            <Percent className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                AWP
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                ${drug.awp}
+              </dd>
+            </div>
           </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
-            <dd className="mt-1 text-base text-gray-900">
-              {localStorage.getItem("selectedRx")
-                ? localStorage.getItem("selectedRx")
-                : "NA"}
-            </dd>
+
+          <div className="flex items-center">
+            <Zap className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Strength
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                {drug.strength}
+              </dd>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <BarChart className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Net
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                {drugDetail ? drugDetail.net : "N/A"}
+              </dd>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <CreditCard className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Insurance Pay
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                {drugDetail?.insurancePayment || "NA"}
+              </dd>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <User className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Patient Pay
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                {drugDetail?.patientPayment || 0}
+              </dd>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <Package className="h-5 w-5 text-gray-400 mr-2" />
+            <div>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Quantity
+              </dt>
+              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                NA
+              </dd>
+            </div>
           </div>
         </dl>
+
+        <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+          <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center">
+              <Building className="h-5 w-5 text-gray-400 mr-2" />
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Insurance Name - BIN
+                </dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                  {drugDetail?.bin
+                    ? `${drugDetail.binFullName} - ${drugDetail.bin}`
+                    : "NA"}
+                </dd>
+              </div>
+            </div>
+
+            <div className="flex items-center">
+              <FileText className="h-5 w-5 text-gray-400 mr-2" />
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  PCN
+                </dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                  {drugDetail?.pcn || "NA"}
+                </dd>
+              </div>
+            </div>
+
+            <div className="flex items-center">
+              <Activity className="h-5 w-5 text-gray-400 mr-2" />
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  RXGroup
+                </dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                  {drugDetail?.rxgroup || "NA"}
+                </dd>
+              </div>
+            </div>
+          </dl>
+        </div>
       </div>
     </div>
   );
@@ -209,18 +298,62 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
   const handleNextPage = () =>
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
+  const columnIcons: Record<string, JSX.Element> = {
+    Name: <Pill className="inline h-4 w-4 mr-1 text-blue-500" />,
+    Class: <Tag className="inline h-4 w-4 mr-1 text-blue-500" />,
+    Branch: <Building className="inline h-4 w-4 mr-1 text-blue-500" />,
+    "NDC Codes": (
+      <Barcode className="inline h-4 w-4 mr-1 text-blue-500" />
+    ),
+    "Rx Group": (
+      <Layers className="inline h-4 w-4 mr-1 text-blue-500" />
+    ),
+    BIN: (
+      <CreditCard className="inline h-4 w-4 mr-1 text-blue-500" />
+    ),
+    "Insurance Name": (
+      <Shield className="inline h-4 w-4 mr-1 text-blue-500" />
+    ),
+    PCN: <Key className="inline h-4 w-4 mr-1 text-blue-500" />,
+    "Net Price": (
+      <DollarSign className="inline h-4 w-4 mr-1 text-green-500" />
+    ),
+    "Insurance Coverage": (
+      <Wallet className="inline h-4 w-4 mr-1 text-blue-500" />
+    ),
+    "Patient Pay": (
+      <UserCheck className="inline h-4 w-4 mr-1 text-blue-500" />
+    ),
+    Quantity: <Hash className="inline h-4 w-4 mr-1 text-blue-500" />,
+    ACQ: <Package className="inline h-4 w-4 mr-1 text-blue-500" />,
+  };
+
   return (
-    <section>
-      <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
-        <h2 className="flex items-center text-xl font-semibold text-gray-900 mb-4">
-          <Repeat className="h-5 w-5 mr-2" />
-          Suggested Alternative Drugs with Available Insurance Price Data
+    <section
+      className={`rounded-lg shadow-lg dark:bg-gray-800 bg-white p-6 transition-all duration-200`}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <Table className="h-5 w-5 text-blue-500" />
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Insurance Information
         </h2>
+      </div>
+
+      {/* Filters Section */}
+      <div
+        className={`rounded-lg p-4 mb-6 dark:bg-gray-700 bg-gray-50`}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Repeat className="h-5 w-5 text-blue-500" />
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+            Filter Insurance Data
+          </h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label
               htmlFor="insuranceFilter"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
             >
               Filter by Rx Group
             </label>
@@ -228,7 +361,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
               id="insuranceFilter"
               value={selectedInsurance}
               onChange={handleInsuranceFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">All</option>
               {uniqueInsuranceNames.map((name) => (
@@ -241,20 +374,20 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <div>
             <label
               htmlFor="binFilter"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
             >
-              Filter by BIN or Insurance Name
+              Filter by BIN
             </label>
             <select
               id="binFilter"
               value={selectedBin}
               onChange={handleBinFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">All</option>
               {uniqueBinValues.map(({ bin, binFullName }) => (
                 <option key={bin} value={bin}>
-                  {bin} - {binFullName}
+                  {binFullName}
                 </option>
               ))}
             </select>
@@ -262,7 +395,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <div>
             <label
               htmlFor="pcnFilter"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
             >
               Filter by PCN
             </label>
@@ -270,7 +403,7 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
               id="pcnFilter"
               value={selectedPcn}
               onChange={handlePcnFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">All</option>
               {uniquePcnValues.map((pcn) => (
@@ -281,170 +414,148 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
             </select>
           </div>
         </div>
-        <div
-          className="mt-4 flex items-center text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition"
+        <button
+          className={`mt-4 flex items-center text-sm dark:text-gray-300 text-gray-600 transition-colors duration-200 hover:text-white dark:hover:text-white`}
           onClick={handleSort}
         >
           <ArrowUpDown className="h-4 w-4 mr-1" />
-          Sorted by Net Price ({sortOrder === "asc" ? "Ascending" : "Descending"})
-        </div>
+          Sort by Net Price ({sortOrder === "asc" ? "Low to High" : "High to Low"})
+        </button>
       </div>
-      <div className="overflow-x-auto shadow-lg rounded-lg bg-white">
-        <table className="min-w-full table-auto">
-          <thead className="bg-gray-100">
+
+      <div className="overflow-x-auto rounded-lg border dark:border-gray-700 border-gray-200">
+        <table className="w-full">
+          <thead
+            className={`transition-colors duration-200 dark:bg-gray-700 bg-gray-50`}
+          >
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Class
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Branch
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                NDC Codes
-              </th>
-              <th className="px-10 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Rx Group
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                BIN
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Insurance Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                PCN
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Net Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Insurance Coverage
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Patient Pay
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Quantity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ACQ
-              </th>
+              {[
+                "Name",
+                "Class",
+                "Branch",
+                "NDC Codes",
+                "Rx Group",
+                "BIN",
+                "Insurance Name",
+                "PCN",
+                "Net Price",
+                "Insurance Coverage",
+                "Patient Pay",
+                "Quantity",
+                "ACQ",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider sticky top-0 bg-inherit backdrop-blur-sm backdrop-filter"
+                >
+                  <span className="flex items-center gap-1">
+                    {columnIcons[header]}
+                    {header}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {currentItems.map((alt, index) => (
-              <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    <a
-                      href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}&insuranceId=${alt.rxgroupId}`}
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                    >
-                      {alt.drugName}
-                    </a>
-                  </div>
-                  
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {currentItems.map((record, index) => (
+              <tr key={`${record.ndcCode}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+                <td className="px-6 py-4 whitespace-nowrap font-medium">
+                  <a
+                    href={`/drug/${record.drugId}?ndc=${record.ndcCode}&insuranceId=${record.rxgroupId}`}
+                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                  >
+                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
+                    <span className="group-hover:underline">
+                      {record.drugName}
+                    </span>
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                  {record.drugClass}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                  {record.branchName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`https://ndclist.com/ndc/${padCode(record.ndcCode)}`}
+                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
+                    <span className="group-hover:underline">
+                      {padCode(record.ndcCode)}
+                    </span>
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`/InsuranceDetails/${record.rxgroupId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                  >
+                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
+                    <span className="group-hover:underline">
+                      {record.insuranceName}
+                    </span>
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`/InsuranceBINDetails/${record.binId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                  >
+                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
+                    <span className="group-hover:underline">
+                      {record.bin}
+                    </span>
+                  </a>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{alt.drugClass}</div>
+                  <a
+                    href={`/InsuranceBINDetails/${record.binId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                  >
+                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
+                    <span className="group-hover:underline">
+                      {record.binFullName}
+                    </span>
+                  </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{alt.branchName}</div>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`/InsurancePCNDetails/${record.pcnId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                  >
+                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
+                    <span className="group-hover:underline">
+                      {record.pcn}
+                    </span>
+                  </a>
                 </td>
-                <td className="px-6 py-4">
-                    <div className="text-sm text-gray-500">
-                      <a
-                        href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
-                        className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {padCode(alt.ndcCode)}
-                      </a>
-                    </div>
-                  </td>
-                  <td className="px-10 py-4">
-                    <div className="text-sm text-gray-500">
-                      <a
-                        href={`/InsuranceDetails/${alt.rxgroupId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                      >
-                        {alt.insuranceName}
-                      </a>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {" "}
-                      <a
-                        href={`/InsuranceBINDetails/${alt.binId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                      >
-                        {alt.bin}
-                      </a>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      <a
-                        href={`/InsuranceBINDetails/${alt.binId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                      >
-                        {alt.binFullName}
-                      </a>{" "}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {" "}
-                      <a
-                        href={`/InsurancePCNDetails/${alt.pcnId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                      >
-                        {alt.pcn}
-                      </a>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {alt.insuranceName ? "$" + alt.net.toFixed(2) : "NA"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      {alt.insuranceName
-                        ? "$" + alt.insurancePayment.toFixed(2)
-                        : "NA"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {alt.insuranceName
-                        ? "$" + alt.patientPayment.toFixed(2)
-                        : "NA"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {"NA"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {alt.acquisitionCost}
-                    </div>
-                  </td>
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600 dark:text-green-400">
+                  {record.insuranceName ? "$" + record.net.toFixed(2) : "NA"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-green-600 dark:text-green-400">
+                  {record.insuranceName ? "$" + record.insurancePayment.toFixed(2) : "NA"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600 dark:text-green-400">
+                  {record.insuranceName ? "$" + record.patientPayment.toFixed(2) : "NA"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-gray-100">
+                  NA
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                  ${record.acquisitionCost.toFixed(2)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -457,13 +568,13 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
             disabled={currentPage === 1}
             className={`px-4 py-2 rounded-md ${
               currentPage === 1
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
             }`}
           >
             Previous
           </button>
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             Page {currentPage} of {totalPages}
           </span>
           <button
@@ -471,8 +582,8 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
             disabled={currentPage === totalPages}
             className={`px-4 py-2 rounded-md ${
               currentPage === totalPages
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
             }`}
           >
             Next
@@ -488,7 +599,9 @@ interface BranchDrugsTableProps {
   classNameStr: string;
   padCode: (code: string) => string;
   selectedInsurance: string;
-  handleInsuranceFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleInsuranceFilterChange: (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => void;
   uniqueInsuranceNames: string[];
   selectedBin: string;
   handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -541,17 +654,23 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
-    <section>
-      <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
-        <h2 className="flex items-center text-xl font-semibold text-gray-900 mb-4">
-          <Repeat className="h-5 w-5 mr-2" />
+    <section
+      className="rounded-lg shadow-lg dark:bg-gray-800 bg-white p-6 transition-all duration-200"
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <Repeat className="h-5 w-5 text-blue-500" />
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Branch Drugs
         </h2>
+      </div>
+
+      {/* Filters Section */}
+      <div className="rounded-lg p-4 mb-6 dark:bg-gray-700 bg-gray-50">
         <div className="flex flex-wrap gap-4">
           <div>
             <label
               htmlFor="branchInsuranceFilter"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
             >
               Filter by Rx Group
             </label>
@@ -559,7 +678,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
               id="branchInsuranceFilter"
               value={selectedInsurance}
               onChange={handleInsuranceFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300"
+              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">All</option>
               {uniqueInsuranceNames.map((name) => (
@@ -572,7 +691,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           <div>
             <label
               htmlFor="branchBinFilter"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
             >
               Filter by BIN
             </label>
@@ -580,7 +699,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
               id="branchBinFilter"
               value={selectedBin}
               onChange={handleBinFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300"
+              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">All</option>
               {uniqueBinValues.map(({ bin, binFullName }) => (
@@ -593,7 +712,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           <div>
             <label
               htmlFor="branchPcnFilter"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
             >
               Filter by PCN
             </label>
@@ -601,7 +720,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
               id="branchPcnFilter"
               value={selectedPcn}
               onChange={handlePcnFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300"
+              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">All</option>
               {uniquePcnValues.map((pcn) => (
@@ -613,167 +732,124 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto shadow-lg rounded-lg bg-white">
-        <table className="min-w-full table-auto">
-          <thead className="bg-gray-100">
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-lg border dark:border-gray-700 border-gray-200">
+        <table className="w-full">
+          <thead className="bg-gray-100 dark:bg-gray-700 transition-colors duration-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Class
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Branch
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                NDC Codes
-              </th>
-              <th className="px-10 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Rx Group
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                BIN
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Insurance Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                PCN
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Net Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Insurance Coverage
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Patient Pay
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Quantity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ACQ
-              </th>
+              {[
+                "Name",
+                "Class",
+                "Branch",
+                "NDC Codes",
+                "Rx Group",
+                "BIN",
+                "Insurance Name",
+                "PCN",
+                "Net Price",
+                "Insurance Coverage",
+                "Patient Pay",
+                "Quantity",
+                "ACQ",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider sticky top-0 bg-inherit backdrop-blur-sm backdrop-filter"
+                >
+                  {header}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {currentItems.map((alt, index) => (
-             <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50">
-             <td className="px-6 py-4 whitespace-nowrap">
-               <div className="text-sm font-medium text-gray-900">
-                 <a
-                   href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}&insuranceId=${alt.rxgroupId}`}
-                   className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                 >
-                   {alt.drugName}
-                 </a>
-               </div>
-               
-             </td>
-             <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm text-gray-500">{alt.drugClass}</div>
-             </td>
-             <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm text-gray-500">{alt.branchName}</div>
-             </td>
-             <td className="px-6 py-4">
-                 <div className="text-sm text-gray-500">
-                   <a
-                     href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
-                     className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                   >
-                     {padCode(alt.ndcCode)}
-                   </a>
-                 </div>
-               </td>
-               <td className="px-10 py-4">
-                 <div className="text-sm text-gray-500">
-                   <a
-                     href={`/InsuranceDetails/${alt.rxgroupId}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                   >
-                     {alt.insuranceName}
-                   </a>
-                 </div>
-               </td>
-               <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm text-gray-900">
-                   {" "}
-                   <a
-                     href={`/InsuranceBINDetails/${alt.binId}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                   >
-                     {alt.bin}
-                   </a>
-                 </div>
-               </td>
-               <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm text-gray-900">
-                   <a
-                     href={`/InsuranceBINDetails/${alt.binId}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                   >
-                     {alt.binFullName}
-                   </a>{" "}
-                 </div>
-               </td>
-               <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm text-gray-900">
-                   {" "}
-                   <a
-                     href={`/InsurancePCNDetails/${alt.pcnId}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                   >
-                     {alt.pcn}
-                   </a>
-                 </div>
-               </td>
-               <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm font-medium text-gray-900">
-                   {alt.insuranceName ? "$" + alt.net.toFixed(2) : "NA"}
-                 </div>
-               </td>
-               <td className="px-6 py-4">
-                 <div className="space-y-1">
-                   {alt.insuranceName
-                     ? "$" + alt.insurancePayment.toFixed(2)
-                     : "NA"}
-                 </div>
-               </td>
-               <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm font-medium text-gray-900">
-                   {alt.insuranceName
-                     ? "$" + alt.patientPayment.toFixed(2)
-                     : "NA"}
-                 </div>
-               </td>
-               <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm font-medium text-gray-900">
-                   {"NA"}
-                 </div>
-               </td>
-               <td className="px-6 py-4 whitespace-nowrap">
-                 <div className="text-sm font-medium text-gray-900">
-                   {alt.acquisitionCost}
-                 </div>
-               </td>
-           </tr>
+              <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+                <td className="px-6 py-4 whitespace-nowrap font-medium">
+                  <a
+                    href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}&insuranceId=${alt.rxgroupId}`}
+                    className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                  >
+                    {alt.drugName}
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                  {alt.drugClass}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                  {alt.branchName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
+                    className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {padCode(alt.ndcCode)}
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`/InsuranceDetails/${alt.rxgroupId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                  >
+                    {alt.insuranceName}
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`/InsuranceBINDetails/${alt.binId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                  >
+                    {alt.bin}
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <a
+                    href={`/InsuranceBINDetails/${alt.binId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                  >
+                    {alt.binFullName}
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                  <a
+                    href={`/InsurancePCNDetails/${alt.pcnId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                  >
+                    {alt.pcn}
+                  </a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600 dark:text-green-400">
+                  {alt.insuranceName ? "$" + alt.net.toFixed(2) : "NA"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-green-600 dark:text-green-400">
+                  {alt.insuranceName ? "$" + alt.insurancePayment.toFixed(2) : "NA"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600 dark:text-green-400">
+                  {alt.insuranceName ? "$" + alt.patientPayment.toFixed(2) : "NA"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-gray-100">
+                  NA
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                  ${alt.acquisitionCost.toFixed(2)}
+                </td>
+              </tr>
             ))}
           </tbody>
         </table>
       </div>
+
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <button
@@ -781,13 +857,13 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
             disabled={currentPage === 1}
             className={`px-4 py-2 rounded-md ${
               currentPage === 1
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
             }`}
           >
             Previous
           </button>
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             Page {currentPage} of {totalPages}
           </span>
           <button
@@ -795,8 +871,8 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
             disabled={currentPage === totalPages}
             className={`px-4 py-2 rounded-md ${
               currentPage === totalPages
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
             }`}
           >
             Next
@@ -859,45 +935,45 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
 
   return (
     <section className="mt-8">
-      <h3 className="text-lg font-semibold text-gray-900">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
         Suggested Alternative Drugs Without Available Insurance Price Data
       </h3>
-      <div className="overflow-x-auto shadow-lg rounded-lg bg-white mt-4">
+      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4">
         <table className="min-w-full table-auto">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Class
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 NDC Codes
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {currentItems.map((alt, index) => (
-              <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50">
+              <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-600">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     <a
                       href={`/drug/${alt.drugId}`}
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
                     >
                       {alt.drugName}
                     </a>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{classNameStr}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-300">{classNameStr}</div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
                     <a
                       href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
-                      className="text-blue-500 hover:text-blue-700 hover:underline transition duration-200"
+                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -917,13 +993,13 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
             disabled={currentPage === 1}
             className={`px-4 py-2 rounded-md ${
               currentPage === 1
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
             }`}
           >
             Previous
           </button>
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             Page {currentPage} of {totalPages}
           </span>
           <button
@@ -931,8 +1007,8 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
             disabled={currentPage === totalPages}
             className={`px-4 py-2 rounded-md ${
               currentPage === totalPages
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
             }`}
           >
             Next
@@ -981,14 +1057,9 @@ export const DrugDetails: React.FC = () => {
         if (!insuranceId) {
           let response;
           if (ndcCode) {
-            response = await axiosInstance.get(
-              `/drug/SearchByNdc?ndc=${ndcCode}`
-              
-            );
+            response = await axiosInstance.get(`/drug/SearchByNdc?ndc=${ndcCode}`);
           } else {
-            response = await axiosInstance.get(
-              `/drug/GetDrugById?id=${drugId}`
-            );
+            response = await axiosInstance.get(`/drug/GetDrugById?id=${drugId}`);
           }
           setDrug(response.data);
           // Get all alternatives and sort descending by net price:
@@ -1009,9 +1080,7 @@ export const DrugDetails: React.FC = () => {
           setClassName(response3.data.name);
         } else {
           // If an insuranceId is provided:
-          const response = await axiosInstance.get(
-            `/drug/SearchByNdc?ndc=${ndcCode}`
-          );
+          const response = await axiosInstance.get(`/drug/SearchByNdc?ndc=${ndcCode}`);
           const drugData = response.data;
           setDrug(drugData);
           response2 = await axiosInstance.get(
@@ -1058,8 +1127,7 @@ export const DrugDetails: React.FC = () => {
       const matchingInsurance = sortedAlternatives.find(
         (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
       );
-      setSelectedInsurance(localStorage.getItem("selectedRx") || "");
-      setSelectedPcn(localStorage.getItem("selectedPcn") || "");
+
       if (matchingInsurance) {
         localStorage.setItem("selectedRx", matchingInsurance.rxgroup || "");
         localStorage.setItem("selectedPcn", matchingInsurance.pcn || "");
@@ -1072,6 +1140,9 @@ export const DrugDetails: React.FC = () => {
         setSelectedInsurance(matchingInsurance.rxgroup || "");
         setSelectedBin(matchingInsurance.bin || "");
         setSelectedPcn(matchingInsurance.pcn || "");
+        setBranchSelectedBin(matchingInsurance.bin || "");
+        setBranchSelectedInsurance(matchingInsurance.rxgroup || "");
+        setBranchSelectedPcn(matchingInsurance.pcn || "");
       }
     }
   }, [insuranceId, sortedAlternatives]);
@@ -1093,10 +1164,14 @@ export const DrugDetails: React.FC = () => {
   ) => {
     setSelectedInsurance(event.target.value);
   };
-  const handleBinFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleBinFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setSelectedBin(event.target.value);
   };
-  const handlePcnFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handlePcnFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setSelectedPcn(event.target.value);
   };
 
@@ -1105,17 +1180,25 @@ export const DrugDetails: React.FC = () => {
   ) => {
     setBranchSelectedInsurance(event.target.value);
   };
-  const handleBranchBinFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleBranchBinFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setBranchSelectedBin(event.target.value);
   };
-  const handleBranchPcnFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleBranchPcnFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setBranchSelectedPcn(event.target.value);
   };
 
-  const handleOtherBinFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleOtherBinFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setOtherSelectedBin(event.target.value);
   };
-  const handleOtherPcnFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleOtherPcnFilterChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setOtherSelectedPcn(event.target.value);
   };
 
@@ -1170,8 +1253,8 @@ export const DrugDetails: React.FC = () => {
 
   return (
     <motion.div>
-      <div className="max-w-screen-2xl mx-auto px-4 lg:px-12">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <DrugHeader drug={drug} padCode={padCode} temp={temp} />
           <div className="p-6 space-y-6">
             <DrugInformation
@@ -1179,20 +1262,20 @@ export const DrugDetails: React.FC = () => {
               drugDetail={drugDetail}
               classNameStr={classNameStr}
             />
-            {/* <div className="flex justify-end mb-4">
+            <div className="flex justify-end mb-4">
               <button
                 onClick={() =>
                   setActiveTable(
                     activeTable === "insurance" ? "branch" : "insurance"
                   )
                 }
-                className="px-4 py-2 bg-green-600 text-white rounded-md"
+                className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md transition-colors duration-200"
               >
                 {activeTable === "insurance"
                   ? "Switch to Branch Drugs"
                   : "Switch to Alternative Medications with Insurance"}
               </button>
-            </div> */}
+            </div>
             {activeTable === "insurance" ? (
               <>
                 {sortedAlternatives.length > 0 && (
@@ -1215,7 +1298,7 @@ export const DrugDetails: React.FC = () => {
                     />
                     <button
                       onClick={() => setShowOtherAlternatives((prev) => !prev)}
-                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+                      className="mt-4 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md transition-colors duration-200"
                     >
                       {showOtherAlternatives
                         ? "Hide Other Alternatives"
@@ -1255,7 +1338,7 @@ export const DrugDetails: React.FC = () => {
                     uniquePcnValues={branchUniquePcnValues}
                   />
                 ) : (
-                  <div className="text-center text-gray-500">
+                  <div className="text-center text-gray-500 dark:text-gray-400">
                     No branch drugs found
                   </div>
                 )}

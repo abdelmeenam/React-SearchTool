@@ -3,13 +3,11 @@ import axios from "axios";
 import debounce from "debounce";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import Select from "react-select";
+import { X as XIcon } from "lucide-react";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import axiosInstance from "../api/axiosInstance";
-
-
 
 // Define types
 interface BinModel {
@@ -50,31 +48,21 @@ interface SelectionOverrides {
   selectedRxGroup?: RxGroupModel | null;
 }
 
-// Custom styles for react-select (keeping options black)
-const customStyles = {
-  option: (provided: any) => ({
-    ...provided,
-    color: "black",
-  }),
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: "black",
-  }),
-  input: (provided: any) => ({
-    ...provided,
-    color: "black",
-  }),
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: "black",
-  }),
-};
-
-// Optional fade variant for AnimatePresence (feel free to adjust)
+// Optional fade variant used for various transitions
 const fadeVariant = {
   initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.3, ease: "easeInOut" } },
+  exit: { opacity: 0, transition: { duration: 0.2, ease: "easeInOut" } },
+};
+
+// Variant for the dropdown details panel (animates height and opacity)
+const dropdownVariant = {
+  hidden: { opacity: 0, height: 0, overflow: "hidden" },
+  visible: {
+    opacity: 1,
+    height: "auto",
+    transition: { duration: 0.2, ease: "easeInOut" },
+  },
 };
 
 export const InsuranceSearch: React.FC = () => {
@@ -88,11 +76,17 @@ export const InsuranceSearch: React.FC = () => {
 
   const [pcnList, setPcnList] = useState<PcnModel[]>([]);
   const [selectedPcn, setSelectedPcn] = useState<PcnModel | null>(null);
+  // New PCN search state
+  const [pcnSearchQuery, setPcnSearchQuery] = useState("");
+  const [showPcnSuggestions, setShowPcnSuggestions] = useState(false);
 
   const [rxGroups, setRxGroups] = useState<RxGroupModel[]>([]);
   const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(
     null
   );
+  // New Rx Group search state
+  const [rxGroupSearchQuery, setRxGroupSearchQuery] = useState("");
+  const [showRxGroupSuggestions, setShowRxGroupSuggestions] = useState(false);
 
   // --- Drug Flow States ---
   const [drugs, setDrugs] = useState<DrugModel[]>([]);
@@ -100,9 +94,18 @@ export const InsuranceSearch: React.FC = () => {
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState<DrugModel | null>(null);
   const [ndcList, setNdcList] = useState<string[]>([]);
+  // Instead of a react‑select, NDC becomes a search input too:
   const [selectedNdc, setSelectedNdc] = useState("");
+  const [ndcSearchQuery, setNdcSearchQuery] = useState("");
+  const [showNdcSuggestions, setShowNdcSuggestions] = useState(false);
 
-  // --- BIN Flow ---
+  // --- Insurance (Drug Coverage) States ---
+  const [insurances, setInsurances] = useState<any[]>([]);
+  const [selectedInsurance, setSelectedInsurance] = useState<any | null>(null);
+
+  // --- Dropdown state for Selected Details panel ---
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
   const debouncedBinSearch = useCallback(
     debounce(async (query: string) => {
       if (query.length > 0) {
@@ -143,6 +146,9 @@ export const InsuranceSearch: React.FC = () => {
     setDrugSearchQuery("");
     setNdcList([]);
     setSelectedNdc("");
+    setPcnSearchQuery("");
+    setRxGroupSearchQuery("");
+    setNdcSearchQuery("");
 
     try {
       const { data } = await axiosInstance.get(
@@ -180,17 +186,22 @@ export const InsuranceSearch: React.FC = () => {
     }
   };
 
-  // --- PCN & Rx Group Selection ---
-  const handlePcnSelectFromSelect = async (
-    selectedOption: { value: number; label: string } | null
-  ) => {
-    if (!selectedOption) {
-      setSelectedPcn(null);
-      return;
-    }
-    const pcn =
-      pcnList.find((item) => item.id === selectedOption.value) || null;
+  // --- PCN Search Input Handlers ---
+  const filteredPcnList = pcnSearchQuery
+    ? pcnList.filter((item) =>
+        item.pcn.toLowerCase().includes(pcnSearchQuery.toLowerCase())
+      )
+    : pcnList;
+
+  const handlePcnSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPcnSearchQuery(e.target.value);
+    setShowPcnSuggestions(true);
+  };
+
+  const handlePcnSelect = async (pcn: PcnModel) => {
     setSelectedPcn(pcn);
+    setPcnSearchQuery(pcn.pcn);
+    setShowPcnSuggestions(false);
     // Clear downstream selections
     setRxGroups([]);
     setSelectedRxGroup(null);
@@ -199,37 +210,63 @@ export const InsuranceSearch: React.FC = () => {
     setDrugSearchQuery("");
     setNdcList([]);
     setSelectedNdc("");
-
-    if (pcn) {
-      try {
-        const { data } = await axiosInstance.get(
-          `/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`
-        );
-        setRxGroups(data);
-      } catch (error) {
-        console.error("Error fetching Rx Groups:", error);
-      }
-      await fetchDrugsBasedOnSelection({ selectedPcn: pcn });
+    setRxGroupSearchQuery("");
+    setNdcSearchQuery("");
+    try {
+      const { data } = await axiosInstance.get(
+        `/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`
+      );
+      setRxGroups(data);
+    } catch (error) {
+      console.error("Error fetching Rx Groups:", error);
     }
+    await fetchDrugsBasedOnSelection({ selectedPcn: pcn });
   };
 
-  const handleRxGroupSelectFromSelect = async (
-    selectedOption: { value: number; label: string } | null
+  // --- Rx Group Search Input Handlers ---
+  const filteredRxGroupList = rxGroupSearchQuery
+    ? rxGroups.filter((item) =>
+        item.rxGroup.toLowerCase().includes(rxGroupSearchQuery.toLowerCase())
+      )
+    : rxGroups;
+
+  const handleRxGroupSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    if (!selectedOption) {
-      setSelectedRxGroup(null);
-      return;
-    }
-    const rxGroup =
-      rxGroups.find((item) => item.id === selectedOption.value) || null;
+    setRxGroupSearchQuery(e.target.value);
+    setShowRxGroupSuggestions(true);
+  };
+
+  const handleRxGroupSelect = async (rxGroup: RxGroupModel) => {
     setSelectedRxGroup(rxGroup);
+    setRxGroupSearchQuery(rxGroup.rxGroup);
+    setShowRxGroupSuggestions(false);
     // Clear downstream selections
     setDrugs([]);
     setSelectedDrug(null);
     setDrugSearchQuery("");
     setNdcList([]);
     setSelectedNdc("");
+    setNdcSearchQuery("");
     await fetchDrugsBasedOnSelection({ selectedRxGroup: rxGroup });
+  };
+
+  // --- NDC Search Input Handlers ---
+  const filteredNdcList = ndcSearchQuery
+    ? ndcList.filter((ndc) =>
+        ndc.toLowerCase().includes(ndcSearchQuery.toLowerCase())
+      )
+    : ndcList;
+
+  const handleNdcSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNdcSearchQuery(e.target.value);
+    setShowNdcSuggestions(true);
+  };
+
+  const handleNdcSelect = (ndc: string) => {
+    setSelectedNdc(ndc);
+    setNdcSearchQuery(ndc);
+    setShowNdcSuggestions(false);
   };
 
   // --- Drug Flow ---
@@ -259,45 +296,63 @@ export const InsuranceSearch: React.FC = () => {
     setNdcList(combinedNdcs);
     if (combinedNdcs.length > 0) {
       setSelectedNdc(combinedNdcs[0]);
+      setNdcSearchQuery(combinedNdcs[0]);
     } else {
       console.error("No NDC found for the selected drug");
     }
   };
 
-  // --- NDC Selection via react-select ---
-  const handleNdcSelectFromSelect = (
-    selectedOption: { value: string; label: string } | null
-  ) => {
-    setSelectedNdc(selectedOption ? selectedOption.value : "");
+  // --- Reset All / Clear Selections ---
+  const clearAll = () => {
+    setBinQuery("");
+    setBinSuggestions([]);
+    setShowBinSuggestions(false);
+    setSelectedBin(null);
+    setPcnList([]);
+    setSelectedPcn(null);
+    setRxGroups([]);
+    setSelectedRxGroup(null);
+    setDrugs([]);
+    setSelectedDrug(null);
+    setDrugSearchQuery("");
+    setNdcList([]);
+    setSelectedNdc("");
+    setPcnSearchQuery("");
+    setRxGroupSearchQuery("");
+    setNdcSearchQuery("");
+    setInsurances([]);
+    setSelectedInsurance(null);
   };
 
   return (
-    <motion.div className="min-h-screen">
+    <motion.div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <PageMeta
         title="Insurance Search | TailAdmin"
         description="Search for medicines using our modern interface."
       />
       <PageBreadcrumb pageTitle="Insurance Search" />
 
-      <motion.div
-        layout
-        className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] w-full max-w-2xl mx-auto my-8 p-4"
-      >
-        {/* Header */}
-        <div className="px-6 py-5 text-center">
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Insurance Search
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Search for drugs based on BIN, PCN, and Rx Group criteria.
-          </p>
-        </div>
+      {/* Responsive Layout: Form on left; Selected Details sidebar on right */}
+      <div className="flex flex-col md:flex-row gap-8 justify-center">
+        {/* Main Form Column */}
+        <div className="flex-1 max-w-2xl">
+          <motion.div
+            layout
+            className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-800 p-6 shadow-lg"
+          >
+            {/* Header */}
+            <div className="px-6 py-5 text-center">
+              <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
+                Insurance Search
+              </h1>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Search for drugs based on BIN, PCN, and Rx Group criteria.
+              </p>
+            </div>
 
-        <div className="border-t border-gray-100 dark:border-gray-800 sm:p-6">
-          <motion.div layout className="space-y-6">
-            {/* BIN Input */}
-            <div>
-              <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
+            {/* Search Section */}
+            <div className="mb-6 p-4 rounded-lg">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Type BIN or Insurance Name
               </label>
               <div className="relative">
@@ -335,66 +390,117 @@ export const InsuranceSearch: React.FC = () => {
               </div>
             </div>
 
-            {/* PCN Searchable Dropdown */}
-            {pcnList.length > 0 && (
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Select PCN
-                </label>
-                <Select
-                  value={
-                    selectedPcn
-                      ? { value: selectedPcn.id, label: selectedPcn.pcn }
-                      : null
-                  }
-                  onChange={handlePcnSelectFromSelect}
-                  options={pcnList.map((pcn) => ({
-                    value: pcn.id,
-                    label: pcn.pcn,
-                  }))}
-                  placeholder="Select a PCN..."
-                  styles={customStyles}
-                  className="basic-single"
-                  classNamePrefix="select"
-                />
-              </div>
-            )}
+            {/* PCN & Rx Group Section */}
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              {/* PCN Search Input */}
+              <AnimatePresence>
+                {pcnList.length > 0 && (
+                  <motion.div
+                    layout
+                    variants={fadeVariant}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="mb-4 relative"
+                  >
+                    <label
+                      htmlFor="pcnSearch"
+                      className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Search for PCN
+                    </label>
+                    <input
+                      id="pcnSearch"
+                      type="text"
+                      value={pcnSearchQuery}
+                      onChange={handlePcnSearchChange}
+                      onFocus={() => setShowPcnSuggestions(true)}
+                      placeholder="e.g., Your PCN..."
+                      className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                    />
+                    <AnimatePresence>
+                      {showPcnSuggestions && filteredPcnList.length > 0 && (
+                        <motion.div
+                          layout
+                          initial={fadeVariant.initial}
+                          animate={fadeVariant.animate}
+                          exit={fadeVariant.exit}
+                          className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
+                        >
+                          {filteredPcnList.map((pcn) => (
+                            <button
+                              key={pcn.id}
+                              onClick={() => handlePcnSelect(pcn)}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
+                            >
+                              {pcn.pcn}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {/* Rx Group Searchable Dropdown */}
-            {rxGroups.length > 0 && (
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Select Rx Group
-                </label>
-                <Select
-                  value={
-                    selectedRxGroup
-                      ? {
-                          value: selectedRxGroup.id,
-                          label: selectedRxGroup.rxGroup,
-                        }
-                      : null
-                  }
-                  onChange={handleRxGroupSelectFromSelect}
-                  options={rxGroups.map((rx) => ({
-                    value: rx.id,
-                    label: rx.rxGroup,
-                  }))}
-                  placeholder="Select an Rx Group..."
-                  styles={customStyles}
-                  className="basic-single"
-                  classNamePrefix="select"
-                />
-              </div>
-            )}
+              {/* Rx Group Search Input */}
+              <AnimatePresence>
+                {rxGroups.length > 0 && (
+                  <motion.div
+                    layout
+                    variants={fadeVariant}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className="mb-4 relative"
+                  >
+                    <label
+                      htmlFor="rxGroupSearch"
+                      className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Search for Rx Group
+                    </label>
+                    <input
+                      id="rxGroupSearch"
+                      type="text"
+                      value={rxGroupSearchQuery}
+                      onChange={handleRxGroupSearchChange}
+                      onFocus={() => setShowRxGroupSuggestions(true)}
+                      placeholder="e.g., Your Rx Group..."
+                      className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                    />
+                    <AnimatePresence>
+                      {showRxGroupSuggestions &&
+                        filteredRxGroupList.length > 0 && (
+                          <motion.div
+                            layout
+                            initial={fadeVariant.initial}
+                            animate={fadeVariant.animate}
+                            exit={fadeVariant.exit}
+                            className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
+                          >
+                            {filteredRxGroupList.map((rx) => (
+                              <button
+                                key={rx.id}
+                                onClick={() => handleRxGroupSelect(rx)}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
+                              >
+                                {rx.rxGroup}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {/* Drug Search Input & Suggestions */}
-            {drugs.length > 0 && (
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Search for Drug
-                </label>
+              {/* Drug Search Input (remains unchanged) */}
+              {(selectedBin?.bin ?? "").length > 0 && (
                 <div className="relative">
+                  <label className="mb-1.5 mt-6 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Search for Drug
+                  </label>
                   <input
                     type="text"
                     value={drugSearchQuery}
@@ -425,43 +531,64 @@ export const InsuranceSearch: React.FC = () => {
                     )}
                   </AnimatePresence>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* NDC Searchable Dropdown */}
-            {ndcList.length > 0 && (
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Select NDC
-                </label>
-                <Select
-                  value={
-                    selectedNdc
-                      ? { value: selectedNdc, label: selectedNdc }
-                      : null
-                  }
-                  onChange={handleNdcSelectFromSelect}
-                  options={ndcList.map((ndc) => ({ value: ndc, label: ndc }))}
-                  placeholder="Select an NDC..."
-                  styles={customStyles}
-                  className="basic-single"
-                  classNamePrefix="select"
-                />
-              </div>
-            )}
+              {/* NDC Search Input */}
+              {ndcList.length > 0 && (
+                <div className="relative">
+                  <label
+                    htmlFor="ndcSearch"
+                    className="mb-1.5 mt-6 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                  >
+                    Search for NDC
+                  </label>
+                  <input
+                    id="ndcSearch"
+                    type="text"
+                    value={ndcSearchQuery}
+                    onChange={handleNdcSearchChange}
+                    onFocus={() => setShowNdcSuggestions(true)}
+                    placeholder="e.g., Your NDC..."
+                    className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                  />
+                  <AnimatePresence>
+                    {showNdcSuggestions && filteredNdcList.length > 0 && (
+                      <motion.div
+                        layout
+                        initial={fadeVariant.initial}
+                        animate={fadeVariant.animate}
+                        exit={fadeVariant.exit}
+                        className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
+                      >
+                        {filteredNdcList.map((ndc, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleNdcSelect(ndc)}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
+                          >
+                            {ndc}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
 
             {/* Action Button */}
             <AnimatePresence>
               {selectedDrug && selectedNdc && (
                 <motion.button
                   layout
-                  initial={fadeVariant.initial}
-                  animate={fadeVariant.animate}
-                  exit={fadeVariant.exit}
+                  variants={fadeVariant}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
                   onClick={() => {
                     localStorage.setItem(
                       "selectedRx",
-                      selectedRxGroup?.rxGroup || ""
+                      selectedInsurance?.insurance || ""
                     );
                     localStorage.setItem("selectedPcn", selectedPcn?.pcn || "");
                     localStorage.setItem(
@@ -478,7 +605,7 @@ export const InsuranceSearch: React.FC = () => {
                       }`
                     );
                   }}
-                  className="w-full py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  className="w-full mt-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 shadow-md"
                 >
                   <span>View Drug Details</span>
                 </motion.button>
@@ -486,7 +613,91 @@ export const InsuranceSearch: React.FC = () => {
             </AnimatePresence>
           </motion.div>
         </div>
-      </motion.div>
+
+        {/* Redesigned Selected Details Section */}
+        <div className="w-full md:w-1/3">
+          <motion.div
+            onMouseEnter={() => setDropdownVisible(true)}
+            onMouseLeave={() => setDropdownVisible(false)}
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
+          >
+            {/* Header: Always visible */}
+            <div className="flex justify-between items-center p-4">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                Selected Details
+              </h2>
+              <button
+                onClick={clearAll}
+                title="Reset Search"
+                className="p-2 transition-transform transform hover:scale-110 hover:bg-red-500  hover:text-white rounded-full"
+              >
+                <XIcon className="h-5 w-5 dark:text-white" />
+              </button>
+            </div>
+            {/* Dropdown Details: Expand on hover */}
+            <motion.div
+              variants={dropdownVariant}
+              initial="hidden"
+              animate={dropdownVisible ? "visible" : "hidden"}
+              className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 dark:text-white"
+            >
+              <p>
+                <strong>BIN: </strong>
+                {selectedBin ? (
+                  <a
+                    href={`/InsuranceBINDetails/${selectedBin.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                  >
+                    {`${selectedBin.name || ""} - ${selectedBin.bin}`}
+                  </a>
+                ) : (
+                  "N/A"
+                )}
+              </p>
+              <p>
+                <strong>PCN: </strong>
+                {selectedPcn ? (
+                  <a
+                    href={`/InsurancePCNDetails/${selectedPcn.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                  >
+                    {selectedPcn.pcn}
+                  </a>
+                ) : (
+                  "N/A"
+                )}
+              </p>
+              <p>
+                <strong>Rx Group: </strong>
+                {selectedRxGroup ? (
+                  <a
+                    href={`/InsuranceDetails/${selectedRxGroup.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                  >
+                    {selectedRxGroup.rxGroup}
+                  </a>
+                ) : (
+                  "N/A"
+                )}
+              </p>
+              <p>
+                <strong>Drug: </strong>
+                {selectedDrug ? selectedDrug.name : "N/A"}
+              </p>
+              <p>
+                <strong>NDC: </strong>
+                {selectedNdc || "N/A"}
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
     </motion.div>
   );
 };

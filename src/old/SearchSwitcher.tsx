@@ -52,7 +52,7 @@ export const SearchSwitcher: React.FC = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
+    <div className="max-w-6xl mx-auto px-4 py-10 ">
       {/* Toggle Buttons */}
       {/* <div className="flex flex-col sm:flex-row justify-center mb-6 gap-4">
         <ResponsiveButton onClick={() => setActiveFlow("drug")}>

@@ -1,7 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { Pill } from "lucide-react";
-import { Search } from "lucide-react";
+import { 
+  Book, 
+  CircleGauge, 
+  HelpCircle, 
+  HomeIcon, 
+  Pill, 
+  WandSparkles,
+  Search,
+  SearchCheckIcon,
+  SearchCode,
+  SearchSlashIcon,
+  History,
+  Archive,
+  LayoutDashboard,
+  LayoutPanelTop,
+  LayoutPanelLeft
+} from "lucide-react";
 
 const SearchIcon = Search;
 
@@ -23,208 +38,84 @@ import { UserIcon } from "../icons";
 
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
+import AboutUs from "../old/about";
+import Services from "../old/services";
+import Home from "../pages/Dashboard/Home";
 
-type NavItem = {
+export type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
   pro?: boolean;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { 
+    name: string; 
+    path: string; 
+    pro?: boolean; 
+    new?: boolean; 
+    icon?: React.ReactNode; 
+  }[];
 };
 
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Home", path: "/", pro: false }],
+    subItems: [
+      { name: "Home", path: "/", pro: false, icon: <HomeIcon /> }
+    ],
   },
-  /*{
-    
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-    
-  },
-  */
-  // {
-  //   icon: <UserCircleIcon />,
-  //   name: "User Profile",
-  //   path: "/profile",
-  // },
   {
     name: "Search",
-    icon: <SearchIcon />, // Make sure you import SearchIcon
+    icon: <SearchIcon />,
     subItems: [
-      { name: "Search by Drug", path: "/search/1", pro: false },
-      { name: "Search by Insurance", path: "/search/2", pro: false },
-      { name: "Search by Rx Group", path: "/search/3", pro: false },
+      { name: "Search by Drug", path: "/search/1", pro: false, icon: <SearchCheckIcon /> },
+      { name: "Search by Insurance", path: "/search/2", pro: false, icon: <SearchCode /> },
+      { name: "Search by Rx Group", path: "/search/3", pro: false, icon: <SearchSlashIcon /> },
     ],
   },
-
   {
     name: "Audits",
-    icon: <ListIcon />, // Replace with an appropriate icon if needed
+    icon: <ListIcon />,
     subItems: [
-      {
-        name: "All Scripts Audit Dashboard",
-        path: "/dashboard/1",
-        pro: false,
-      },
-      {
-        name: " Scripts matched Medisearch tool output Audit Dashboard",
-        path: "/dashboard/2",
-        pro: false,
-      },
-      {
-        name: " Scripts mismatched Medisearch tool output Audit Dashboard",
-        path: "/dashboard/3",
-        pro: false,
-      },
-
-      { name: "Users Logs", path: "/logs", pro: false },
+      { name: "All Scripts Audit Dashboard", path: "/dashboard/1", pro: false,icon: <LayoutDashboard /> },
+      { name: "Scripts matched Medisearch tool output Audit Dashboard", path: "/dashboard/2", pro: false,icon: <LayoutPanelTop /> },
+      { name: "Scripts mismatched Medisearch tool output Audit Dashboard", path: "/dashboard/3", pro: false,icon: <LayoutPanelLeft /> },
+      { name: "Users Logs", path: "/logs", pro: false,icon:<Archive/> },
     ],
   },
-  /*
-      {
-        name: "Drug",
-        icon: <ListIcon />, // Replace with an appropriate icon if needed
-        subItems: [{ name: "Manage Drugs", path: "/drug-form", pro: false },
-        { name: "Manage Branches", path: "/branch-form", pro: false },
-        { name: "Manage Ensurance Branches", path: "/ens-branch-form", pro: false },
-        { name: "Manage Drug Branches", path: "/drug-branch-form", pro: false },
-        { name: "Manage Drug Classes", path: "/drug-class-form", pro: false },
-        { name: "Manage Drug CSV", path: "/drug-csv-form", pro: false },
-{name: "Manage Drug Ensurance", path: "/drug-insurance-form", pro: false },
-{ name: "Manage  Ensurance", path: "/insurance-form", pro: false },
-{ name: "Manage  Companies", path: "/company-form", pro: false },
-{ name: "Manage  Roles", path: "/roles-form", pro: false },
-{ name: "Manage  Scripts", path: "/scripts-form", pro: false },
-{ name: "Manage  Scripts items", path: "/script-item-form", pro: false },
-{ name: "Manage  Specialties", path: "/specialty-form", pro: false },
-{ name: "Manage  Users", path: "/user-form", pro: false },
-
-
-
-
-        ],
-
-    
-    
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [
-      { name: "Basic Tables", path: "/basic-tables", pro: false },
-      { name: "Branch Tables", path: "/branch-table", pro: false },
-      { name: "Drug Tables", path: "/drug-table", pro: false
-     },
-     { name: "Class Insurance Tables", path: "/class-insurance-table", pro: false },
-      { name: "Drug Branch Tables", path: "/drug-branch-table", pro: false },
-      { name: "Drug Class Tables", path: "/drug-class-table", pro: false },
-      { name: "Drug CSV Tables", path: "/drug-csv-table", pro: false },
-      { name: "Drug Ensurance Tables", path: "/drug-insurance-table", pro: false },
-      { name: "Ensurance Tables", path: "/insurance-table", pro: false },
-      { name: "Company Tables", path: "/company-table", pro: false },
-      { name: "Role Tables", path: "/role-table", pro: false },
-      { name: "Script Tables", path: "/script-table", pro: false },
-      { name: "Script Item Tables", path: "/script-item-table", pro: false },
-      { name: "Specialty Tables", path: "/specialty-table", pro: false },
-      { name: "User Tables", path: "/user-table", pro: false },
-      { name: "User Logs Tables", path: "/user-logs-table", pro: false },
-
-    ],
-  },
-
-  */
-  // {
-  //   name: "Pages",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "about", path: "/about", pro: false },
-  //     { name: "services", path: "/services", pro: false },
-  //     { name: "Help & Support", path: "/help", pro: false },
-
-  //     /*
-  //     { name: "Blank Page", path: "/blank", pro: false },
-  //     { name: "404 Error", path: "/error-404", pro: false },
-  //      */
-  //   ],
-  // },
-
-  // {
-  //   name: "Logs",
-  //   icon: <PageIcon />,
-  //   subItems: [{ name: "Users Logs", path: "/logs", pro: false }],
-  // },
 ];
 
 const othersItems: NavItem[] = [
   {
+    icon: <Book />,
     name: "About",
     path: "/about",
     pro: false,
-    icon: undefined,
   },
   {
     name: "Services",
     path: "/services",
     pro: false,
-    icon: undefined,
+    icon: <WandSparkles />,
   },
   {
     name: "Help & Support",
     path: "/help",
     pro: false,
-    icon: undefined,
+    icon: <HelpCircle />,
   },
-  /*
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
-  */
 ];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-
   const location = useLocation();
-
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
@@ -248,7 +139,6 @@ const AppSidebar: React.FC = () => {
         }
       });
     });
-
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
@@ -311,8 +201,7 @@ const AppSidebar: React.FC = () => {
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
                   className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
+                    openSubmenu?.type === menuType && openSubmenu?.index === index
                       ? "rotate-180 text-brand-500"
                       : ""
                   }`}
@@ -366,6 +255,12 @@ const AppSidebar: React.FC = () => {
                           : "menu-dropdown-item-inactive"
                       }`}
                     >
+                      {/* Render the subitem icon if provided */}
+                      {subItem.icon && (
+                        <span className="mr-2">
+                          {subItem.icon}
+                        </span>
+                      )}
                       {subItem.name}
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
@@ -423,15 +318,12 @@ const AppSidebar: React.FC = () => {
         }`}
       >
         <Link to="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <span className="flex items-center text-2xl font-extrabold tracking-wide text-blue-600 dark:text-blue-400">
-                Medsearch
-                <Pill className="ml-2 w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </span>
-            </>
-          ) : // Return null to render nothing when false
-          null}
+          {(isExpanded || isHovered || isMobileOpen) && (
+            <span className="flex items-center text-2xl font-extrabold tracking-wide text-blue-600 dark:text-blue-400">
+              Medsearch
+              <Pill className="ml-2 w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </span>
+          )}
         </Link>
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
@@ -440,38 +332,27 @@ const AppSidebar: React.FC = () => {
             <div>
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
+                  !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
-                ) : (
-                  <HorizontaLDots className="size-6" />
-                )}
+                {isExpanded || isHovered || isMobileOpen ? "Menu" : <HorizontaLDots className="size-6" />}
               </h2>
               {renderMenuItems(navItems, "main")}
             </div>
             <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
+                  !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  ""
-                ) : (
-                  <HorizontaLDots />
-                )}
+                {(isExpanded || isHovered || isMobileOpen) ? "" : <HorizontaLDots />}
               </h2>
               {renderMenuItems(othersItems, "others")}
             </div>
           </div>
         </nav>
-        {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}
+        {/* Optionally render additional sidebar widgets */}
+        {/* {(isExpanded || isHovered || isMobileOpen) && <SidebarWidget />} */}
       </div>
     </aside>
   );

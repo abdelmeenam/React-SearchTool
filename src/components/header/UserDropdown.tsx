@@ -4,6 +4,8 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link, useNavigate } from "react-router-dom";
 import BaseUrlLoader from "../../BaseUrlLoader";
+// Import lucide icons
+import { User as UserIcon, Edit3 as EditIcon, LogOut } from "lucide-react";
 
 interface UserReadDto {
   email: string;
@@ -13,7 +15,6 @@ interface UserReadDto {
   branchName: string;
   roleName: string;
 }
-
 
 export default function UserInfoCard() {
   const [isOpen, setIsOpen] = useState(false);
@@ -99,17 +100,26 @@ export default function UserInfoCard() {
 
   // Logout handler
   const handleLogout = async () => {
-    const response = await axios.get(`${API_BASE_URL}/user/Logout`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      await axios.get(`${API_BASE_URL}/user/Logout`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
     localStorage.removeItem("role");
     localStorage.removeItem("accessToken");
     // Optionally remove any other user-related data here
-  
+
     navigate("/signin");
   };
 
-  if (!user) return <p className="text-center text-gray-500"><a href="/signin" >Log In</a></p>;
+  if (!user)
+    return (
+      <p className="text-center text-gray-500">
+        <a href="/signin">Log In</a>
+      </p>
+    );
 
   return (
     <div className="relative">
@@ -141,7 +151,7 @@ export default function UserInfoCard() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+        className="absolute right-0 mt-[17px] flex w-[290px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
@@ -154,24 +164,28 @@ export default function UserInfoCard() {
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
           <li>
-            <DropdownItem onItemClick={closeDropdown} tag="a" to="/profile">
+            <DropdownItem onItemClick={closeDropdown} tag="a" to="/profile" className="inline-flex items-center">
+              {/* Added user icon with a margin to the right */}
+              <UserIcon size={16} className="mr-2" />
               Edit Profile
             </DropdownItem>
           </li>
-          
-          {/* <li>
+          {/* You can uncomment and add additional dropdown items below */}
+          {/*
+          <li>
             <DropdownItem onItemClick={closeDropdown} tag="a" to="/support">
+              <EditIcon size={16} className="mr-2" />
               Support
             </DropdownItem>
-          </li> */}
-         
+          </li>
+          */}
         </ul>
 
-        {/* Updated Logout Button */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 mt-3 w-full text-left"
+          className="flex items-center gap-3 px-3 py-2 mt-3 w-full text-left "
         >
+          <LogOut size={16} />
           Sign out
         </button>
       </Dropdown>
