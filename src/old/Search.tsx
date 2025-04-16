@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import debounce from "debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search as SearchIcon, X as XIcon, ExternalLink } from "lucide-react";
-import { Drug, DrugInsuranceInfo } from "../types";
+import { Drug, DrugInsuranceInfo, Prescription } from "../types";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
@@ -41,6 +41,10 @@ export const Search: React.FC = () => {
   // State for controlling the visibility of the selected details dropdown
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
+  // New state to store drug details (e.g. net price information)
+  const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(null);
+  const [bestDrugNetDetails, setBestDrugNetDetails] = useState<Prescription | null>(null);
+
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
       if (query.length >= 1) {
@@ -76,6 +80,7 @@ export const Search: React.FC = () => {
     setSelectedNdc("");
     setInsurances([]);
     setSelectedInsurance(null);
+    setDrugNetDetails(null);
   };
 
   const handleDrugSelect = async (drug: Drug) => {
@@ -87,6 +92,7 @@ export const Search: React.FC = () => {
     setSelectedNdc("");
     setInsurances([]);
     setSelectedInsurance(null);
+    setDrugNetDetails(null);
 
     try {
       const { data } = await axiosInstance.get(
@@ -101,9 +107,10 @@ export const Search: React.FC = () => {
   const handleNdcSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const ndc = e.target.value;
     setSelectedNdc(ndc);
-    // Reset insurance each time a new NDC is chosen
+    // Reset insurance and net details each time a new NDC is chosen
     setInsurances([]);
     setSelectedInsurance(null);
+    setDrugNetDetails(null);
 
     axiosInstance
       .get(`/drug/GetInsuranceByNdc?ndc=${ndc}`)
@@ -126,6 +133,33 @@ export const Search: React.FC = () => {
     }
   };
 
+  // Fetch drug details (e.g. net price) if rxGroup is available along with NDC and insurance selection.
+  useEffect(() => {
+    async function fetchDrugDetails() {
+      if (selectedDrug && selectedNdc && selectedInsurance) {
+        try {
+          const { data: response2 } = await axiosInstance.get(
+            `/drug/GetDetails?ndc=${selectedNdc}&insuranceId=${selectedInsurance.insuranceId}`
+          );
+          console.log("Fetched drug net details:", response2.drugClassId, " " , response2.insuranceId);
+
+          // const { data: response3 } = await axiosInstance.get(
+          //   `/drug/GetBestAlternativeByNDCRxGroupId?classId=${response2.drugClassId}&insuranceId=${response2.insuranceId}`
+          // );
+          // console.log("Fetched drug best net details:", response3);
+
+          setDrugNetDetails(response2);
+          // setBestDrugNetDetails(response3);
+        } catch (error) {
+          console.error("Error fetching drug net details:", error);
+        }
+      } else {
+        setDrugNetDetails(null); // clear details if dependencies are not met
+      }
+    }
+    fetchDrugDetails();
+  }, [selectedDrug, selectedNdc, selectedInsurance]);
+
   return (
     <motion.div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <PageMeta
@@ -147,8 +181,7 @@ export const Search: React.FC = () => {
                 Search for Medicines
               </h1>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Enter the drug name to find matching NDC codes and insurance
-                coverage.
+                Enter the drug name to find matching NDC codes and insurance coverage.
               </p>
             </div>
 
@@ -202,9 +235,7 @@ export const Search: React.FC = () => {
                       className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto"
                     >
                       {[
-                        ...new Map(
-                          suggestions.map((d) => [d.name, d])
-                        ).values(),
+                        ...new Map(suggestions.map((d) => [d.name, d])).values(),
                       ].map((drug: Drug) => (
                         <button
                           key={drug.id}
@@ -284,6 +315,8 @@ export const Search: React.FC = () => {
                               (i) => i.insuranceId === Number(e.target.value)
                             ) || null;
                           setSelectedInsurance(selected);
+                          // Clear drug details when insurance is changed
+                          setDrugNetDetails(null);
                         }}
                         className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                       >
@@ -325,64 +358,102 @@ export const Search: React.FC = () => {
 
         {/* Redesigned Selected Details Section */}
         <div className="w-full md:w-1/3">
-          {
-            <motion.div
-              onMouseEnter={() => setDropdownVisible(true)}
-              onMouseLeave={() => setDropdownVisible(false)}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
-            >
-              {/* Header: Always visible */}
-              <div className="flex justify-between items-center p-4">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-                  Selected Details
-                </h2>
-                <button
-                  onClick={clearSearch}
-                  title="Reset Search"
-                  className="p-2 transition-transform transform hover:scale-110 hover:bg-red-500 hover:text-white rounded-full"
-                >
-                  <XIcon className="h-5 w-5 dark:text-white" />
-                </button>
-              </div>
-              {/* Dropdown Details: Animates in on hover */}
-              <motion.div
-                variants={dropdownVariant}
-                initial="hidden"
-                animate={dropdownVisible ? "visible" : "hidden"}
-                className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 dark:text-white"
+          <motion.div
+            onMouseEnter={() => setDropdownVisible(true)}
+            onMouseLeave={() => setDropdownVisible(false)}
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
+          >
+            {/* Header: Always visible */}
+            <div className="flex justify-between items-center p-4">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                Selected Details
+              </h2>
+              <button
+                onClick={clearSearch}
+                title="Reset Search"
+                className="p-2 transition-transform transform hover:scale-110 hover:bg-red-500 hover:text-white rounded-full"
               >
+                <XIcon className="h-5 w-5 dark:text-white" />
+              </button>
+            </div>
+            {/* Dropdown Details: Animates in on hover */}
+            <motion.div
+              variants={dropdownVariant}
+              initial="hidden"
+              animate={dropdownVisible ? "visible" : "hidden"}
+              className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 dark:text-white"
+            >
+              <p>
+                <strong>Drug Name: </strong>
+                {selectedDrug ? selectedDrug.name : "N/A"}
+              </p>
+              {selectedDrug && (selectedDrug as any).rxGroup && (
                 <p>
-                  <strong>Drug Name: </strong>
-                  {selectedDrug ? selectedDrug.name : "N/A"}
+                  <strong>Rx Group: </strong>
+                  {(selectedDrug as any).rxGroup}
                 </p>
-                {selectedDrug && (selectedDrug as any).rxGroup && (
-                  <p>
-                    <strong>Rx Group: </strong>
-                    {(selectedDrug as any).rxGroup}
-                  </p>
+              )}
+              <p>
+                <strong>NDC: </strong>
+                {selectedNdc || "N/A"}
+              </p>
+              <p>
+                <strong>Insurance: </strong>
+                {selectedInsurance ? (
+                  <a
+                    href={`/InsuranceDetails/${selectedInsurance.insuranceId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                  >
+                    {selectedInsurance.insurance}
+                  </a>
+                ) : (
+                  "N/A"
                 )}
-                <p>
-                  <strong>NDC: </strong>
-                  {selectedNdc || "N/A"}
-                </p>
-                <p>
-                  <strong>Insurance: </strong>
-                  {selectedInsurance ? (
-                    <a
-                      href={`/InsuranceDetails/${selectedInsurance.insuranceId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                    >
-                      {selectedInsurance.insurance}
-                    </a>
-                  ) : (
-                    "N/A"
-                  )}
-                </p>
-              </motion.div>
+              </p>
+
+              {/* Newly added net price section */}
+              {drugNetDetails && (
+                <motion.div
+                  layout
+                  variants={fadeVariant}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+                >
+                  <p>
+                    <strong>Net Price: </strong>
+                    {drugNetDetails.net
+                      ? `$${drugNetDetails.net}`
+                      : "N/A"}
+                  </p>
+                </motion.div>
+              )}
+              {/* {bestDrugNetDetails && (
+                <motion.div
+                  layout
+                  variants={fadeVariant}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+                >
+                  <p>
+                    <strong>Best Alternative: </strong>
+                    {bestDrugNetDetails.drugName}
+                  </p>
+                  <p>
+                    <strong>Net Price: </strong>
+                    {bestDrugNetDetails.net
+                      ? `$${bestDrugNetDetails.net}`
+                      : "N/A"}
+                  </p>
+                </motion.div>
+              )} */}
             </motion.div>
-          }
+          </motion.div>
         </div>
       </div>
     </motion.div>

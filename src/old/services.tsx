@@ -90,16 +90,16 @@ export const Services: React.FC = () => {
               >
                 <div
                   key={service.to}
-                  className="rounded-3xl bg-white p-8 ring-1 shadow-xl ring-gray-900/10 sm:p-10"
+                  className="rounded-3xl bg-white dark:bg-gray-800 p-8 ring-1 shadow-xl ring-gray-900/10 sm:p-10"
                   data-aos="fade-up"
                 >
                   <Link to={service.to} className="block">
-                    <div className="flex flex-col items-center text-center">
+                    <div className="flex flex-col items-center text-center dark:text-white dark:bg-gray-800">
                       <div className="mb-4 text-blue-500">{service.icon}</div>
                       <h3 className="text-base font-semibold text-blue-600">
                         {service.title}
                       </h3>
-                      <p className="mt-4 text-base text-gray-600">
+                      <p className="mt-4 text-base text-gray-600 dark:text-white">
                         {service.text}
                       </p>
                     </div>

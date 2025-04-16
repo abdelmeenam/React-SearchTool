@@ -17,6 +17,8 @@ import {
   UserCheck,
   Hash,
   Link2Icon,
+  BarChart2,
+  Link2,
 } from "lucide-react";
 import {
   Tag,
@@ -55,22 +57,19 @@ interface DrugHeaderProps {
   padCode: (code: string) => string;
   temp: string;
 }
-const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode, temp }) => (
-  <div className="bg-blue-600 dark:bg-blue-800 p-6 text-white">
-    <div className="flex items-center space-x-4">
-      <Pill className="h-8 w-8" />
-      <div>
-        <h1 className="text-2xl font-bold">{drug.name}</h1>
-        <a
-          href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-100 hover:underline"
-        >
-          NDC: {padCode(drug.ndc)}
-        </a>
-        {temp && <p>{temp}</p>}
-      </div>
+export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
+  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-t-lg text-white flex items-center space-x-4">
+    <Pill className="h-8 w-8" />
+    <div>
+      <h1 className="text-2xl font-bold">{drug.name}</h1>
+      <a
+        href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-100 hover:underline"
+      >
+        NDC: {padCode(drug.ndc)}
+      </a>
     </div>
   </div>
 );
@@ -80,157 +79,156 @@ interface DrugInformationProps {
   drugDetail?: Prescription | null;
   classNameStr: string;
 }
-const DrugInformation: React.FC<DrugInformationProps> = ({
+export const DrugInformation: React.FC<DrugInformationProps> = ({
   drug,
   drugDetail,
-  classNameStr,
 }) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const net = drugDetail?.net ?? 0;
+  const netPositive = net >= 0;
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div
-        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg rounded-lg p-6
-                   transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-      >
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="flex items-center">
-            <Tag className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Class Name
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                {classNameStr}
-              </dd>
+    <div className="max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+      {/* Summary Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex items-center space-x-2">
+          <DollarSign className="h-5 w-5 text-gray-400" />
+          <div>
+            <dt className="text-sm font-medium text-gray-500">ACQ</dt>
+            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+              ${drug.acq.toFixed(2)}
+            </dd>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Percent className="h-5 w-5 text-gray-400" />
+          <div>
+            <dt className="text-sm font-medium text-gray-500">AWP</dt>
+            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+              ${drug.awp}
+            </dd>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Zap className="h-5 w-5 text-gray-400" />
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Strength</dt>
+            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+              {drug.strength}
+            </dd>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <BarChart2 className="h-5 w-5 text-gray-400" />
+          <div className="flex-1">
+            <dt className="text-sm font-medium text-gray-500">Net</dt>
+            <dd
+              className={`mt-1 text-base font-semibold ${
+                netPositive ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {netPositive ? "+" : "-"}${Math.abs(net).toFixed(2)}
+            </dd>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded mt-1">
+              <div
+                className={`h-2 rounded ${
+                  netPositive ? "bg-green-500" : "bg-red-500"
+                }`}
+                style={{
+                  width: `${Math.min((drug.acq / drug.awp) * 100, 100)}%`,
+                }}
+              />
             </div>
           </div>
-
-          <div className="flex items-center">
-            <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                ACQ
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                ${drug.acq.toFixed(2)}
-              </dd>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <Percent className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                AWP
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                ${drug.awp}
-              </dd>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <Zap className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Strength
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                {drug.strength}
-              </dd>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <BarChart className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Net
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                {drugDetail ? drugDetail.net : "N/A"}
-              </dd>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <CreditCard className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Insurance Pay
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                {drugDetail?.insurancePayment || "NA"}
-              </dd>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <User className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Patient Pay
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                {drugDetail?.patientPayment || 0}
-              </dd>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <Package className="h-5 w-5 text-gray-400 mr-2" />
-            <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Quantity
-              </dt>
-              <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                NA
-              </dd>
-            </div>
-          </div>
-        </dl>
-
-        <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
-          <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center">
-              <Building className="h-5 w-5 text-gray-400 mr-2" />
-              <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Insurance Name - BIN
-                </dt>
-                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                  {drugDetail?.bin
-                    ? `${drugDetail.binFullName} - ${drugDetail.bin}`
-                    : "NA"}
-                </dd>
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <FileText className="h-5 w-5 text-gray-400 mr-2" />
-              <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  PCN
-                </dt>
-                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                  {drugDetail?.pcn || "NA"}
-                </dd>
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <Activity className="h-5 w-5 text-gray-400 mr-2" />
-              <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  RXGroup
-                </dt>
-                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                  {drugDetail?.rxgroup || "NA"}
-                </dd>
-              </div>
-            </div>
-          </dl>
         </div>
       </div>
+
+      {/* Toggle Details Button */}
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="mt-6 text-sm font-medium text-blue-600 hover:underline"
+      >
+        {showDetails ? "Hide Details" : "Show Details"}
+      </button>
+
+      {/* Detailed Section */}
+      {showDetails && (
+        <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex items-center space-x-2">
+              <CreditCard className="h-5 w-5 text-gray-400" />
+              <div>
+                <dt className="text-sm font-medium text-gray-500">
+                  Insurance Pay
+                </dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                  {drugDetail?.insurancePayment ?? "NA"}
+                </dd>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <User className="h-5 w-5 text-gray-400" />
+              <div>
+                <dt className="text-sm font-medium text-gray-500">
+                  Patient Pay
+                </dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                  {drugDetail?.patientPayment ?? 0}
+                </dd>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Package className="h-5 w-5 text-gray-400" />
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Quantity</dt>
+                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                  NA
+                </dd>
+              </div>
+            </div>
+          </div>
+
+          <details className="mt-4 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <summary className="flex items-center space-x-2 cursor-pointer">
+              <Building className="h-5 w-5 text-gray-400" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                Insurance Details
+              </span>
+            </summary>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center space-x-2">
+                <Building className="h-5 w-5 text-gray-400" />
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">BIN</dt>
+                  <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                    {drugDetail?.bin
+                      ? `${drugDetail.binFullName} - ${drugDetail.bin}`
+                      : "NA"}
+                  </dd>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <FileText className="h-5 w-5 text-gray-400" />
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">PCN</dt>
+                  <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                    {drugDetail?.pcn ?? "NA"}
+                  </dd>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Activity className="h-5 w-5 text-gray-400" />
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
+                  <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                    {drugDetail?.rxgroup ?? "NA"}
+                  </dd>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   );
 };
@@ -253,9 +251,9 @@ interface AlternativesTableProps {
   handleSort: () => void;
   sortOrder: "asc" | "desc";
 }
-const AlternativesTable: React.FC<AlternativesTableProps> = ({
+export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   alternatives,
-  classNameStr,
+  classNameStr = "",
   padCode,
   selectedInsurance,
   handleInsuranceFilterChange,
@@ -269,7 +267,8 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
   handleSort,
   sortOrder,
 }) => {
-  const filteredAlternatives = useMemo(
+  // Filter and pagination logic
+  const filtered = useMemo(
     () =>
       alternatives.filter(
         (alt) =>
@@ -280,316 +279,238 @@ const AlternativesTable: React.FC<AlternativesTableProps> = ({
     [alternatives, selectedInsurance, selectedBin, selectedPcn]
   );
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filteredAlternatives.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredAlternatives.slice(
-    indexOfFirstItem,
-    indexOfLastItem
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const pageItems = filtered.slice((page - 1) * perPage, page * perPage);
+
+  useEffect(
+    () => setPage(1),
+    [selectedInsurance, selectedBin, selectedPcn, alternatives]
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedInsurance, selectedBin, selectedPcn, alternatives]);
-
-  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-  const handleNextPage = () =>
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-
-  const columnIcons: Record<string, JSX.Element> = {
-    Name: <Pill className="inline h-4 w-4 mr-1 text-blue-500" />,
-    Class: <Tag className="inline h-4 w-4 mr-1 text-blue-500" />,
-    Branch: <Building className="inline h-4 w-4 mr-1 text-blue-500" />,
-    "NDC Codes": (
-      <Barcode className="inline h-4 w-4 mr-1 text-blue-500" />
-    ),
-    "Rx Group": (
-      <Layers className="inline h-4 w-4 mr-1 text-blue-500" />
-    ),
-    BIN: (
-      <CreditCard className="inline h-4 w-4 mr-1 text-blue-500" />
-    ),
-    "Insurance Name": (
-      <Shield className="inline h-4 w-4 mr-1 text-blue-500" />
-    ),
-    PCN: <Key className="inline h-4 w-4 mr-1 text-blue-500" />,
-    "Net Price": (
-      <DollarSign className="inline h-4 w-4 mr-1 text-green-500" />
-    ),
-    "Insurance Coverage": (
-      <Wallet className="inline h-4 w-4 mr-1 text-blue-500" />
-    ),
-    "Patient Pay": (
-      <UserCheck className="inline h-4 w-4 mr-1 text-blue-500" />
-    ),
-    Quantity: <Hash className="inline h-4 w-4 mr-1 text-blue-500" />,
-    ACQ: <Package className="inline h-4 w-4 mr-1 text-blue-500" />,
-  };
 
   return (
     <section
-      className={`rounded-lg shadow-lg dark:bg-gray-800 bg-white p-6 transition-all duration-200`}
+      className={`bg-white dark:bg-gray-800 shadow rounded-lg p-6 ${classNameStr}`}
     >
-      <div className="flex items-center gap-2 mb-4">
-        <Table className="h-5 w-5 text-blue-500" />
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Insurance Information
+      <header className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+          Insurance Alternatives
         </h2>
-      </div>
+      </header>
 
-      {/* Filters Section */}
-      <div
-        className={`rounded-lg p-4 mb-6 dark:bg-gray-700 bg-gray-50`}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Repeat className="h-5 w-5 text-blue-500" />
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-            Filter Insurance Data
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label
-              htmlFor="insuranceFilter"
-              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
-            >
-              Filter by Rx Group
-            </label>
-            <select
-              id="insuranceFilter"
-              value={selectedInsurance}
-              onChange={handleInsuranceFilterChange}
-              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
-            >
-              <option value="">All</option>
-              {uniqueInsuranceNames.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="binFilter"
-              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
-            >
-              Filter by BIN
-            </label>
-            <select
-              id="binFilter"
-              value={selectedBin}
-              onChange={handleBinFilterChange}
-              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
-            >
-              <option value="">All</option>
-              {uniqueBinValues.map(({ bin, binFullName }) => (
-                <option key={bin} value={bin}>
-                  {binFullName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="pcnFilter"
-              className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
-            >
-              Filter by PCN
-            </label>
-            <select
-              id="pcnFilter"
-              value={selectedPcn}
-              onChange={handlePcnFilterChange}
-              className={`block w-full rounded-md border-0 py-1.5 px-3 shadow-sm ring-1 ring-inset dark:bg-gray-600 dark:ring-gray-500 dark:text-white bg-white ring-gray-300 text-gray-900 focus:ring-2 focus:ring-blue-500`}
-            >
-              <option value="">All</option>
-              {uniquePcnValues.map((pcn) => (
-                <option key={pcn} value={pcn}>
-                  {pcn}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <button
-          className={`mt-4 flex items-center text-sm dark:text-gray-300 text-gray-600 transition-colors duration-200 hover:text-white dark:hover:text-white`}
-          onClick={handleSort}
-        >
-          <ArrowUpDown className="h-4 w-4 mr-1" />
-          Sort by Net Price ({sortOrder === "asc" ? "Low to High" : "High to Low"})
-        </button>
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border dark:border-gray-700 border-gray-200">
-        <table className="w-full">
-          <thead
-            className={`transition-colors duration-200 dark:bg-gray-700 bg-gray-50`}
+      {/* Filters */}
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label
+            htmlFor="insuranceFilter"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
+            Insurance
+          </label>
+          <select
+            id="insuranceFilter"
+            value={selectedInsurance}
+            onChange={handleInsuranceFilterChange}
+            className="w-full border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Insurances</option>
+            {uniqueInsuranceNames.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="binFilter"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            BIN
+          </label>
+          <select
+            id="binFilter"
+            value={selectedBin}
+            onChange={handleBinFilterChange}
+            className="w-full border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All BINs</option>
+            {uniqueBinValues.map(({ bin, binFullName }) => (
+              <option key={bin} value={bin}>
+                {binFullName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="pcnFilter"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            PCN
+          </label>
+          <select
+            id="pcnFilter"
+            value={selectedPcn}
+            onChange={handlePcnFilterChange}
+            className="w-full border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All PCNs</option>
+            {uniquePcnValues.map((pcn) => (
+              <option key={pcn} value={pcn}>
+                {pcn}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Sort & Pagination */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        <button
+          onClick={handleSort}
+          className="mb-2 md:mb-0 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Sort by Net Price (
+          {sortOrder === "asc" ? "Low to High" : "High to Low"})
+        </button>
+        {totalPages > 1 && (
+          <div className="inline-flex items-center space-x-2">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className={`px-3 py-1 rounded ${
+                page === 1
+                  ? "bg-gray-200 dark:bg-gray-600 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              }`}
+            >
+              Prev
+            </button>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className={`px-3 py-1 rounded ${
+                page === totalPages
+                  ? "bg-gray-200 dark:bg-gray-600 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
               {[
                 "Name",
                 "Class",
                 "Branch",
-                "NDC Codes",
+                "NDC",
                 "Rx Group",
                 "BIN",
-                "Insurance Name",
+                "Insurance",
                 "PCN",
                 "Net Price",
-                "Insurance Coverage",
+                "Coverage",
                 "Patient Pay",
-                "Quantity",
                 "ACQ",
-              ].map((header) => (
+              ].map((col) => (
                 <th
-                  key={header}
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider sticky top-0 bg-inherit backdrop-blur-sm backdrop-filter"
+                  key={col}
+                  className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase"
                 >
-                  <span className="flex items-center gap-1">
-                    {columnIcons[header]}
-                    {header}
-                  </span>
+                  {col}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {currentItems.map((record, index) => (
-              <tr key={`${record.ndcCode}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="px-6 py-4 whitespace-nowrap font-medium">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {pageItems.map((rec, idx) => (
+              <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+                <td className="px-4 py-2">
                   <a
-                    href={`/drug/${record.drugId}?ndc=${record.ndcCode}&insuranceId=${record.rxgroupId}`}
-                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                    href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
                   >
-                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
-                    <span className="group-hover:underline">
-                      {record.drugName}
-                    </span>
+                    {rec.drugName}
                   </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                  {record.drugClass}
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
+                  {rec.drugClass}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                  {record.branchName}
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
+                  {rec.branchName}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                <td className="px-4 py-2 font-mono">
                   <a
-                    href={`https://ndclist.com/ndc/${padCode(record.ndcCode)}`}
-                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                    href={`https://ndclist.com/ndc/${padCode(rec.ndcCode)}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
                   >
-                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
-                    <span className="group-hover:underline">
-                      {padCode(record.ndcCode)}
-                    </span>
+                    {padCode(rec.ndcCode)}
                   </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                <td className="px-4 py-2">
                   <a
-                    href={`/InsuranceDetails/${record.rxgroupId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                    href={`/InsuranceDetails/${rec.rxgroupId}`}
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
                   >
-                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
-                    <span className="group-hover:underline">
-                      {record.insuranceName}
-                    </span>
+                    {rec.insuranceName}
                   </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                <td className="px-4 py-2">
                   <a
-                    href={`/InsuranceBINDetails/${record.binId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                    href={`/InsuranceBINDetails/${rec.binId}`}
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
                   >
-                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
-                    <span className="group-hover:underline">
-                      {record.bin}
-                    </span>
+                    {rec.bin}
                   </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
+                  {" "}
                   <a
-                    href={`/InsuranceBINDetails/${record.binId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                    href={`/InsuranceBINDetails/${rec.binId}`}
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
                   >
-                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
-                    <span className="group-hover:underline">
-                      {record.binFullName}
-                    </span>
+                    {rec.binFullName}
                   </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">
+                <td className="px-4 py-2">
                   <a
-                    href={`/InsurancePCNDetails/${record.pcnId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900 px-2 py-1 rounded-md group"
+                    href={`/InsurancePCNDetails/${rec.pcnId}`}
+                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
                   >
-                    <Link2Icon className="h-4 w-4 opacity-60 group-hover:opacity-100 transition" />
-                    <span className="group-hover:underline">
-                      {record.pcn}
-                    </span>
+                    {rec.pcn}
                   </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600 dark:text-green-400">
-                  {record.insuranceName ? "$" + record.net.toFixed(2) : "NA"}
+                <td className="px-4 py-2 text-green-600 dark:text-green-400">
+                  ${rec.net.toFixed(2)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-green-600 dark:text-green-400">
-                  {record.insuranceName ? "$" + record.insurancePayment.toFixed(2) : "NA"}
+                <td className="px-4 py-2 text-green-600 dark:text-green-400">
+                  ${rec.insurancePayment.toFixed(2)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600 dark:text-green-400">
-                  {record.insuranceName ? "$" + record.patientPayment.toFixed(2) : "NA"}
+                <td className="px-4 py-2 text-green-600 dark:text-green-400">
+                  ${rec.patientPayment.toFixed(2)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-gray-100">
-                  NA
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                  ${record.acquisitionCost.toFixed(2)}
+                <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                  ${rec.acquisitionCost.toFixed(2)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-md ${
-              currentPage === 1
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 dark:bg-blue-700 text-white"
-            }`}
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-md ${
-              currentPage === totalPages
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 dark:bg-blue-700 text-white"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
     </section>
   );
 };
@@ -654,9 +575,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
-    <section
-      className="rounded-lg shadow-lg dark:bg-gray-800 bg-white p-6 transition-all duration-200"
-    >
+    <section className="rounded-lg shadow-lg dark:bg-gray-800 bg-white p-6 transition-all duration-200">
       <div className="flex items-center gap-2 mb-4">
         <Repeat className="h-5 w-5 text-blue-500" />
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -764,7 +683,10 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {currentItems.map((alt, index) => (
-              <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+              <tr
+                key={`${alt.ndcCode}-${index}`}
+                className="hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
                 <td className="px-6 py-4 whitespace-nowrap font-medium">
                   <a
                     href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}&insuranceId=${alt.rxgroupId}`}
@@ -833,10 +755,14 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                   {alt.insuranceName ? "$" + alt.net.toFixed(2) : "NA"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-green-600 dark:text-green-400">
-                  {alt.insuranceName ? "$" + alt.insurancePayment.toFixed(2) : "NA"}
+                  {alt.insuranceName
+                    ? "$" + alt.insurancePayment.toFixed(2)
+                    : "NA"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600 dark:text-green-400">
-                  {alt.insuranceName ? "$" + alt.patientPayment.toFixed(2) : "NA"}
+                  {alt.insuranceName
+                    ? "$" + alt.patientPayment.toFixed(2)
+                    : "NA"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-gray-100">
                   NA
@@ -955,7 +881,10 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {currentItems.map((alt, index) => (
-              <tr key={`${alt.ndcCode}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+              <tr
+                key={`${alt.ndcCode}-${index}`}
+                className="hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     <a
@@ -967,7 +896,9 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">{classNameStr}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {classNameStr}
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
@@ -1026,7 +957,9 @@ export const DrugDetails: React.FC = () => {
   const insuranceId = searchParams.get("insuranceId");
 
   const [drug, setDrug] = useState<Drug | null>(null);
-  const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>([]);
+  const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
+    []
+  );
   const [drugDetail, setDrugDetail] = useState<Prescription | null>(null);
   const [branchDrugs, setBranchDrugs] = useState<Prescription[]>([]);
   const [classNameStr, setClassName] = useState("");
@@ -1035,7 +968,8 @@ export const DrugDetails: React.FC = () => {
   const [selectedBin, setSelectedBin] = useState<string>("");
   const [selectedPcn, setSelectedPcn] = useState<string>("");
 
-  const [branchSelectedInsurance, setBranchSelectedInsurance] = useState<string>("");
+  const [branchSelectedInsurance, setBranchSelectedInsurance] =
+    useState<string>("");
   const [branchSelectedBin, setBranchSelectedBin] = useState<string>("");
   const [branchSelectedPcn, setBranchSelectedPcn] = useState<string>("");
 
@@ -1043,8 +977,12 @@ export const DrugDetails: React.FC = () => {
   const [otherSelectedPcn, setOtherSelectedPcn] = useState<string>("");
 
   // activeTable state controls which table is shown: "insurance" or "branch"
-  const [activeTable, setActiveTable] = useState<"insurance" | "branch">("insurance");
-  const [alternativesSortOrder, setAlternativesSortOrder] = useState<"asc" | "desc">("desc");
+  const [activeTable, setActiveTable] = useState<"insurance" | "branch">(
+    "insurance"
+  );
+  const [alternativesSortOrder, setAlternativesSortOrder] = useState<
+    "asc" | "desc"
+  >("desc");
   const [temp, setTemp] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -1057,9 +995,13 @@ export const DrugDetails: React.FC = () => {
         if (!insuranceId) {
           let response;
           if (ndcCode) {
-            response = await axiosInstance.get(`/drug/SearchByNdc?ndc=${ndcCode}`);
+            response = await axiosInstance.get(
+              `/drug/SearchByNdc?ndc=${ndcCode}`
+            );
           } else {
-            response = await axiosInstance.get(`/drug/GetDrugById?id=${drugId}`);
+            response = await axiosInstance.get(
+              `/drug/GetDrugById?id=${drugId}`
+            );
           }
           setDrug(response.data);
           // Get all alternatives and sort descending by net price:
@@ -1080,7 +1022,9 @@ export const DrugDetails: React.FC = () => {
           setClassName(response3.data.name);
         } else {
           // If an insuranceId is provided:
-          const response = await axiosInstance.get(`/drug/SearchByNdc?ndc=${ndcCode}`);
+          const response = await axiosInstance.get(
+            `/drug/SearchByNdc?ndc=${ndcCode}`
+          );
           const drugData = response.data;
           setDrug(drugData);
           response2 = await axiosInstance.get(
@@ -1148,7 +1092,8 @@ export const DrugDetails: React.FC = () => {
   }, [insuranceId, sortedAlternatives]);
 
   if (loading) return <LoadingSpinner />;
-  if (error || !drug) return <ErrorMessage message={error || "Drug not found"} />;
+  if (error || !drug)
+    return <ErrorMessage message={error || "Drug not found"} />;
 
   const handleSort = () => {
     const newSortOrder = alternativesSortOrder === "desc" ? "asc" : "desc";
@@ -1254,7 +1199,7 @@ export const DrugDetails: React.FC = () => {
   return (
     <motion.div>
       <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-amber-25 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <DrugHeader drug={drug} padCode={padCode} temp={temp} />
           <div className="p-6 space-y-6">
             <DrugInformation
@@ -1328,7 +1273,9 @@ export const DrugDetails: React.FC = () => {
                     classNameStr={classNameStr}
                     padCode={padCode}
                     selectedInsurance={branchSelectedInsurance}
-                    handleInsuranceFilterChange={handleBranchInsuranceFilterChange}
+                    handleInsuranceFilterChange={
+                      handleBranchInsuranceFilterChange
+                    }
                     uniqueInsuranceNames={branchUniqueInsuranceNames}
                     selectedBin={branchSelectedBin}
                     handleBinFilterChange={handleBranchBinFilterChange}

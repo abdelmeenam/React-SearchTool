@@ -6,6 +6,7 @@ import { X as XIcon } from "lucide-react";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import axiosInstance from "../api/axiosInstance";
+import { Prescription } from "../types";
 
 // Define types
 interface RxGroupModel {
@@ -36,6 +37,11 @@ const fadeVariant = {
 
 export const Search3: React.FC = () => {
   const navigate = useNavigate();
+  const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(
+    null
+  );
+  const [bestDrugNetDetails, setBestDrugNetDetails] =
+    useState<Prescription | null>(null);
 
   // --- Rx Group States ---
   const [rxGroups, setRxGroups] = useState<RxGroupModel[]>([]);
@@ -90,7 +96,37 @@ export const Search3: React.FC = () => {
     };
     fetchDrugs();
   }, [selectedRxGroup]);
+  useEffect(() => {
+    async function fetchDrugDetails() {
+      console.log("Hi : ", selectedNdc, selectedRxGroup);
+      if (selectedNdc && selectedRxGroup) {
+        try {
+          const { data: response2 } = await axiosInstance.get(
+            `/drug/GetDetails?ndc=${selectedNdc}&insuranceId=${selectedRxGroup.id}`
+          );
+          console.log(
+            "Fetched drug net details:",
+            response2.drugClassId,
+            " ",
+            response2.insuranceId
+          );
 
+          // const { data: response3 } = await axiosInstance.get(
+          //   `/drug/GetBestAlternativeByNDCRxGroupId?classId=${response2.drugClassId}&insuranceId=${response2.insuranceId}`
+          // );
+          // console.log("Fetched drug best net details:", response3);
+
+          setDrugNetDetails(response2);
+          // setBestDrugNetDetails(response3);
+        } catch (error) {
+          console.error("Error fetching drug net details:", error);
+        }
+      } else {
+        setDrugNetDetails(null); // clear details if dependencies are not met
+      }
+    }
+    fetchDrugDetails();
+  }, [selectedNdc, selectedRxGroup]);
   // --- Drug Search Handling ---
   const handleDrugSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDrugSearchQuery(e.target.value);
@@ -411,6 +447,21 @@ export const Search3: React.FC = () => {
                 <strong>NDC: </strong>
                 {selectedNdc || "N/A"}
               </p>
+              {drugNetDetails && (
+                <motion.div
+                  layout
+                  variants={fadeVariant}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+                >
+                  <p>
+                    <strong>Net Price: </strong>
+                    {drugNetDetails.net ? `$${drugNetDetails.net}` : "N/A"}
+                  </p>
+                </motion.div>
+              )}
             </motion.div>
           </motion.div>
         </div>
