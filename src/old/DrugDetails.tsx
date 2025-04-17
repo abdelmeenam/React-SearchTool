@@ -412,6 +412,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
               {[
+                "Date",
                 "Name",
                 "Class",
                 "Branch",
@@ -437,6 +438,9 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {pageItems.map((rec, idx) => (
               <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+                <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                  {new Date(rec.date).toISOString().split("T")[0]}{" "}
+                </td>
                 <td className="px-4 py-2">
                   <a
                     href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
@@ -1051,6 +1055,7 @@ export const DrugDetails: React.FC = () => {
               (a: Prescription, b: Prescription) => b.net - a.net
             );
             setSortedAlternatives(sortedData);
+            console.log("sortedData", sortedData);
           } else {
             setSortedAlternatives([]);
           }
