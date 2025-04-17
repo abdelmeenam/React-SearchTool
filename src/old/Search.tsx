@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import debounce from "debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search as SearchIcon, X as XIcon, ExternalLink } from "lucide-react";
-import { Drug, DrugInsuranceInfo, Prescription } from "../types";
+import {
+  BestAlternative,
+  Drug,
+  DrugInsuranceInfo,
+  Prescription,
+} from "../types";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
@@ -42,8 +47,11 @@ export const Search: React.FC = () => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
   // New state to store drug details (e.g. net price information)
-  const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(null);
-  const [bestDrugNetDetails, setBestDrugNetDetails] = useState<Prescription | null>(null);
+  const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(
+    null
+  );
+  const [bestDrugNetDetails, setBestDrugNetDetails] =
+    useState<Prescription | null>(null);
 
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
@@ -141,14 +149,22 @@ export const Search: React.FC = () => {
           const { data: response2 } = await axiosInstance.get(
             `/drug/GetDetails?ndc=${selectedNdc}&insuranceId=${selectedInsurance.insuranceId}`
           );
-          console.log("Fetched drug net details:", response2.drugClassId, " " , response2.insuranceId);
-
-          // const { data: response3 } = await axiosInstance.get(
-          //   `/drug/GetBestAlternativeByNDCRxGroupId?classId=${response2.drugClassId}&insuranceId=${response2.insuranceId}`
+          // console.log("Fetched drug net details:", response2);
+          // const response4 = await axiosInstance.get(
+          //   `/drug/GetAllDrugs?classId=${response2.drugClassId}`
           // );
-          // console.log("Fetched drug best net details:", response3);
+          // console.log(response4.data);
+          // console.log(selectedInsurance.insuranceId) 
+          // const alternatives = response4.data.filter(
+          //   (item: Prescription) => item.insuranceId === selectedInsurance.insuranceId
+          // );
+          // const sortedData = alternatives.sort(
+          //               (a: Prescription, b: Prescription) => b.net - a.net
+          //             );
+          // console.log("Fetched drug best net details:" ,sortedData[0]);
 
           setDrugNetDetails(response2);
+          // setBestDrugNetDetails(sortedData[0]);
           // setBestDrugNetDetails(response3);
         } catch (error) {
           console.error("Error fetching drug net details:", error);
@@ -181,7 +197,8 @@ export const Search: React.FC = () => {
                 Search for Medicines
               </h1>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Enter the drug name to find matching NDC codes and insurance coverage.
+                Enter the drug name to find matching NDC codes and insurance
+                coverage.
               </p>
             </div>
 
@@ -235,7 +252,9 @@ export const Search: React.FC = () => {
                       className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto"
                     >
                       {[
-                        ...new Map(suggestions.map((d) => [d.name, d])).values(),
+                        ...new Map(
+                          suggestions.map((d) => [d.name, d])
+                        ).values(),
                       ].map((drug: Drug) => (
                         <button
                           key={drug.id}
@@ -303,7 +322,7 @@ export const Search: React.FC = () => {
                       htmlFor="insuranceSelect"
                       className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      Select Insurance
+                      Select RxGroub
                     </label>
                     <div className="relative">
                       <select
@@ -425,9 +444,7 @@ export const Search: React.FC = () => {
                 >
                   <p>
                     <strong>Net Price: </strong>
-                    {drugNetDetails.net
-                      ? `$${drugNetDetails.net}`
-                      : "N/A"}
+                    {drugNetDetails.net ? `$${drugNetDetails.net}` : "N/A"}
                   </p>
                 </motion.div>
               )}
@@ -438,12 +455,17 @@ export const Search: React.FC = () => {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+                  className="mt-4 p-4 bg-green-100 dark:bg-gray-700 rounded-lg"
                 >
                   <p>
-                    <strong>Best Alternative: </strong>
+                    <strong>Best Alternative Drug: </strong>
                     {bestDrugNetDetails.drugName}
                   </p>
+                  <p>
+                    <strong>Best Alternative Drug NDC: </strong>
+                    {bestDrugNetDetails.ndcCode}
+                  </p>
+            
                   <p>
                     <strong>Net Price: </strong>
                     {bestDrugNetDetails.net

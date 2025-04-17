@@ -105,14 +105,11 @@ export const Search3: React.FC = () => {
             `/drug/GetDetails?ndc=${selectedNdc}&insuranceId=${selectedRxGroup.id}`
           );
           console.log(
-            "Fetched drug net details:",
-            response2.drugClassId,
-            " ",
-            response2.insuranceId
+            "Fetched drug net details:",response2
           );
 
           // const { data: response3 } = await axiosInstance.get(
-          //   `/drug/GetBestAlternativeByNDCRxGroupId?classId=${response2.drugClassId}&insuranceId=${response2.insuranceId}`
+          //   `/drug/GetBestAlternativeByNDCRxGroupId?classId=${response2.drugClassId}&rxGroupId=${response2.insuranceId}`
           // );
           // console.log("Fetched drug best net details:", response3);
 

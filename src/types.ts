@@ -10,8 +10,29 @@ export interface Drug {
   awp: number;
   rxcui: number;
 }
+export interface BestAlternative {
+  classId: number;
+  date: string; // ISO date string, e.g., "2024-01-01T00:00:00Z"
+  branchId: number;
+  className: string;
+  bestNet: number;
+  drugId: number;
+  scriptCode: string;
+  scriptDateTime: string; // ISO date string, e.g., "2024-01-15T22:00:00Z"
+  drugName: string;
+  drugClass: string;
+  branchName: string;
+  ndc: string;
+  binId: number;
+  pcnId: number;
+  rxGroupId: number;
+  binFullName: string;
+  bin: string;
+  pcn: string;
+  rxgroup: string;
+}
 export interface Prescription {
-  insuranceId: string;
+  insuranceId: number;
   drugId: number;
   ndcCode: string;
   drugName: string;
