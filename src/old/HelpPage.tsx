@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { LibraryBig } from "lucide-react";
 
 // Sample data for help points
 const helpPoints = [
@@ -162,7 +163,7 @@ const HelpPage: React.FC = () => {
               <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleExpanded(index)}>
                 <h2 className="text-xl font-semibold tracking-tight dark:text-gray-200 flex items-center">
                   {/* Optional icon/emoji before the title */}
-                  <span className="mr-2">💡</span>
+                  <span className="mr-2"><LibraryBig/></span>
                   {point.title}
                 </h2>
                 <span className="text-2xl dark:text-gray-200">
