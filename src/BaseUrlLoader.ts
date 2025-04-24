@@ -10,7 +10,6 @@ export interface AppConfig {
   export const loadConfig = async (): Promise<void> => {
     try {
       const response = await fetch("/BaseUrl.json");
-      console.log("dsdasa ", response);
       const data: AppConfig = await response.json();
       Object.assign(BaseUrlLoader, data);
     } catch (error) {

@@ -11,7 +11,11 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import BaseUrlLoader from "../../BaseUrlLoader";
 import axiosInstance from "../../api/axiosInstance";
-import { Edit2 as EditIcon, Eye as EyeIcon, EyeOff as EyeOffIcon } from "lucide-react"; // Using Edit2 for the pencil icon
+import {
+  Edit2 as EditIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
+} from "lucide-react"; // Using Edit2 for the pencil icon
 
 interface UserReadDto {
   email: string;
@@ -22,7 +26,8 @@ interface UserReadDto {
   roleName: string;
 }
 
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{5,}$/;
+const passwordRegex =
+  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{5,}$/;
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -55,14 +60,7 @@ export default function UserInfoCard() {
   // Fetch user data on mount
   const fetchUserData = async () => {
     try {
-      if (!token) {
-        console.error("No token found");
-        setLoading(false);
-        return;
-      }
-      const response = await axiosInstance.get(`${API_BASE_URL}/user/UserById`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axiosInstance.get(`/user/UserById`);
       const data: UserReadDto = response.data;
       setUser(data);
       setFormData((prev) => ({
@@ -87,9 +85,16 @@ export default function UserInfoCard() {
     setError("");
     if (name === "newPassword" || name === "confirmPassword") {
       // Validate new password as the user types
-      if (formData.newPassword && formData.confirmPassword && formData.newPassword !== formData.confirmPassword) {
+      if (
+        formData.newPassword &&
+        formData.confirmPassword &&
+        formData.newPassword !== formData.confirmPassword
+      ) {
         setPasswordError("New password and confirm password do not match.");
-      } else if (formData.newPassword && !passwordRegex.test(formData.newPassword)) {
+      } else if (
+        formData.newPassword &&
+        !passwordRegex.test(formData.newPassword)
+      ) {
         setPasswordError(
           "Password must be at least 5 characters long and include letters, numbers, and symbols."
         );
@@ -103,13 +108,12 @@ export default function UserInfoCard() {
     e.preventDefault();
     setError("");
 
-    if (!token) {
-      setError("User is not authenticated.");
-      return;
-    }
-
     // If updating password, ensure all fields are filled
-    if (formData.oldPassword || formData.newPassword || formData.confirmPassword) {
+    if (
+      formData.oldPassword ||
+      formData.newPassword ||
+      formData.confirmPassword
+    ) {
       if (
         !formData.oldPassword.trim() ||
         !formData.newPassword.trim() ||
@@ -133,11 +137,10 @@ export default function UserInfoCard() {
     try {
       // Validate the old password by attempting a login (if password is being updated)
       if (formData.newPassword.trim()) {
-        const loginResponse = await axios.post(
-          `${API_BASE_URL}/user/login`,
-          { email: formData.email, password: formData.oldPassword },
-          { withCredentials: true }
-        );
+        const loginResponse = await axiosInstance.post(`/user/login`, {
+          email: formData.email,
+          password: formData.oldPassword,
+        });
         if (loginResponse.status !== 200) {
           setError("Wrong old password.");
           return;
@@ -154,14 +157,11 @@ export default function UserInfoCard() {
         updatedData.password = formData.newPassword;
       }
 
-      await axios.put(`${API_BASE_URL}/user/UpdateUser`, updatedData, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axiosInstance.put(`/user/UpdateUser`, updatedData, {});
 
-      setUser((prev) => (prev ? { ...prev, name: formData.name, email: formData.email } : null));
+      setUser((prev) =>
+        prev ? { ...prev, name: formData.name, email: formData.email } : null
+      );
       // Using alert for now; consider using a toast notification system
       if (formData.newPassword.trim()) {
         alert("Password changed successfully.");
@@ -218,25 +218,33 @@ export default function UserInfoCard() {
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Name</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Name
+              </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.name}
               </p>
             </div>
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Email</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Email
+              </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.email}
               </p>
             </div>
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Branch</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Branch
+              </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.branchName}
               </p>
             </div>
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Role</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Role
+              </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.roleName}
               </p>
@@ -272,7 +280,9 @@ export default function UserInfoCard() {
           <form onSubmit={handleSubmit} className="flex flex-col">
             {/* Display error messages */}
             {error && (
-              <div className="mb-4 text-red-500 text-sm font-medium">{error}</div>
+              <div className="mb-4 text-red-500 text-sm font-medium">
+                {error}
+              </div>
             )}
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">

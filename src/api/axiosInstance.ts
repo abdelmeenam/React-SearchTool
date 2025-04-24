@@ -42,6 +42,7 @@ axiosInstance.interceptors.response.use(
   response => response,
   async (error) => {
     const originalRequest = error.config;
+    console.log("refreshing");
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -61,12 +62,12 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-
         const res = await axios.post(
           `${API_BASE_URL}/user/access-token`,
           {},
           { withCredentials: true }
         );
+        console.log(res);
         const newToken = res.data.accessToken;
         localStorage.setItem('accessToken', newToken);
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
