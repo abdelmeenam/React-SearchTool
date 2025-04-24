@@ -2,13 +2,13 @@ import axios from 'axios';
 import BaseUrlLoader, { loadConfig } from '../BaseUrlLoader';
 
 await loadConfig(); 
-const API_BASE_URL = BaseUrlLoader.API_BASE_URL;
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 });
 
-const axiosInstance = axios.create({
+const axiosInstancePython = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Send cookies (refresh token)
 });
@@ -27,7 +27,7 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-axiosInstance.interceptors.request.use(
+axiosInstancePython.interceptors.request.use(
   config => {
     const authHeader = getAuthHeader();
     Object.entries(authHeader).forEach(([key, value]) => {
@@ -38,7 +38,7 @@ axiosInstance.interceptors.request.use(
   error => Promise.reject(error)
 );
 
-axiosInstance.interceptors.response.use(
+axiosInstancePython.interceptors.response.use(
   response => response,
   async (error) => {
     const originalRequest = error.config;
@@ -51,7 +51,7 @@ axiosInstance.interceptors.response.use(
           failedQueue.push({
             resolve: (token: string) => {
               originalRequest.headers['Authorization'] = `Bearer ${token}`;
-              resolve(axiosInstance(originalRequest));
+              resolve(axiosInstancePython(originalRequest));
             },
             reject: (err: any) => reject(err),
           });
@@ -61,19 +61,19 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-
         const res = await axios.post(
-          `${API_BASE_URL}/user/access-token`,
+          `${API_BASE_URL}/auth/refresh-token`,
           {},
           { withCredentials: true }
         );
+
         const newToken = res.data.accessToken;
         localStorage.setItem('accessToken', newToken);
-        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        axiosInstancePython.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
         processQueue(null, newToken);
 
-        return axiosInstance(originalRequest);
+        return axiosInstancePython(originalRequest);
       } catch (err) {
         processQueue(err, null);
         localStorage.removeItem('accessToken');
@@ -88,4 +88,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance;
+export default axiosInstancePython;

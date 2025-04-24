@@ -69,6 +69,7 @@ import { AboutUs } from "./old/about";
 import { Services } from "./old/services";
 import InsurancePCNDetails from "./old/InsurancePCNDetails";
 import HelpPage from "./old/HelpPage";
+import SyncData from "./old/SyncData";
 // PrivateRoute and PublicRoute components
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -150,6 +151,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <DrugDetails />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/SyncData"
+              element={
+                <PrivateRoute>
+                  <SyncData />
                 </PrivateRoute>
               }
             />

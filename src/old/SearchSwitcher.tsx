@@ -1,108 +1,120 @@
-import React, { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useParams } from "react-router-dom";
-import { Search } from "./Search"; // Drug search by name
-import { InsuranceSearch } from "./Search2"; // Insurance-first search flow
-import { Search3 } from "./Search3"; // Rx Group–first search flow
+import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useParams } from 'react-router-dom';
+import { Search } from './Search';
+import { InsuranceSearch } from './Search2';
+import { Search3 } from './Search3';
 
-export const SearchSwitcher: React.FC = () => {
-  // Remove any previously stored selections on mount
+const SearchSwitcher: React.FC = () => {
+  // Clear previous selections on mount
   useEffect(() => {
-    localStorage.removeItem("selectedRx");
-    localStorage.removeItem("selectedPcn");
-    localStorage.removeItem("selectedBin");
+    localStorage.removeItem('selectedRx');
+    localStorage.removeItem('selectedPcn');
+    localStorage.removeItem('selectedBin');
   }, []);
 
-  // Get the id from the route parameters
+  // Determine initial flow from URL param
   const { id } = useParams<{ id: string }>();
-
-  // "drug" for the drug search flow, "insurance" for the insurance-first flow,
-  // "rx" for the Rx Group–first search flow.
-  const [activeFlow, setActiveFlow] = useState<"drug" | "insurance" | "rx">("drug");
-
-  // Update activeFlow based on the id from the URL
-  useEffect(() => {
-    if (id === "1") {
-      setActiveFlow("drug");
-    } else if (id === "2") {
-      setActiveFlow("insurance");
-    } else if (id === "3") {
-      setActiveFlow("rx");
+  const [activeFlow, setActiveFlow] = useState<'drug' | 'insurance' | 'rx'>(() => {
+    switch (id) {
+      case '2':
+        return 'insurance';
+      case '3':
+        return 'rx';
+      default:
+        return 'drug';
     }
+  });
+
+  useEffect(() => {
+    if (id === '1') setActiveFlow('drug');
+    else if (id === '2') setActiveFlow('insurance');
+    else if (id === '3') setActiveFlow('rx');
   }, [id]);
 
-  const ResponsiveButton = ({
-    children,
-    onClick,
-  }: {
-    children: React.ReactNode;
-    onClick: () => void;
-  }) => (
-    <motion.button
-      whileHover={{
-        scale: 1.1,
-        boxShadow: "0px 8px 20px rgba(59, 130, 246, 0.4)",
-      }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className="w-full sm:w-auto px-6 py-2 text-white bg-blue-600 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-200"
-    >
-      {children}
-    </motion.button>
-  );
+  const flows = [
+    { key: 'drug', label: 'Search by Drug' },
+    { key: 'insurance', label: 'Search by Insurance' },
+    { key: 'rx', label: 'Search by Rx Group' },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 ">
-      {/* Toggle Buttons */}
-      {/* <div className="flex flex-col sm:flex-row justify-center mb-6 gap-4">
-        <ResponsiveButton onClick={() => setActiveFlow("drug")}>
-          Search by Drug
-        </ResponsiveButton>
-        <ResponsiveButton onClick={() => setActiveFlow("insurance")}>
-          Search by Insurance
-        </ResponsiveButton>
-        <ResponsiveButton onClick={() => setActiveFlow("rx")}>
-          Search by Rx Group
-        </ResponsiveButton>
+    <main className="max-w-6xl mx-auto px-4 py-10">
+      {/* Tablist for selecting search flow */}
+      {/* <div
+        role="tablist"
+        aria-label="Search methods"
+        className="flex flex-col sm:flex-row justify-center mb-6 gap-4"
+      >
+        {flows.map(({ key, label }) => (
+          <button
+            key={key}
+            role="tab"
+            type="button"
+            id={`${key}-tab`}
+            aria-controls={`${key}-panel`}
+            aria-selected={activeFlow === key}
+            onClick={() => setActiveFlow(key)}
+            className={`py-2 px-4 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors
+              ${activeFlow === key
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600'}`}
+          >
+            {label}
+          </button>
+        ))}
       </div> */}
 
-      {/* Render the selected search flow with smooth fade transitions */}
-      <AnimatePresence mode="wait">
-        {activeFlow === "drug" && (
-          <motion.div
-            key="drug"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Search />
-          </motion.div>
-        )}
-        {activeFlow === "insurance" && (
-          <motion.div
-            key="insurance"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <InsuranceSearch />
-          </motion.div>
-        )}
-        {activeFlow === "rx" && (
-          <motion.div
-            key="rx"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Search3 />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Panels with fade animations */}
+      <section>
+        <AnimatePresence mode="wait">
+          {activeFlow === 'drug' && (
+            <motion.div
+              key="drug"
+              role="tabpanel"
+              id="drug-panel"
+              aria-labelledby="drug-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Search />
+            </motion.div>
+          )}
+
+          {activeFlow === 'insurance' && (
+            <motion.div
+              key="insurance"
+              role="tabpanel"
+              id="insurance-panel"
+              aria-labelledby="insurance-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <InsuranceSearch />
+            </motion.div>
+          )}
+
+          {activeFlow === 'rx' && (
+            <motion.div
+              key="rx"
+              role="tabpanel"
+              id="rx-panel"
+              aria-labelledby="rx-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Search3 />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+    </main>
   );
 };
 

@@ -114,9 +114,14 @@ const UserInfoCard: React.FC = () => {
 
   if (!user)
     return (
-      <p className="text-center text-gray-500">
-        <Link to="/signin">Log In</Link>
-      </p>
+      <h3 className="text-center text-gray-500">
+      <Link
+        to="/signin"
+        className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] text-gray-500 hover:text-blue-600"
+      >
+        Log In
+      </Link>
+    </h3>
     );
 
   // Return initials if no user image is available

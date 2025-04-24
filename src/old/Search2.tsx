@@ -673,7 +673,7 @@ export const InsuranceSearch: React.FC = () => {
             <motion.div
               variants={dropdownVariant}
               initial="hidden"
-              animate={dropdownVisible ? "visible" : "hidden"}
+              animate={dropdownVisible ? "visible" : "visible"}
               className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 dark:text-white"
             >
               <p>

@@ -1,15 +1,32 @@
-import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { FaSearch, FaUpload, FaUserCog } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { FaSearch, FaUserCog } from "react-icons/fa";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import Tilt from "react-parallax-tilt"; // Assuming Tilt is from this library
-
+import Tilt from "react-parallax-tilt";
+import Alert from "./Alert"; // Adjust path if different
 export const Services: React.FC = () => {
+  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "">("");
+
+  const location = useLocation();
+  const handleServiceClick = (serviceTitle: string) => {
+    setAlertMessage(`${serviceTitle} selected successfully!`);
+    setAlertType("success");
+    setTimeout(() => {
+      setAlertMessage("");
+      setAlertType("");
+    }, 4000); // Clear after 4 seconds
+  };
+
   useEffect(() => {
-    AOS.init({ duration: 1000 });
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      AOS.init({ disable: true });
+    } else {
+      AOS.init({ duration: 1000 });
+    }
   }, []);
 
   const services = [
@@ -17,100 +34,134 @@ export const Services: React.FC = () => {
       to: "/search/1",
       title: "Search for Medicines",
       text: "Find the medicine you need, compare prices, and check insurance compatibility.",
-      icon: <FaSearch className="w-12 h-12" />,
+      icon: (
+        <FaSearch aria-hidden="true" focusable="false" className="w-12 h-12" />
+      ),
     },
-
     {
       to: "/dashboard/1",
       title: "Dashboard",
       text: "Manage your profile, view saved searches, and access your history.",
-      icon: <FaUserCog className="w-12 h-12" />,
+      icon: (
+        <FaUserCog aria-hidden="true" focusable="false" className="w-12 h-12" />
+      ),
     },
     {
       to: "/help",
       title: "Help & Support",
       text: "Get assistance with your queries and learn how to use our platform effectively.",
-      icon: <HelpCircle className="w-12 h-12" />,
+      icon: (
+        <HelpCircle
+          aria-hidden="true"
+          focusable="false"
+          className="w-12 h-12"
+        />
+      ),
     },
   ];
 
   return (
-    <div className="relative isolate bg-white dark:bg-gray-900 px-6 py-12 sm:py-16 lg:px-8">
-      {/* SVG Wave Separator */}
-      {/* <div className="absolute inset-x-0 top-0 -z-10">
-        <svg
-          className="w-full h-20"
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-        >
-          <path
-            fill="url(#gradient)"
-            d="M0,96L48,90.7C96,85,192,75,288,96C384,117,480,171,576,170.7C672,171,768,117,864,96C960,75,1056,85,1152,112C1248,139,1344,181,1392,202.7L1440,224L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
+    <>
+      {/* Skip link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only p-4 bg-white text-blue-600"
+      >
+        Skip to main content
+      </a>
+
+      <main
+        id="main-content"
+        tabIndex={-1}
+        role="main"
+        className="relative isolate bg-white dark:bg-gray-900 px-6 py-12 sm:py-16 lg:px-8"
+      >
+        {/* Page Header */}
+        <header className="mx-auto max-w-4xl text-center mb-12">
+          <h1 className="mt-2 text-[clamp(2rem,5vw,3rem)] font-semibold tracking-tight text-gray-900 dark:text-white">
+            Enhance Your Healthcare Experience
+          </h1>
+          <p className="text-lg font-medium text-gray-600 dark:text-gray-300">
+            Explore our range of services designed to simplify your healthcare
+            journey.
+          </p>
+        </header>
+        {/* {alertMessage && alertType && (
+          <Alert
+            message={alertMessage}
+            type={alertType as "success" | "error"}
           />
-          <defs>
-            <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#22d3ee" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div> */}
+        )} */}
 
-      {/* Header Section */}
-      <div className="mx-auto max-w-4xl text-center mb-12">
-        <h2 className="mt-2 text-[clamp(2rem,5vw,3rem)] font-semibold tracking-tight text-gray-900 dark:text-white">
-          Enhance Your Healthcare Experience
-        </h2>
-        <p className="mx-auto mt-6 max-w-2xl text-lg font-medium text-gray-600 dark:text-gray-300">
-          Explore our range of services designed to simplify your healthcare
-          journey.
-        </p>
-      </div>
+        {/* Services List */}
+        <ul
+          aria-label="Main menu"
+          role="list"
+          className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl"
+        >
+          {services.map((service, idx) => {
+            const isActive = location.pathname === service.to;
 
-      {/* Services Cards */}
-      <div className="mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
-        {services.map((service) => (
-          <Link key={service.to} to={service.to}>
-            <Tilt
-              glareEnable={true}
-              glareMaxOpacity={0.2}
-              glareColor="#ffffff"
-              glarePosition="all"
-              scale={1.02}
-              transitionSpeed={250}
-              tiltMaxAngleX={10}
-              tiltMaxAngleY={10}
-              className="group"
-            >
-              <motion.div
-                data-aos="fade-up"
-                whileHover={{ scale: 1.03, rotate: 0.5 }}
-                transition={{ duration: 0.3 }}
-                className="rounded-3xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg p-8 ring-1 ring-gray-900/10 shadow-xl hover:ring-blue-400 dark:hover:ring-blue-300 transition-all"
-              >
-                <div
-                  key={service.to}
-                  className="rounded-3xl bg-white dark:bg-gray-800 p-8 ring-1 shadow-xl ring-gray-900/10 sm:p-10"
-                  data-aos="fade-up"
+            return (
+              <li key={service.to} role="listitem" className="group">
+                <Link
+                  to={service.to}
+                  aria-label={service.title}
+                  aria-labelledby={`service-title-${idx} service-desc-${idx}`}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`block focus:outline-none focus:ring-4 focus:ring-blue-400 rounded-3xl ${
+                    isActive ? "ring-4 ring-blue-500" : ""
+                  }`}
+                  onClick={() => handleServiceClick(service.title)}
                 >
-                  <Link to={service.to} className="block">
-                    <div className="flex flex-col items-center text-center dark:text-white dark:bg-gray-800">
-                      <div className="mb-4 text-blue-500">{service.icon}</div>
-                      <h3 className="text-base font-semibold text-blue-600">
-                        {service.title}
-                      </h3>
-                      <p className="mt-4 text-base text-gray-600 dark:text-white">
-                        {service.text}
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              </motion.div>
-            </Tilt>
-          </Link>
-        ))}
-      </div>
-    </div>
+                  <Tilt
+                    glareEnable={true}
+                    glareMaxOpacity={0.2}
+                    glareColor="#ffffff"
+                    glarePosition="all"
+                    scale={1.02}
+                    transitionSpeed={250}
+                    tiltMaxAngleX={10}
+                    tiltMaxAngleY={10}
+                    className="block"
+                  >
+                    <motion.article
+                      data-aos="fade-up"
+                      whileHover={{ scale: 1.03, rotate: 0.5 }}
+                      whileFocus={{ scale: 1.03, rotate: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={`rounded-3xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg p-8 ring-1 ring-gray-900/10 shadow-xl hover:ring-blue-400 dark:hover:ring-blue-300 transition-all focus-visible:ring-4 focus-visible:ring-blue-400 ${
+                        isActive ? "ring-4 ring-blue-500" : ""
+                      }`}
+                      aria-labelledby={`service-title-${idx} service-desc-${idx}`}
+                      tabIndex={0}
+                    >
+                      <div className="flex flex-col items-center text-center dark:text-white">
+                        <div className="mb-4 text-blue-500" aria-hidden="true">
+                          {service.icon}
+                        </div>
+                        <h2
+                          id={`service-title-${idx}`}
+                          className="text-base font-semibold text-blue-600"
+                        >
+                          {service.title}
+                        </h2>
+                        <p
+                          className="mt-4 text-base text-gray-600 dark:text-white"
+                          id={`service-desc-${idx}`}
+                        >
+                          {service.text}
+                        </p>
+                      </div>
+                    </motion.article>
+                  </Tilt>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </main>
+    </>
   );
 };
 

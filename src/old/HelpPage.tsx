@@ -111,47 +111,33 @@ const HelpPage: React.FC = () => {
 
   return (
     <div className="relative bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-      {/* Gradient Blob Background (top) */}
-      {/* <div className="absolute left-1/2 -translate-x-1/2 -top-24 -z-10 opacity-30">
-        <svg
-          width="720"
-          height="600"
-          viewBox="0 0 720 600"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle cx="360" cy="300" r="300" fill="url(#paint0_radial)" />
-          <defs>
-            <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(360 300) rotate(90) scale(300)">
-              <stop offset="0%" stopColor="#22d3ee" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </radialGradient>
-          </defs>
-        </svg>
-      </div> */}
-
       <div className="container mx-auto max-w-6xl px-4 py-12">
-        {/* Header */}
-        <div className="text-center mb-12" data-aos="fade-down">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-snug">
+        {/* Header Section */}
+        <section aria-labelledby="how-it-works-heading" className="text-center mb-12" data-aos="fade-down">
+          <h1 id="how-it-works-heading" className="text-4xl sm:text-5xl font-bold tracking-tight leading-snug">
             How It Works
           </h1>
           <p className="mt-4 text-lg sm:text-xl font-medium">
             Follow these simple steps to get started.
           </p>
-        </div>
-
-        {/* Filter/Search Input */}
+        </section>
+  
+        {/* Search Input with Label */}
         <div className="mb-8 flex justify-center">
+          <label htmlFor="search-topics" className="sr-only">
+            Search help topics
+          </label>
           <input
+            id="search-topics"
             type="text"
             placeholder="Search help topics..."
+            aria-label="Search help topics"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="w-full max-w-md rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-2 px-4 text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
           />
         </div>
-
+  
         {/* Help Sections */}
         <div className="space-y-8">
           {filteredHelpPoints.map((point, index) => (
@@ -160,18 +146,28 @@ const HelpPage: React.FC = () => {
               data-aos="fade-up"
               className="rounded-xl shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 bg-white dark:bg-neutral-800 p-6 transition-transform duration-300 hover:scale-105 hover:ring-blue-400 dark:hover:ring-blue-300"
             >
-              <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleExpanded(index)}>
+              <button
+                onClick={() => toggleExpanded(index)}
+                aria-expanded={expanded[index]}
+                aria-controls={`help-section-${index}`}
+                className="flex w-full items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-2"
+              >
                 <h2 className="text-xl font-semibold tracking-tight dark:text-gray-200 flex items-center">
-                  {/* Optional icon/emoji before the title */}
-                  <span className="mr-2"><LibraryBig/></span>
+                  <span className="mr-2">
+                    <LibraryBig />
+                  </span>
                   {point.title}
                 </h2>
                 <span className="text-2xl dark:text-gray-200">
                   {expanded[index] ? "–" : "+"}
                 </span>
-              </div>
+              </button>
+  
               {expanded[index] && (
-                <ul className="mt-4 list-disc pl-5 space-y-1 text-sm sm:text-base leading-relaxed">
+                <ul
+                  id={`help-section-${index}`}
+                  className="mt-4 list-disc pl-5 space-y-1 text-sm sm:text-base leading-relaxed"
+                >
                   {point.subPoints.map((subPoint, subIndex) => (
                     <li key={subIndex}>{subPoint}</li>
                   ))}
@@ -180,12 +176,15 @@ const HelpPage: React.FC = () => {
             </div>
           ))}
         </div>
-
+  
         {/* Call-to-Action Footer */}
         <div className="mt-12 text-center" data-aos="fade-up">
           <p className="text-lg font-medium">
             Still need help?{" "}
-            <Link to="/contact" className="text-blue-500 hover:text-blue-600 transition-colors">
+            <Link
+              to="/contact"
+              className="text-blue-500 hover:text-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            >
               Contact us.
             </Link>
           </p>
@@ -193,6 +192,7 @@ const HelpPage: React.FC = () => {
       </div>
     </div>
   );
+  
 };
 
 export default HelpPage;

@@ -259,14 +259,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
   return (
     <motion.div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 relative">
+      <div className=" px-4 sm:px-6 lg:px-10 py-8 ">
         {/* Responsive Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Card 1: Total Prescriptions */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-blue-700 dark:border-blue-500 rounded-lg shadow p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-blue-500 dark:text-blue-400 truncate">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300 truncate">
                   Total Prescriptions
                 </p>
                 <p
@@ -283,11 +283,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               <Pill className="h-10 w-10 mt-4 sm:mt-0" />
             </div>
           </div>
+
           {/* Card 2: Below Optimal Net Profit */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-red-500 dark:border-red-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-red-700 dark:border-red-500 rounded-lg shadow p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-red-500 dark:text-red-400 truncate">
+                <p className="text-sm font-medium text-red-800 dark:text-red-300 truncate">
                   Below Optimal Net Profit
                 </p>
                 <p
@@ -304,11 +305,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               <AlertTriangle className="h-10 w-10 mt-4 sm:mt-0" />
             </div>
           </div>
+
           {/* Card 3: Estimated Max. Net Profit */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-green-500 dark:border-green-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-green-700 dark:border-green-500 rounded-lg shadow p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-green-500 dark:text-green-400 truncate">
+                <p className="text-sm font-medium text-green-800 dark:text-green-300 truncate">
                   Estimated Max. Net Profit
                 </p>
                 <p
@@ -334,11 +336,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               <BarChart3 className="h-10 w-10 mt-4 sm:mt-0" />
             </div>
           </div>
+
           {/* Card 4: Current Total Net Profit */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-purple-500 dark:border-purple-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-purple-700 dark:border-purple-500 rounded-lg shadow p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-purple-500 dark:text-purple-400 truncate">
+                <p className="text-sm font-medium text-purple-800 dark:text-purple-300 truncate">
                   Current Total Net Profit
                 </p>
                 <p
@@ -485,7 +488,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         <div className="mb-4">
           <button
             onClick={downloadCSV}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-150"
+            className="px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Download CSV
           </button>
@@ -494,7 +497,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         {/* Responsive Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse table-auto">
-            <thead className="bg-gray-200 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600">
+            <thead className="bg-gray-300 dark:bg-gray-800 border-b-2 border-gray-400 dark:border-gray-700">
               <tr>
                 {[
                   { label: "Date", key: "date" as keyof DrugTransaction },
@@ -570,7 +573,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                 ].map(({ label, key }) => (
                   <th
                     key={key}
-                    className="px-4 py-3 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase cursor-pointer whitespace-nowrap transition-colors duration-150 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    className="px-4 py-3 text-left text-sm font-bold text-gray-800 dark:text-gray-200 uppercase cursor-pointer whitespace-nowrap transition-colors duration-150 hover:bg-gray-400 dark:hover:bg-gray-700"
                     onClick={() => requestSort(key)}
                   >
                     {label}
@@ -578,84 +581,84 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-400 dark:divide-gray-700">
               {currentRecords.map((item, index) => (
                 <tr
                   key={index}
-                  className="transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {new Date(item.date).toLocaleDateString("en-US")}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`/scriptitems/${item.scriptCode}`}
-                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-150"
+                      className="text-blue-700 dark:text-blue-300 hover:underline hover:text-blue-900 dark:hover:text-blue-400 transition-colors duration-150"
                     >
                       {item.scriptCode}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.branchCode}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`/InsuranceDetails/${item.insuranceId}`}
                       target="_blank"
-                      className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-150"
+                      className="text-blue-700 dark:text-blue-300 hover:underline hover:text-blue-900 dark:hover:text-blue-400 transition-colors duration-150"
                     >
                       {item.insurance === "  "
                         ? "MARCOG"
                         : insurance_mapping[item.insurance] || item.insurance}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.drugClass}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`/drug/${item.drugId}?ndc=${item.ndcCode}&insuranceId=${item.insuranceId}`}
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      className="text-blue-700 hover:underline hover:text-blue-900 transition duration-200 dark:text-blue-300 dark:hover:text-blue-400"
                       target="_blank"
                     >
                       {item.drugName}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`https://ndclist.com/ndc/${item.ndcCode}`}
-                      className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors duration-150"
+                      className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-400 hover:underline transition-colors duration-150"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       {item.ndcCode}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.user}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.patientPayment}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.acquisitionCost}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.insurancePayment}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {normalizeName(item.prescriber)}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.netProfit}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.highstNet}
                   </td>
-                  <td className="px-3 py-2 text-sm text-red-600 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
                     {(item.highstNet - item.netProfit).toFixed(2)}
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
                       href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
                       className="hover:underline transition-colors duration-150"
@@ -665,19 +668,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                       {item.highstDrugNDC}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
                       href={`/drug/${item.highstDrugId}?ndc=${item.highstDrugNDC}&insuranceId=${item.insuranceId}`}
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      className="text-blue-700 hover:underline hover:text-blue-900 transition duration-200 dark:text-blue-300 dark:hover:text-blue-400"
                       target="_blank"
                     >
                       {item.highstDrugName}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     {item.highstScriptCode}
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     {new Date(item.highstScriptDate).toLocaleDateString(
                       "en-US"
                     )}
@@ -686,40 +689,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               ))}
             </tbody>
           </table>
-
-          {/* Pagination Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-center mt-4">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md mb-2 sm:mb-0 ${
-                currentPage === 1
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
-            >
-              <ChevronLeft className="inline-block w-4 h-4 mr-1" />
-              Previous
-            </button>
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              Page {currentPage} of {totalPages}
-            </p>
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md ${
-                currentPage === totalPages
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
-            >
-              Next <ChevronRight className="inline-block w-4 h-4 ml-1" />
-            </button>
-          </div>
         </div>
-
+ {/* Pagination Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md mb-2 sm:mb-0 transition-colors duration-150 ${
+              currentPage === 1
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            <ChevronLeft className="inline-block w-4 h-4 mr-1" />
+            Previous
+          </button>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            Page {currentPage} of {totalPages}
+          </p>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md transition-colors duration-150 ${
+              currentPage === totalPages
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            Next <ChevronRight className="inline-block w-4 h-4 ml-1" />
+          </button>
+        </div>
         {/* Tooltip rendering */}
         {tooltip.visible && (
           <div

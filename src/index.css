@@ -176,19 +176,29 @@ layer(base);
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  /* Apply default border color */
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-gray-200, currentColor); /* Fallback to currentColor */
   }
+
+  /* Ensure buttons and elements with role="button" are interactive */
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  /* Set default line height for paragraphs */
+  p {
+    line-height: 1.5;
+  }
+
+  /* Apply global styles to the body */
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative font-normal font-outfit z-1 bg-gray-50; /* Tailwind utilities */
   }
 }
 
@@ -290,6 +300,9 @@ layer(base);
   input[type="time"]::-webkit-calendar-picker-indicator {
     display: none;
     -webkit-appearance: none;
+  }
+  .leading-custom {
+    line-height: 1.5 !important; /* Custom utility to enforce line-height */
   }
 }
 

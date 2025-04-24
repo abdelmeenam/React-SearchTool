@@ -299,18 +299,18 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
 
   return (
     <motion.div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 relative">
-        <h1 className="text-4xl sm:text-4xl font-extrabold text-blue-700 dark:text-blue-400 mb-6 text-center tracking-wide">
+      <div className=" px-4 sm:px-6 lg:px-10 py-8 relative">
+        <h3 className="text-4xl sm:text-4xl font-extrabold text-blue-700 dark:text-blue-400 mb-6 text-center tracking-wide">
           Estimated Best Net Differences
-        </h1>
+        </h3>
 
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Card 1: Total Scripts */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-blue-600 dark:border-blue-500 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-blue-500 dark:text-blue-400">
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
                   Total Scripts
                 </p>
                 <p
@@ -329,10 +329,10 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
           </div>
 
           {/* Card 2: Total Prescriptions with Deviation */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-red-500 dark:border-red-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-red-600 dark:border-red-500 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-red-500 dark:text-red-400">
+                <p className="text-sm font-medium text-red-700 dark:text-red-300">
                   Total Prescriptions with Deviation
                 </p>
                 <p
@@ -351,10 +351,10 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
           </div>
 
           {/* Card 3: Total Deviation */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-green-500 dark:border-green-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-green-600 dark:border-green-500 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-green-500 dark:text-green-400">
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">
                   Total Deviation
                 </p>
                 <p
@@ -373,10 +373,10 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
           </div>
 
           {/* Card 4: Total Revenue from Matching Scripts */}
-          <div className="bg-white dark:bg-gray-800 border-l-4 border-purple-500 dark:border-purple-400 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 border-l-4 border-purple-600 dark:border-purple-500 rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-purple-500 dark:text-purple-400">
+                <p className="text-sm font-medium text-purple-700 dark:text-purple-300">
                   Total Revenue from Matching Scripts
                 </p>
                 <p
@@ -518,7 +518,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
         <div className="mb-4">
           <button
             onClick={downloadCSV}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-150"
+            className="px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Download CSV
           </button>
@@ -526,118 +526,169 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
 
         {/* Data Table */}
         <div className="overflow-x-auto">
-          <table className="table-auto min-w-full border-collapse">
-            <thead className="bg-gray-200 dark:bg-gray-700 border-b-2 border-gray-300 dark:border-gray-600 sticky top-0 z-10">
+          <table className="min-w-full border-collapse table-auto">
+            <thead className="bg-gray-300 dark:bg-gray-800 border-b-2 border-gray-400 dark:border-gray-700">
               <tr>
                 {[
-                  "Date",
-                  "Script Code",
-                  "Branch Name",
-                  "Rx Group",
-                  "Drug Class",
-                  "Drug Name",
-                  "NDC Code",
-                  "User",
-                  "Patient Payment",
-                  "ACQ",
-                  "Insurance Payment",
-                  "Prescriber",
-                  "Net Profit",
-                  "Highest Net",
-                  "Difference",
-                  "Highest Drug NDC",
-                  "Highest Drug Name",
-                  "Highest Script Code",
-                  "Highest Script Date",
-                ].map((col) => (
+                  { label: "Date", key: "date" as keyof DrugTransaction },
+                  {
+                    label: "Script Code",
+                    key: "scriptCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Branch Name",
+                    key: "branchCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Rx Group",
+                    key: "insurance" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Drug Class",
+                    key: "drugClass" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Drug Name",
+                    key: "drugName" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "NDC Code",
+                    key: "ndcCode" as keyof DrugTransaction,
+                  },
+                  { label: "User", key: "user" as keyof DrugTransaction },
+                  {
+                    label: "Patient Payment",
+                    key: "patientPayment" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "ACQ",
+                    key: "acquisitionCost" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Insurance Payment",
+                    key: "insurancePayment" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Prescriber",
+                    key: "prescriber" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Net Profit",
+                    key: "netProfit" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Net",
+                    key: "highstNet" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Difference",
+                    key: "difference" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Drug NDC",
+                    key: "highstDrugNDC" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Drug Name",
+                    key: "highstDrugName" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Script Code",
+                    key: "highstScriptCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Script Date",
+                    key: "highstScriptDate" as keyof DrugTransaction,
+                  },
+                ].map(({ label, key }) => (
                   <th
-                    key={col}
-                    onClick={() => requestSort(col)}
-                    className="px-4 py-3 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase cursor-pointer whitespace-nowrap transition-colors duration-150 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    key={key}
+                    className="px-4 py-3 text-left text-sm font-bold text-gray-800 dark:text-gray-200 uppercase cursor-pointer whitespace-nowrap transition-colors duration-150 hover:bg-gray-400 dark:hover:bg-gray-700"
+                    onClick={() => requestSort(key)}
                   >
-                    {col}
+                    {label}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-400 dark:divide-gray-700">
               {currentRecords.map((item, index) => (
                 <tr
                   key={index}
-                  className="transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {new Date(item.date).toLocaleDateString("en-US")}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`/scriptitems/${item.scriptCode}`}
-                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-150"
+                      className="text-blue-700 dark:text-blue-300 hover:underline hover:text-blue-900 dark:hover:text-blue-400 transition-colors duration-150"
                     >
                       {item.scriptCode}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.branchCode}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`/InsuranceDetails/${item.insuranceId}`}
                       target="_blank"
-                      className="text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-150"
+                      className="text-blue-700 dark:text-blue-300 hover:underline hover:text-blue-900 dark:hover:text-blue-400 transition-colors duration-150"
                     >
                       {item.insurance === "  "
                         ? "MARCOG"
                         : insurance_mapping[item.insurance] || item.insurance}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.drugClass}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`/drug/${item.drugId}?ndc=${item.ndcCode}&insuranceId=${item.insuranceId}`}
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      className="text-blue-700 hover:underline hover:text-blue-900 transition duration-200 dark:text-blue-300 dark:hover:text-blue-400"
                       target="_blank"
                     >
                       {item.drugName}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     <a
                       href={`https://ndclist.com/ndc/${item.ndcCode}`}
-                      className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors duration-150"
+                      className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-400 hover:underline transition-colors duration-150"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       {item.ndcCode}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.user}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.patientPayment}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.acquisitionCost}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.insurancePayment}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {normalizeName(item.prescriber)}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.netProfit}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.highstNet}
                   </td>
-                  <td className="px-3 py-2 text-sm text-red-600 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
                     {(item.highstNet - item.netProfit).toFixed(2)}
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
                       href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
                       className="hover:underline transition-colors duration-150"
@@ -647,19 +698,19 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                       {item.highstDrugNDC}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
                       href={`/drug/${item.highstDrugId}?ndc=${item.highstDrugNDC}&insuranceId=${item.insuranceId}`}
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      className="text-blue-700 hover:underline hover:text-blue-900 transition duration-200 dark:text-blue-300 dark:hover:text-blue-400"
                       target="_blank"
                     >
                       {item.highstDrugName}
                     </a>
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     {item.highstScriptCode}
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     {new Date(item.highstScriptDate).toLocaleDateString(
                       "en-US"
                     )}

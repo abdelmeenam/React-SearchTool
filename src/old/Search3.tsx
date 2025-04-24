@@ -217,251 +217,253 @@ export const Search3: React.FC = () => {
   };
 
   return (
-    <motion.div className="min-h-screen">
+    <motion.div className="min-h-screen" initial="initial" animate="animate">
       <PageMeta
         title="Search Medicines | TailAdmin"
         description="Search for medicines using our modern interface."
       />
       <PageBreadcrumb pageTitle="RxGroup, Drugs & NDC" />
 
-      {/* Responsive two-column layout */}
       <div className="flex flex-col md:flex-row gap-8 justify-center">
-        {/* Main Form Column */}
-        <div className="flex-1 max-w-2xl">
-          <motion.div
-            layout
-            className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-4 shadow-lg"
-          >
-            {/* Header */}
-            <div className="px-6 py-5 text-center">
-              <h1 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                RxGroup, Drugs & NDC
-              </h1>
+        {/* Main Search Form */}
+        <section className="flex-1 max-w-2xl" aria-labelledby="search-form-heading">
+          <h1 id="search-form-heading" className="sr-only">
+            Search Medicines
+          </h1>
+          <form className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 shadow-lg" role="search">
+            <header className="px-6 py-5 text-center">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">RxGroup, Drugs & NDC</h2>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Search for an Rx Group and drug to view details.
               </p>
-            </div>
+            </header>
 
-            <div className="border-t border-gray-100 dark:border-gray-800 sm:p-6 space-y-6">
-              {/* Rx Group Search Input */}
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Search for Rx Group
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={rxGroupSearchQuery}
-                    onChange={(e) => {
-                      setRxGroupSearchQuery(e.target.value);
-                      setShowRxGroupSuggestions(true);
-                    }}
-                    onFocus={() => setShowRxGroupSuggestions(true)}
-                    placeholder="Type Rx Group..."
-                    className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                  />
-                  {showRxGroupSuggestions && filteredRxGroups.length > 0 && (
-                    <motion.div
-                      layout
-                      initial={fadeVariant.initial}
-                      animate={fadeVariant.animate}
-                      exit={fadeVariant.exit}
-                      className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
-                    >
-                      {filteredRxGroups.map((rg) => (
-                        <button
-                          key={rg.id}
-                          onClick={() => handleRxGroupSelect(rg)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
-                        >
-                          {rg.rxGroup}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </div>
-              </div>
+            <div className="border-t border-gray-100 dark:border-gray-700 sm:p-6 space-y-6">
 
-              {/* Drug Search Input & Suggestions */}
-              {drugs.length > 0 && (
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Search for Drug
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={drugSearchQuery}
-                      onChange={handleDrugSearchChange}
-                      onFocus={() => setShowDrugSuggestions(true)}
-                      placeholder="Type drug name..."
-                      className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                    />
-                    {showDrugSuggestions && uniqueFilteredDrugs.length > 0 && (
-                      <motion.div
-                        layout
-                        initial={fadeVariant.initial}
-                        animate={fadeVariant.animate}
-                        exit={fadeVariant.exit}
-                        className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
-                      >
-                        {uniqueFilteredDrugs.map((drug) => (
-                          <button
-                            key={drug.id}
-                            onClick={() => handleDrugSelect(drug)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
-                          >
-                            {drug.name}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* NDC Search Input */}
-              {ndcList.length > 0 && (
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Search for NDC
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={ndcSearchQuery}
-                      onChange={(e) => {
-                        setNdcSearchQuery(e.target.value);
-                        setShowNdcSuggestions(true);
-                      }}
-                      onFocus={() => setShowNdcSuggestions(true)}
-                      placeholder="Type NDC..."
-                      className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                    />
-                    {showNdcSuggestions && filteredNdcList.length > 0 && (
-                      <motion.div
-                        layout
-                        initial={fadeVariant.initial}
-                        animate={fadeVariant.animate}
-                        exit={fadeVariant.exit}
-                        className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
-                      >
-                        {filteredNdcList.map((ndc, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleNdcSelect(ndc)}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
-                          >
-                            {ndc}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Button */}
-              {selectedDrug && selectedNdc && (
-                <motion.button
-                  layout
-                  initial={fadeVariant.initial}
-                  animate={fadeVariant.animate}
-                  exit={fadeVariant.exit}
-                  onClick={async () => {
-                    if (selectedRxGroup) {
-                      localStorage.setItem(
-                        "selectedRx",
-                        selectedRxGroup.rxGroup
-                      );
-                    }
-                    await handleDrugDetails();
-                    navigate(
-                      `/drug/${
-                        selectedDrug.id
-                      }?ndc=${selectedNdc}&insuranceId=${
-                        selectedRxGroup?.id || ""
-                      }`
-                    );
-                  }}
-                  className="w-full py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <span>View Drug Details</span>
-                </motion.button>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Selected Details Dropdown Panel */}
-        <div className="w-full md:w-1/3">
-          <motion.div
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
-            initial={{ height: "4rem" }}
-            whileHover={{ height: "auto" }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+{/* Rx Group Combobox */}
+<div>
+  <label id="rxgroup-label" htmlFor="rxgroup-search" className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
+    Search for Rx Group
+  </label>
+  <div
+    className="relative"
+    role="combobox"
+    aria-haspopup="listbox"
+    aria-expanded={showRxGroupSuggestions}
+    aria-owns="rxgroup-listbox"
+    aria-labelledby="rxgroup-label"
+  >
+    <input
+      id="rxgroup-search"
+      type="text"
+      value={rxGroupSearchQuery}
+      onChange={(e) => {
+        setRxGroupSearchQuery(e.target.value);
+        // update filteredRxGroups and setShowRxGroupSuggestions(true)
+      }}
+      onFocus={() => setShowRxGroupSuggestions(true)}
+      placeholder="Type Rx Group..."
+      aria-autocomplete="list"
+      aria-controls="rxgroup-listbox"
+      className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-xs placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+    />
+    {showRxGroupSuggestions && filteredRxGroups.length > 0 && (
+      <ul
+        id="rxgroup-listbox"
+        role="listbox"
+        className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-xs max-h-60 overflow-y-auto"
+      >
+        {filteredRxGroups.map((rg) => (
+          <li
+            key={rg.id}
+            id={`rxgroup-option-${rg.id}`}
+            role="option"
+            tabIndex={0}
+            onClick={() => handleRxGroupSelect(rg)}
+            onKeyDown={(e) => e.key === 'Enter' && handleRxGroupSelect(rg)}
+            className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
           >
-            {/* Header: always visible */}
+            {rg.rxGroup}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>
+
+{/* Drug Combobox */}
+{drugs.length > 0 && (
+  <div>
+    <label id="drug-label" htmlFor="drug-search" className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
+      Search for Drug
+    </label>
+    <div
+      className="relative"
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded={showDrugSuggestions}
+      aria-owns="drug-listbox"
+      aria-labelledby="drug-label"
+    >
+      <input
+        id="drug-search"
+        type="text"
+        value={drugSearchQuery}
+        onChange={handleDrugSearchChange}
+        onFocus={() => setShowDrugSuggestions(true)}
+        placeholder="Type drug name..."
+        aria-autocomplete="list"
+        aria-controls="drug-listbox"
+        className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-xs placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+      />
+      {showDrugSuggestions && uniqueFilteredDrugs.length > 0 && (
+        <ul
+          id="drug-listbox"
+          role="listbox"
+          className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-xs max-h-60 overflow-y-auto"
+        >
+          {uniqueFilteredDrugs.map((drug) => (
+            <li
+              key={drug.id}
+              id={`drug-option-${drug.id}`}
+              role="option"
+              tabIndex={0}
+              onClick={() => handleDrugSelect(drug)}
+              onKeyDown={(e) => e.key === 'Enter' && handleDrugSelect(drug)}
+              className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+            >
+              {drug.name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+)}
+
+{/* NDC Combobox */}
+{ndcList.length > 0 && (
+  <div>
+    <label id="ndc-label" htmlFor="ndc-search" className="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-400">
+      Search for NDC
+    </label>
+    <div
+      className="relative"
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded={showNdcSuggestions}
+      aria-owns="ndc-listbox"
+      aria-labelledby="ndc-label"
+    >
+      <input
+        id="ndc-search"
+        type="text"
+        value={ndcSearchQuery}
+        onChange={(e) => setNdcSearchQuery(e.target.value)}
+        onFocus={() => setShowNdcSuggestions(true)}
+        placeholder="Type NDC..."
+        aria-autocomplete="list"
+        aria-controls="ndc-listbox"
+        className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-xs placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+      />
+      {showNdcSuggestions && filteredNdcList.length > 0 && (
+        <ul
+          id="ndc-listbox"
+          role="listbox"
+          className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-xs max-h-60 overflow-y-auto"
+        >
+          {filteredNdcList.map((ndc) => (
+            <li
+              key={ndc}
+              id={`ndc-option-${ndc}`}
+              role="option"
+              tabIndex={0}
+              onClick={() => handleNdcSelect(ndc)}
+              onKeyDown={(e) => e.key === 'Enter' && handleNdcSelect(ndc)}
+              className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+            >
+              {ndc}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+)}
+
+{/* Action Button */}
+{selectedDrug && selectedNdc && (
+  <button
+    type="button"
+    onClick={async () => {
+      if (selectedRxGroup) {
+        localStorage.setItem('selectedRx', selectedRxGroup.rxGroup);
+      }
+      await handleDrugDetails();
+      navigate(
+        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${selectedRxGroup?.id || ''}`
+      );
+    }}
+    className="w-full py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+  >
+    View Drug Details
+  </button>
+)}
+</div>
+          </form>
+        </section>
+
+        {/* Selected Details Panel */}
+        <aside className="w-full md:w-1/3" aria-labelledby="selected-details-heading">
+          <h2 id="selected-details-heading" className="sr-only">
+            Selected Details
+          </h2>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
             <div className="flex justify-between items-center p-4">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-                Selected Details
-              </h2>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Selected Details</h3>
               <button
+                type="button"
                 onClick={clearAll}
-                title="Reset Selection"
+                aria-label="Reset selection"
                 className="p-2 transition-transform transform hover:scale-110 hover:bg-red-500 hover:text-white rounded-full"
               >
-                <XIcon className="h-5 w-5 dark:text-white" />
+                <XIcon className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
-            {/* Details: hidden by default; fade in on hover */}
-            <motion.div
-              initial={{ opacity: 1 }}
-              whileHover={{ opacity: 1 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 dark:text-white"
-            >
+            <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 dark:text-white">
               <p>
                 <strong>Rx Group: </strong>
                 {selectedRxGroup ? (
                   <a
-                    href={`/InsuranceDetails/${selectedRxGroup.id}`}
+                    href={`/InsuranceDetails/${selectedRxGroup.id}`} 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                    className="text-blue-600 hover:underline hover:text-blue-800"
                   >
                     {selectedRxGroup.rxGroup}
                   </a>
                 ) : (
-                  "N/A"
+                  'N/A'
                 )}
               </p>
               <p>
-                <strong>Drug: </strong>
-                {selectedDrug ? selectedDrug.name : "N/A"}
+                <strong>Drug: </strong>{selectedDrug?.name || 'N/A'}
               </p>
               <p>
-                <strong>NDC: </strong>
-                {selectedNdc || "N/A"}
+                <strong>NDC: </strong>{selectedNdc || 'N/A'}
               </p>
               {drugNetDetails && (
-                <motion.div
-                  layout
-                  variants={fadeVariant}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
-                >
+                <div role="region" aria-labelledby="net-price-heading" className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                  <h4 id="net-price-heading" className="sr-only">Net Price</h4>
                   <p>
                     <strong>Net Price: </strong>
-                    {drugNetDetails.net ? `$${drugNetDetails.net}` : "N/A"}
+                    {drugNetDetails.net ? `$${drugNetDetails.net}` : 'N/A'}
                   </p>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
-          </motion.div>
-        </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </motion.div>
   );

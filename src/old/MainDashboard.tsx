@@ -127,42 +127,47 @@ export const MainDashboard: React.FC = () => {
 
   return (
     <motion.div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
-        <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
-          Pharmacy Dashboard
-        </h1>
+      <main className="  sm:px-6 lg: py-8" role="main">
+        <header className="mb-6 text-center">
+          <h1 className="text-4xl font-bold text-blue-700">Pharmacy Dashboard</h1>
+        </header>
 
         {/* Loading/Error States */}
         {loading && (
-          <p className="text-center text-gray-500">Loading data...</p>
+          <section>
+            <h2 className="sr-only">Loading State</h2>
+            <p className="text-center text-gray-500">Loading data...</p>
+          </section>
         )}
         {error && (
-          <div
+          <section
             className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-2xl mx-auto mb-6"
             role="alert"
           >
+            <h2 className="sr-only">Error State</h2>
             <strong className="font-bold">Access Denied!</strong>
             <span className="block sm:inline">
-              {" "}
               Sorry, you don’t have permission to view this page.
             </span>
             <br />
             <span className="block sm:inline">
-              Please contact the system administrator if you believe this is an
-              error.
+              Please contact the system administrator if you believe this is an error.
             </span>
-          </div>
+          </section>
         )}
 
         {/* Render the appropriate dashboard when data is ready */}
         {!loading && !error && (
-          <div>
-            {activeDashboard === "1" && <Dashboard data={data} />}
-            {activeDashboard === "2" && <SecondDashBoard data={data} />}
-            {activeDashboard === "3" && <ThirdDashBoard data={data} />}
-          </div>
+          <section>
+            {/* <h2 className="sr-only">Dashboard Content</h2> */}
+            <div>
+              {activeDashboard === "1" && <Dashboard data={data} />}
+              {activeDashboard === "2" && <SecondDashBoard data={data} />}
+              {activeDashboard === "3" && <ThirdDashBoard data={data} />}
+            </div>
+          </section>
         )}
-      </div>
+      </main>
     </motion.div>
   );
 };

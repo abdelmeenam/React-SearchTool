@@ -42,6 +42,8 @@ export const Search: React.FC = () => {
   const [insurances, setInsurances] = useState<DrugInsuranceInfo[]>([]);
   const [selectedInsurance, setSelectedInsurance] =
     useState<DrugInsuranceInfo | null>(null);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] =
+    useState<number>(-1);
 
   // State for controlling the visibility of the selected details dropdown
   const [dropdownVisible, setDropdownVisible] = useState(false);
@@ -154,7 +156,7 @@ export const Search: React.FC = () => {
           //   `/drug/GetAllDrugs?classId=${response2.drugClassId}`
           // );
           // console.log(response4.data);
-          // console.log(selectedInsurance.insuranceId) 
+          // console.log(selectedInsurance.insuranceId)
           // const alternatives = response4.data.filter(
           //   (item: Prescription) => item.insuranceId === selectedInsurance.insuranceId
           // );
@@ -183,7 +185,7 @@ export const Search: React.FC = () => {
         description="Search for medicines using our modern interface."
       />
       <PageBreadcrumb pageTitle="Search Medicines" />
-      {/* Responsive container: on md+ screens show side-by-side */}
+
       <div className="flex flex-col md:flex-row gap-8 justify-center">
         {/* Search Form Column */}
         <div className="flex-1 max-w-2xl">
@@ -191,7 +193,6 @@ export const Search: React.FC = () => {
             layout
             className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-800 p-6 shadow-lg"
           >
-            {/* Header */}
             <div className="px-6 py-5 text-center">
               <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
                 Search for Medicines
@@ -217,11 +218,46 @@ export const Search: React.FC = () => {
                 <input
                   type="text"
                   id="drugSearch"
+                  role="combobox" // Explicitly define the role
+                  aria-label="Search for a drug by name"
+                  aria-autocomplete="list"
+                  aria-controls="suggestion-list"
+                  aria-expanded={showSuggestions}
+                  aria-activedescendant={
+                    activeSuggestionIndex >= 0
+                      ? `suggestion-${activeSuggestionIndex}`
+                      : undefined
+                  }
                   value={searchQuery}
-                  onChange={handleSearchChange}
+                  onChange={(e) => {
+                    handleSearchChange(e);
+                    setActiveSuggestionIndex(-1);
+                  }}
                   onFocus={() =>
                     searchQuery.length >= 1 && setShowSuggestions(true)
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setActiveSuggestionIndex((prev) =>
+                        prev + 1 < suggestions.length ? prev + 1 : 0
+                      );
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setActiveSuggestionIndex((prev) =>
+                        prev - 1 >= 0 ? prev - 1 : suggestions.length - 1
+                      );
+                    } else if (
+                      e.key === "Enter" &&
+                      activeSuggestionIndex >= 0
+                    ) {
+                      e.preventDefault();
+                      handleDrugSelect(suggestions[activeSuggestionIndex]);
+                    } else if (e.key === "Escape") {
+                      setShowSuggestions(false);
+                      setActiveSuggestionIndex(-1);
+                    }
+                  }}
                   placeholder="e.g., Metformin"
                   className="h-11 w-full rounded-lg border border-blue-300 pl-10 pr-10 py-2.5 text-sm shadow-md placeholder:text-gray-400 focus:outline-none focus:ring-3 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
@@ -234,32 +270,35 @@ export const Search: React.FC = () => {
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
                       onClick={clearSearch}
+                      aria-label="Clear search input"
                       className="absolute inset-y-0 right-3 flex items-center"
-                      title="Clear"
                     >
                       <XIcon className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     </motion.button>
                   )}
                 </AnimatePresence>
+
+                {/* Suggestions Dropdown */}
                 <AnimatePresence>
                   {showSuggestions && suggestions.length > 0 && (
                     <motion.div
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2, ease: "easeInOut" }}
+                      id="suggestion-list"
+                      role="listbox"
+                      aria-label="Drug search suggestions"
                       className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto"
                     >
-                      {[
-                        ...new Map(
-                          suggestions.map((d) => [d.name, d])
-                        ).values(),
-                      ].map((drug: Drug) => (
+                      {suggestions.map((drug: Drug, index) => (
                         <button
                           key={drug.id}
+                          id={`suggestion-${index}`}
+                          role="option"
+                          aria-selected={activeSuggestionIndex === index}
                           onClick={() => handleDrugSelect(drug)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
+                          className={`w-full text-left px-4 py-2 text-sm ${
+                            activeSuggestionIndex === index
+                              ? "bg-blue-100 text-blue-800"
+                              : "hover:bg-gray-100 text-gray-800"
+                          } focus:outline-none`}
                         >
                           {drug.name}
                         </button>
@@ -270,90 +309,67 @@ export const Search: React.FC = () => {
               </div>
             </div>
 
-            {/* NDC & Insurance Section */}
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              {/* NDC Selector */}
-              <AnimatePresence>
-                {ndcList.length > 0 && (
-                  <motion.div
-                    layout
-                    variants={fadeVariant}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    className="mb-4"
-                  >
-                    <label
-                      htmlFor="ndcSelect"
-                      className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Select NDC
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="ndcSelect"
-                        value={selectedNdc}
-                        onChange={handleNdcSelect}
-                        className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      >
-                        <option value="">Select NDC code...</option>
-                        {ndcList.map((ndc) => (
-                          <option key={ndc} value={ndc}>
-                            {ndc}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            {/* NDC Selector */}
+            {ndcList.length > 0 && (
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <label
+                  htmlFor="ndcSelect"
+                  className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Select NDC
+                </label>
+                <select
+                  id="ndcSelect"
+                  aria-label="Select NDC code"
+                  value={selectedNdc}
+                  onChange={handleNdcSelect}
+                  className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">Select NDC code...</option>
+                  {ndcList.map((ndc) => (
+                    <option key={ndc} value={ndc}>
+                      {ndc}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-              {/* Insurance Selector */}
-              <AnimatePresence>
-                {insurances.length > 0 && (
-                  <motion.div
-                    layout
-                    variants={fadeVariant}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                  >
-                    <label
-                      htmlFor="insuranceSelect"
-                      className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            {/* Insurance Selector */}
+            {insurances.length > 0 && (
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <label
+                  htmlFor="insuranceSelect"
+                  className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Select Insurance
+                </label>
+                <select
+                  id="insuranceSelect"
+                  aria-label="Select insurance group"
+                  value={selectedInsurance?.insuranceId || ""}
+                  onChange={(e) => {
+                    const selected =
+                      insurances.find(
+                        (i) => i.insuranceId === Number(e.target.value)
+                      ) || null;
+                    setSelectedInsurance(selected);
+                    setDrugNetDetails(null);
+                  }}
+                  className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">Select insurance...</option>
+                  {insurances.map((insurance) => (
+                    <option
+                      key={insurance.insuranceId}
+                      value={insurance.insuranceId}
                     >
-                      Select RxGroub
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="insuranceSelect"
-                        value={selectedInsurance?.insuranceId || ""}
-                        onChange={(e) => {
-                          const selected =
-                            insurances.find(
-                              (i) => i.insuranceId === Number(e.target.value)
-                            ) || null;
-                          setSelectedInsurance(selected);
-                          // Clear drug details when insurance is changed
-                          setDrugNetDetails(null);
-                        }}
-                        className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      >
-                        <option value="">Select insurance...</option>
-                        {insurances.map((insurance) => (
-                          <option
-                            key={insurance.insuranceId}
-                            value={insurance.insuranceId}
-                          >
-                            {insurance.insurance}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                      {insurance.insurance}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Action Button */}
             <AnimatePresence>
@@ -365,7 +381,8 @@ export const Search: React.FC = () => {
                   animate="animate"
                   exit="exit"
                   onClick={handleSearch}
-                  className="w-full py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 shadow-md"
+                  aria-label="View Drug Details" // Match the visible text
+                  className="w-full py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <span>View Drug Details</span>
                   <ExternalLink className="h-4 w-4" />

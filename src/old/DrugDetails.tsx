@@ -58,7 +58,7 @@ interface DrugHeaderProps {
   temp: string;
 }
 export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
-  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-t-lg text-white flex items-center space-x-4">
+  <header className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-t-lg text-white flex items-center space-x-4">
     <Pill className="h-8 w-8" />
     <div>
       <h1 className="text-2xl font-bold">{drug.name}</h1>
@@ -71,7 +71,7 @@ export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
         NDC: {padCode(drug.ndc)}
       </a>
     </div>
-  </div>
+  </header>
 );
 
 interface DrugInformationProps {
@@ -93,42 +93,47 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="flex items-center space-x-2">
           <DollarSign className="h-5 w-5 text-gray-400" />
-          <div>
+          <dl>
             <dt className="text-sm font-medium text-gray-500">ACQ</dt>
             <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
               ${drug.acq.toFixed(2)}
             </dd>
-          </div>
+          </dl>
         </div>
+
         <div className="flex items-center space-x-2">
           <Percent className="h-5 w-5 text-gray-400" />
-          <div>
+          <dl>
             <dt className="text-sm font-medium text-gray-500">AWP</dt>
             <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
               ${drug.awp}
             </dd>
-          </div>
+          </dl>
         </div>
+
         <div className="flex items-center space-x-2">
           <Zap className="h-5 w-5 text-gray-400" />
-          <div>
+          <dl>
             <dt className="text-sm font-medium text-gray-500">Strength</dt>
             <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
               {drug.strength}
             </dd>
-          </div>
+          </dl>
         </div>
+
         <div className="flex items-center space-x-2">
           <BarChart2 className="h-5 w-5 text-gray-400" />
           <div className="flex-1">
-            <dt className="text-sm font-medium text-gray-500">Net</dt>
-            <dd
-              className={`mt-1 text-base font-semibold ${
-                netPositive ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {netPositive ? "+" : "-"}${Math.abs(net).toFixed(2)}
-            </dd>
+            <dl>
+              <dt className="text-sm font-medium text-gray-500">Net</dt>
+              <dd
+                className={`mt-1 text-base font-semibold ${
+                  netPositive ? "text-gray-800" : "text-red-600"
+                }`}
+              >
+                {netPositive ? "+" : "-"}${Math.abs(net).toFixed(2)}
+              </dd>
+            </dl>
             <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded mt-1">
               <div
                 className={`h-2 rounded ${
@@ -151,40 +156,48 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
         {showDetails ? "Hide Details" : "Show Details"}
       </button>
 
-      {/* Detailed Section */}
+      {/* Detailed Section with ARIA Landmark */}
       {showDetails && (
-        <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6 space-y-6">
+        <section
+          aria-labelledby="drug-details-heading"
+          className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6 space-y-6"
+        >
+          <h2 id="drug-details-heading" className="sr-only">
+            Drug Details
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="flex items-center space-x-2">
               <CreditCard className="h-5 w-5 text-gray-400" />
-              <div>
+              <dl>
                 <dt className="text-sm font-medium text-gray-500">
                   Insurance Pay
                 </dt>
                 <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
                   {drugDetail?.insurancePayment ?? "NA"}
                 </dd>
-              </div>
+              </dl>
             </div>
+
             <div className="flex items-center space-x-2">
               <User className="h-5 w-5 text-gray-400" />
-              <div>
+              <dl>
                 <dt className="text-sm font-medium text-gray-500">
                   Patient Pay
                 </dt>
                 <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
                   {drugDetail?.patientPayment ?? 0}
                 </dd>
-              </div>
+              </dl>
             </div>
+
             <div className="flex items-center space-x-2">
               <Package className="h-5 w-5 text-gray-400" />
-              <div>
+              <dl>
                 <dt className="text-sm font-medium text-gray-500">Quantity</dt>
                 <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
                   NA
                 </dd>
-              </div>
+              </dl>
             </div>
           </div>
 
@@ -198,36 +211,38 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="flex items-center space-x-2">
                 <Building className="h-5 w-5 text-gray-400" />
-                <div>
+                <dl>
                   <dt className="text-sm font-medium text-gray-500">BIN</dt>
                   <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
                     {drugDetail?.bin
                       ? `${drugDetail.binFullName} - ${drugDetail.bin}`
                       : "NA"}
                   </dd>
-                </div>
+                </dl>
               </div>
+
               <div className="flex items-center space-x-2">
                 <FileText className="h-5 w-5 text-gray-400" />
-                <div>
+                <dl>
                   <dt className="text-sm font-medium text-gray-500">PCN</dt>
                   <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
                     {drugDetail?.pcn ?? "NA"}
                   </dd>
-                </div>
+                </dl>
               </div>
+
               <div className="flex items-center space-x-2">
                 <Activity className="h-5 w-5 text-gray-400" />
-                <div>
+                <dl>
                   <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
                   <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
                     {drugDetail?.rxgroup ?? "NA"}
                   </dd>
-                </div>
+                </dl>
               </div>
             </div>
           </details>
-        </div>
+        </section>
       )}
     </div>
   );
@@ -370,7 +385,8 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <button
           onClick={handleSort}
-          className="mb-2 md:mb-0 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="mb-2 md:mb-0 inline-flex items-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ minWidth: "44px", minHeight: "44px" }} // Ensure minimum size
         >
           Sort by Net Price (
           {sortOrder === "asc" ? "Low to High" : "High to Low"})
@@ -439,7 +455,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             {pageItems.map((rec, idx) => (
               <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-600">
                 <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                  {new Date(rec.date).toISOString().split("T")[0]}{" "}
+                  {new Date(rec.date).toISOString().split("T")[0]}
                 </td>
                 <td className="px-4 py-2">
                   <a
@@ -482,7 +498,6 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   </a>
                 </td>
                 <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
-                  {" "}
                   <a
                     href={`/InsuranceBINDetails/${rec.binId}`}
                     className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
@@ -498,13 +513,13 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     {rec.pcn}
                   </a>
                 </td>
-                <td className="px-4 py-2 text-green-600 dark:text-green-400">
+                <td className="px-4 py-2 text-green-700 dark:text-green-400">
                   ${rec.net.toFixed(2)}
                 </td>
-                <td className="px-4 py-2 text-green-600 dark:text-green-400">
+                <td className="px-4 py-2 text-green-700 dark:text-green-400">
                   ${rec.insurancePayment.toFixed(2)}
                 </td>
-                <td className="px-4 py-2 text-green-600 dark:text-green-400">
+                <td className="px-4 py-2 text-green-700 dark:text-green-400">
                   ${rec.patientPayment.toFixed(2)}
                 </td>
                 <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
@@ -1204,30 +1219,28 @@ export const DrugDetails: React.FC = () => {
   return (
     <motion.div>
       <div className="min-h-screen dark:bg-gray-900 bg-gray-100">
-        <div className="bg-amber-25 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-          <DrugHeader drug={drug} padCode={padCode} temp={temp} />
-          <div className="p-6 space-y-6">
+        <main
+          role="main"
+          className="bg-amber-25 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
+        >
+          {/* Header landmark */}
+          <header>
+            <DrugHeader drug={drug} padCode={padCode} temp={temp} />
+          </header>
+
+          {/* Main content section */}
+          <section
+            aria-label="Drug Information and Alternatives"
+            className="p-6 space-y-6"
+          >
             <DrugInformation
               drug={drug}
               drugDetail={drugDetail}
               classNameStr={classNameStr}
             />
-            {/* <div className="flex justify-end mb-4">
-              <button
-                onClick={() =>
-                  setActiveTable(
-                    activeTable === "insurance" ? "branch" : "insurance"
-                  )
-                }
-                className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md transition-colors duration-200"
-              >
-                {activeTable === "insurance"
-                  ? "Switch to Branch Drugs"
-                  : "Switch to Alternative Medications with Insurance"}
-              </button>
-            </div> */}
+
             {activeTable === "insurance" ? (
-              <>
+              <section aria-label="Alternative Medications with Insurance">
                 {sortedAlternatives.length > 0 && (
                   <>
                     <AlternativesTable
@@ -1246,6 +1259,7 @@ export const DrugDetails: React.FC = () => {
                       handleSort={handleSort}
                       sortOrder={alternativesSortOrder}
                     />
+
                     <button
                       onClick={() => setShowOtherAlternatives((prev) => !prev)}
                       className="mt-4 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md transition-colors duration-200"
@@ -1254,24 +1268,27 @@ export const DrugDetails: React.FC = () => {
                         ? "Hide Other Alternatives"
                         : "Show Other Alternatives"}
                     </button>
+
                     {showOtherAlternatives && (
-                      <OtherAlternativesTable
-                        alternatives={alternativesWithoutInsurance}
-                        classNameStr={classNameStr}
-                        padCode={padCode}
-                        selectedBin={otherSelectedBin}
-                        handleBinFilterChange={handleOtherBinFilterChange}
-                        uniqueBinValues={uniqueOtherBinValues}
-                        selectedPcn={otherSelectedPcn}
-                        handlePcnFilterChange={handleOtherPcnFilterChange}
-                        uniquePcnValues={uniqueOtherPcnValues}
-                      />
+                      <section aria-label="Other Alternatives Without Insurance">
+                        <OtherAlternativesTable
+                          alternatives={alternativesWithoutInsurance}
+                          classNameStr={classNameStr}
+                          padCode={padCode}
+                          selectedBin={otherSelectedBin}
+                          handleBinFilterChange={handleOtherBinFilterChange}
+                          uniqueBinValues={uniqueOtherBinValues}
+                          selectedPcn={otherSelectedPcn}
+                          handlePcnFilterChange={handleOtherPcnFilterChange}
+                          uniquePcnValues={uniqueOtherPcnValues}
+                        />
+                      </section>
                     )}
                   </>
                 )}
-              </>
+              </section>
             ) : (
-              <>
+              <section aria-label="Branch Drugs">
                 {branchDrugs.length > 0 ? (
                   <BranchDrugsTable
                     branchDrugs={branchDrugs}
@@ -1290,14 +1307,14 @@ export const DrugDetails: React.FC = () => {
                     uniquePcnValues={branchUniquePcnValues}
                   />
                 ) : (
-                  <div className="text-center text-gray-500 dark:text-gray-400">
+                  <p className="text-center text-gray-500 dark:text-gray-400">
                     No branch drugs found
-                  </div>
+                  </p>
                 )}
-              </>
+              </section>
             )}
-          </div>
-        </div>
+          </section>
+        </main>
       </div>
     </motion.div>
   );
