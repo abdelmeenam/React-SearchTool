@@ -62,13 +62,7 @@ export const Services: React.FC = () => {
 
   return (
     <>
-      {/* Skip link for keyboard users */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only p-4 bg-white text-blue-600"
-      >
-        Skip to main content
-      </a>
+
 
       <main
         id="main-content"
