@@ -193,7 +193,7 @@ layer(base);
 
   /* Set default line height for paragraphs */
   p {
-    line-height: 1.5;
+    line-height: 1.5 !important; 
   }
 
   /* Apply global styles to the body */

@@ -111,19 +111,37 @@ const HelpPage: React.FC = () => {
 
   return (
     <div className="relative bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-      <div className="container mx-auto max-w-6xl px-4 py-12">
+      <main
+        className="container mx-auto max-w-6xl px-4 py-12"
+        role="main"
+        aria-labelledby="help-page-heading"
+      >
         {/* Header Section */}
-        <section aria-labelledby="how-it-works-heading" className="text-center mb-12" data-aos="fade-down">
-          <h1 id="how-it-works-heading" className="text-4xl sm:text-5xl font-bold tracking-tight leading-snug">
+        <header
+          aria-labelledby="how-it-works-heading"
+          className="text-center mb-12"
+          data-aos="fade-down"
+          role="banner"
+        >
+          <h1
+            id="how-it-works-heading"
+            className="text-4xl sm:text-5xl font-bold tracking-tight leading-snug"
+          >
             How It Works
           </h1>
-          <p className="mt-4 text-lg sm:text-xl font-medium">
+          <p style={{ lineHeight: 1.5 }} className="mt-4 text-lg sm:text-xl font-medium">
             Follow these simple steps to get started.
           </p>
-        </section>
-  
+        </header>
+
         {/* Search Input with Label */}
-        <div className="mb-8 flex justify-center">
+        <section
+          aria-labelledby="search-topics-heading"
+          className="mb-8 flex justify-center"
+        >
+          <h2 id="search-topics-heading" className="sr-only">
+            Search Help Topics
+          </h2>
           <label htmlFor="search-topics" className="sr-only">
             Search help topics
           </label>
@@ -136,10 +154,16 @@ const HelpPage: React.FC = () => {
             onChange={(e) => setFilter(e.target.value)}
             className="w-full max-w-md rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-2 px-4 text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
           />
-        </div>
-  
+        </section>
+
         {/* Help Sections */}
-        <div className="space-y-8">
+        <section
+          aria-labelledby="help-sections-heading"
+          className="space-y-8"
+        >
+          <h2 id="help-sections-heading" className="sr-only">
+            Help Sections
+          </h2>
           {filteredHelpPoints.map((point, index) => (
             <div
               key={index}
@@ -152,17 +176,17 @@ const HelpPage: React.FC = () => {
                 aria-controls={`help-section-${index}`}
                 className="flex w-full items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-2"
               >
-                <h2 className="text-xl font-semibold tracking-tight dark:text-gray-200 flex items-center">
+                <h3 className="text-xl font-semibold tracking-tight dark:text-gray-200 flex items-center">
                   <span className="mr-2">
                     <LibraryBig />
                   </span>
                   {point.title}
-                </h2>
+                </h3>
                 <span className="text-2xl dark:text-gray-200">
                   {expanded[index] ? "–" : "+"}
                 </span>
               </button>
-  
+
               {expanded[index] && (
                 <ul
                   id={`help-section-${index}`}
@@ -175,10 +199,14 @@ const HelpPage: React.FC = () => {
               )}
             </div>
           ))}
-        </div>
-  
+        </section>
+
         {/* Call-to-Action Footer */}
-        <div className="mt-12 text-center" data-aos="fade-up">
+        <footer
+          className="mt-12 text-center"
+          data-aos="fade-up"
+          role="contentinfo"
+        >
           <p className="text-lg font-medium">
             Still need help?{" "}
             <Link
@@ -188,8 +216,8 @@ const HelpPage: React.FC = () => {
               Contact us.
             </Link>
           </p>
-        </div>
-      </div>
+        </footer>
+      </main>
     </div>
   );
   

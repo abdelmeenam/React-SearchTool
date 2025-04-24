@@ -8,6 +8,7 @@ import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import BaseUrlLoader from "../../BaseUrlLoader";
 import { X as XIcon } from "lucide-react"; // For close icon
+import axiosInstance from "../../api/axiosInstance";
 // You can also import a settings icon or any additional icons if desired.
 
 interface UserReadDto {
@@ -43,9 +44,7 @@ const UserInfoCard: React.FC = () => {
         return;
       }
       try {
-        const response = await axios.get(`${API_BASE_URL}/user/UserById`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axiosInstance.get(`/user/UserById`);
         const data: UserReadDto = response.data;
         setUser(data);
         setFormData({ name: data.name, email: data.email, password: "" });
@@ -75,12 +74,7 @@ const UserInfoCard: React.FC = () => {
       if (formData.password.trim() !== "") {
         updatedData.password = formData.password;
       }
-      await axios.put(`${API_BASE_URL}/user/UpdateUser`, updatedData, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axiosInstance.put(`${API_BASE_URL}/user/UpdateUser`, updatedData);
       setUser((prev) =>
         prev ? { ...prev, name: formData.name, email: formData.email } : null
       );
@@ -93,9 +87,7 @@ const UserInfoCard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.get(`${API_BASE_URL}/user/Logout`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.get(`/user/Logout`);
       localStorage.removeItem("role");
       localStorage.removeItem("accessToken");
       // Optionally remove any other user-related data here
