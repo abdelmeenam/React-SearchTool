@@ -3,6 +3,8 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { Minus, Plus } from 'lucide-react';
 import { formatCurrency } from '../src/utils/helpers';
+// import axiosInstance from '../api/axiosInstance' // or however you fetch
+
 import DrugItem from "../src/components/DrugItem";
 import {
   Pill,
@@ -83,15 +85,297 @@ export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
 
 
 //   tryyyyyyyy
+// src/components/CartSidebar.tsx
+
+
+interface CartSidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export const CartSidebar: React.FC<CartSidebarProps> = ({
+  isOpen,
+  onClose,
+}) => {
+  const {
+    items,
+    addToCart,
+    remove,
+    updateQuantity,
+    closeCart,
+    openCheckout,
+  } = useCart()
+
+  // STEP MANAGEMENT
+  const [step, setStep] = useState(1)
+
+  // --- Step 1 state: search & insurance ---
+  const [searchTerm, setSearchTerm] = useState('')
+  const [insuranceId, setInsuranceId] = useState<string>('')
+  const [results, setResults] = useState<typeof items>([])
+
+  useEffect(() => {
+    if (step === 1 && searchTerm.trim()) {
+      axiosInstance
+        .get(`/drugs?q=${encodeURIComponent(searchTerm)}&ins=${insuranceId}`)
+        .then((res) => setResults(res.data))
+        .catch(console.error)
+    } else {
+      setResults([])
+    }
+  }, [searchTerm, insuranceId, step])
+
+  // --- Step 2 helper: replace with alternative ---
+  const replaceWithAlternative = (origId: string, alt: typeof items[0]) => {
+    remove(origId)
+    addToCart(alt.drug)
+  }
+
+  // --- Totals & copay (stubbed) ---
+  const subtotal = items.reduce(
+    (sum, it) => sum + it.drug.acq * it.quantity,
+    0
+  )
+  const copayPercent = 14 // or fetch from insurance API
+
+  const handleConfirmDispense = () => {
+    closeCart()
+    openCheckout()
+  }
+
+  return (
+    <div
+      className={`fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-gray-800 shadow-xl transform ${
+        isOpen ? 'translate-x-0' : 'translate-x-full'
+      } transition-transform duration-300 ease-in-out z-50`}
+    >
+      {/* Stepper */}
+      <div className="flex items-center space-x-4 p-4 border-b">
+        {['Search', 'Review', 'Confirm'].map((label, i) => (
+          <div key={i} className="flex items-center">
+            <div
+              className={`h-6 w-6 rounded-full flex items-center justify-center text-sm font-medium ${
+                step > i + 1
+                  ? 'bg-blue-600 text-white'
+                  : step === i + 1
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-gray-200 text-gray-500'
+              }`}
+            >
+              {i + 1}
+            </div>
+            <span
+              className={`ml-2 ${
+                step >= i + 1 ? 'text-gray-800' : 'text-gray-500'
+              }`}
+            >
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <h2 className="text-lg font-semibold flex items-center">
+          <ShoppingCart className="h-5 w-5 mr-2" />
+          Your Cart ({items.length})
+        </h2>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="overflow-y-auto h-[calc(100%-200px)] p-4">
+        {step === 1 && (
+          <>
+            {/* --- STEP 1: Search & Add --- */}
+            <input
+              type="text"
+              placeholder="Search drugs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full mb-2 px-3 py-2 border rounded"
+            />
+            <select
+              value={insuranceId}
+              onChange={(e) => setInsuranceId(e.target.value)}
+              className="w-full mb-4 px-3 py-2 border rounded"
+            >
+              <option value="">Select Insurance</option>
+              {/* map your insurers here */}
+              <option value="ins1">Insurer 1</option>
+              <option value="ins2">Insurer 2</option>
+            </select>
+            <ul className="space-y-2">
+              {results.map((r) => (
+                <li
+                  key={r.drug.id}
+                  className="flex justify-between items-center border p-2 rounded"
+                >
+                  <div>
+                    <p className="font-medium">{r.drug.name}</p>
+                    <small className="text-gray-500">{r.drug.strength}</small>
+                  </div>
+                  <button
+                    onClick={() => addToCart(r.drug)}
+                    className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                  >
+                    Add
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            {/* --- STEP 2: Review Script --- */}
+            {items.map((it) => (
+              <div key={it.drug.id} className="mb-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-medium">
+                      {it.drug.name} <small>{it.drug.strength}</small>
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      ${it.drug.acq} × {it.quantity}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() =>
+                        updateQuantity(it.drug.id, Math.max(1, it.quantity - 1))
+                      }
+                    >
+                      <Minus className="h-4 w-4 text-gray-600 hover:text-gray-800" />
+                    </button>
+                    <span>{it.quantity}</span>
+                    <button
+                      onClick={() =>
+                        updateQuantity(it.drug.id, it.quantity + 1)
+                      }
+                    >
+                      <Plus className="h-4 w-4 text-gray-600 hover:text-gray-800" />
+                    </button>
+                  </div>
+                </div>
+
+                <details className="mt-2 text-sm">
+                  <summary className="text-blue-600 hover:underline cursor-pointer">
+                    See Alternatives
+                  </summary>
+                  <ul className="pl-4 space-y-1">
+                    {(it.alternatives || []).map((alt: any) => (
+                      <li
+                        key={alt.id}
+                        className="flex justify-between items-center"
+                      >
+                        <span>
+                          {alt.name} <small>{alt.strength}</small>
+                        </span>
+                        <button
+                          onClick={() =>
+                            replaceWithAlternative(it.drug.id, alt)
+                          }
+                          className="text-blue-600 hover:underline text-xs"
+                        >
+                          Replace
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+
+                <button
+                  onClick={() => remove(it.drug.id)}
+                  className="mt-2 text-red-500 hover:underline text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            {/* --- STEP 3: Confirm Dispense --- */}
+            <div className="grid grid-cols-1 gap-2 mb-4">
+              {items.map((it) => (
+                <div
+                  key={it.drug.id}
+                  className="flex justify-between text-sm"
+                >
+                  <span>
+                    {it.drug.name} × {it.quantity}
+                  </span>
+                  <span>
+                    {formatCurrency(it.drug.acq * it.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="border-t pt-2 mb-4">
+              <div className="flex justify-between text-base font-medium">
+                <span>Subtotal</span>
+                <span>{formatCurrency(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Patient Copay</span>
+                <span>{copayPercent}%</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Footer Nav */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
+        <div className="flex justify-between">
+          {step > 1 ? (
+            <button
+              onClick={() => setStep((s) => s - 1)}
+              className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
+            >
+              Back
+            </button>
+          ) : (
+            <div />
+          )}
+          {step < 3 ? (
+            <button
+              onClick={() => setStep((s) => s + 1)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={handleConfirmDispense}
+              disabled={items.length === 0}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              Confirm Dispense
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // newww
 interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
+/*
 const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   const { items, remove, updateQuantity ,closeCart,openCheckout } = useCart();
+  const [step, setStep] = useState(1);
 
   const total = items.reduce(
     (sum, item) => sum + item.drug.acq * item.quantity,
@@ -99,11 +383,25 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   );
 // side cart code
   return (
+  
+
     <div
       className={`fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-gray-800 shadow-xl transform ${
         isOpen ? "translate-x-0" : "translate-x-full"
       } transition-transform duration-300 ease-in-out z-50`}
     >
+      <div className="flex items-center space-x-4 p-4 border-b">
+  {['Search','Review','Confirm'].map((label, i) => (
+    <div key={i} className="flex items-center">
+      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-sm font-medium
+          ${step>i+1 ? 'bg-blue-600 text-white' : step===i+1 ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-500'}`}>
+        {i+1}
+      </div>
+      <span className={`ml-2 ${step>=i+1 ? 'text-gray-800' : 'text-gray-500'}`}>{label}</span>
+    </div>
+  ))}
+</div>
+
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold flex items-center">
           <ShoppingCart className="h-5 w-5 mr-2" />
@@ -116,64 +414,23 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
           <X className="h-5 w-5" />
         </button>
       </div>
+      <div className="overflow-y-auto h-[calc(100%-200px)] p-4">
+  {step === 1 && <Step1_SearchAndAdd onAdd={items} insuranceList={items}/>}
 
-      <div className="overflow-y-auto h-[calc(100%-120px)]">
-        {items.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
-            Your cart is empty
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {items.map((item) => (
-              <li key={item.drug.id} className="p-4">
-                <div className="flex justify-between">
-                  <div>
-                  <h2 style={{marginTop: 44}}>  </h2>
-                    <h3 className="font-medium">{item.drug.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {formatCurrency(item.drug.acq)} × {item.quantity}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2 mt-6">
-                    <button
-                      onClick={() =>
-                        updateQuantity(
-                          item.drug.id,
-                          Math.max(1, item.quantity - 1)
-                        )
-                      }
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                            <Minus className="h-3 w-3" />
+  {step === 2 && <Step2_ReviewScript
+     items={items}
+     onQtyChange={updateQuantity}
+     onRemove={remove}
+     onReplace={replaceWithAlternative}
+  />}
 
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.drug.id, item.quantity + 1)
-                      }
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex justify-between mt-2">
-                  <span className="text-sm">
-                    {formatCurrency(item.drug.acq * item.quantity)}
-                  </span>
-                  <button
-                    onClick={() => remove(item.drug.id)}
-                    className="text-red-500 hover:text-red-700 text-sm"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+  {step === 3 && <Step3_ConfirmDispense
+     items={items}
+     total={total}
+     copayPercent={copayPercent}
+  />}
+</div>
+
 
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex justify-between mb-2">
@@ -195,6 +452,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+*/
 //end
 interface DrugInformationProps {
   drug: Drug;
