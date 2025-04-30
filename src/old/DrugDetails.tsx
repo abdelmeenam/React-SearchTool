@@ -1,5 +1,9 @@
 import React, { JSX, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { Minus, Plus } from 'lucide-react';
+import { formatCurrency } from '../src/utils/helpers';
+import DrugItem from "../src/components/DrugItem";
 import {
   Pill,
   AlertCircle,
@@ -19,6 +23,8 @@ import {
   Link2Icon,
   BarChart2,
   Link2,
+  ShoppingCart,
+  X,
 } from "lucide-react";
 import {
   Tag,
@@ -33,7 +39,7 @@ import {
   FileText,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Drug, Prescription } from "../types";
+import { Drug, Prescription } from "../src/types/index";
 import axiosInstance from "../api/axiosInstance";
 
 const LoadingSpinner: React.FC = () => (
@@ -74,21 +80,161 @@ export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
   </header>
 );
 
+
+
+//   tryyyyyyyy
+
+// newww
+interface CartSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
+  const { items, remove, updateQuantity ,closeCart,openCheckout } = useCart();
+
+  const total = items.reduce(
+    (sum, item) => sum + item.drug.acq * item.quantity,
+    0
+  );
+// side cart code
+  return (
+    <div
+      className={`fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-gray-800 shadow-xl transform ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      } transition-transform duration-300 ease-in-out z-50`}
+    >
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold flex items-center">
+          <ShoppingCart className="h-5 w-5 mr-2" />
+          Your Cart ({items.length})
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="overflow-y-auto h-[calc(100%-120px)]">
+        {items.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">
+            Your cart is empty
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+            {items.map((item) => (
+              <li key={item.drug.id} className="p-4">
+                <div className="flex justify-between">
+                  <div>
+                  <h2 style={{marginTop: 44}}>  </h2>
+                    <h3 className="font-medium">{item.drug.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {formatCurrency(item.drug.acq)} × {item.quantity}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2 mt-6">
+                    <button
+                      onClick={() =>
+                        updateQuantity(
+                          item.drug.id,
+                          Math.max(1, item.quantity - 1)
+                        )
+                      }
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                            <Minus className="h-3 w-3" />
+
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      onClick={() =>
+                        updateQuantity(item.drug.id, item.quantity + 1)
+                      }
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-between mt-2">
+                  <span className="text-sm">
+                    {formatCurrency(item.drug.acq * item.quantity)}
+                  </span>
+                  <button
+                    onClick={() => remove(item.drug.id)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <div className="flex justify-between mb-2">
+          <span>Total:</span>
+          <span className="font-semibold">{formatCurrency(total)}</span>
+        </div>
+      
+<button
+  onClick={() => {
+    closeCart(); // Close the cart sidebar
+    openCheckout(); // Open the checkout modal
+  }}
+  className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
+  disabled={items.length === 0}
+>
+  Proceed to Checkout
+</button>
+      </div>
+    </div>
+  );
+};
+//end
 interface DrugInformationProps {
   drug: Drug;
   drugDetail?: Prescription | null;
   classNameStr: string;
+   onAddToCart: (drug: Drug) => void;
+ 
 }
+interface DrugItemProps {
+  drug: Drug;
+  onAddToCart: (drug: Drug) => void;
+}
+
+
 export const DrugInformation: React.FC<DrugInformationProps> = ({
   drug,
   drugDetail,
+  classNameStr,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const { addToCart, isOpen, closeCart } = useCart(); // Get cart state from context
+
   const net = drugDetail?.net ?? 0;
   const netPositive = net >= 0;
 
+  // No need for local isCartOpen state anymore
+  const handleAdd = () => {
+    console.log("Add clicked for", drug);
+    addToCart(drug as Drug); // This will automatically open the cart
+  };
+
+
+
+
+
+  
+ 
   return (
     <div className="max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+   
       {/* Summary Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="flex items-center space-x-2">
@@ -146,8 +292,40 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
             </div>
           </div>
         </div>
+        <div className="p-4">
+       
+     {/* Add to Cart Button remains the same */}
+     <div className="my-4 flex justify-end">
+          <button
+            onClick={handleAdd}
+            className="flex items-center bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add to cart
+          </button>
+        </div>
       </div>
 
+      {/* Cart Sidebar - now uses context's isOpen and closeCart */}
+      <CartSidebar isOpen={isOpen} onClose={closeCart} />
+      
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={closeCart}
+        />
+      )}
+    
+
+    
+
+         {/* Add to Cart Button */}
+        
+   
+      </div>
+      
+    
       {/* Toggle Details Button */}
       <button
         onClick={() => setShowDetails(!showDetails)}
@@ -304,6 +482,25 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
     [selectedInsurance, selectedBin, selectedPcn, alternatives]
   );
 
+  
+  const { addToCart, isOpen, closeCart } = useCart();
+
+    const handleAddToCart = (rec: Prescription) => {
+      const drugItem: Drug = {
+        id: `${rec.ndc}-${rec.bin}-${rec.pcn}`, // Composite key
+        name: rec.drugName, // adjust based on your actual data structure
+        description: rec.description || "No description available",
+        price: rec.price || 0,
+        category: rec.category || "Uncategorized",
+        requiresPrescription: rec.requiresPrescription || false,
+   /*     strength: rec.strength || "N/A",
+        acq: rec.acqCost || 0,
+        awp: rec.awpPrice || 0,
+        */
+      };
+      addToCart(drugItem);
+    };  
+
   return (
     <section
       className={`bg-white dark:bg-gray-800 shadow rounded-lg p-6 ${classNameStr}`}
@@ -428,6 +625,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
               {[
+                "Cart",
                 "Date",
                 "Name",
                 "Class",
@@ -451,9 +649,23 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
               ))}
             </tr>
           </thead>
+ 
+    
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {pageItems.map((rec, idx) => (
-              <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-600">
+              <tr key={`${rec.ndc}-${rec.bin}-${idx}`}>
+                 <td className="px-4 py-2">
+                <div className="my-4 flex justify-end">
+                  <button
+                    onClick={() => handleAddToCart(rec)}
+                    className="flex items-center bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add 
+                  </button>
+                </div>
+                  
+                </td>
                 <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
                   {new Date(rec.date).toISOString().split("T")[0]}
                 </td>
@@ -529,6 +741,18 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             ))}
           </tbody>
         </table>
+              {/* Cart Sidebar - same one we created earlier */}
+      <CartSidebar isOpen={isOpen} onClose={closeCart} />
+      
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={closeCart}
+        />
+      )}
+
+      {/* Pagination Controls */}
       </div>
     </section>
   );
@@ -677,6 +901,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
           <thead className="bg-gray-100 dark:bg-gray-700 transition-colors duration-200">
             <tr>
               {[
+                
                 "Name",
                 "Class",
                 "Branch",
@@ -878,6 +1103,21 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   const handleNextPage = () =>
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
+
+  const { addToCart, isOpen, closeCart } = useCart();
+
+  const handleAddToCart = (alt: Prescription) => {
+    const drugItem: Drug = {
+      id: `${alt.ndcCode}-${alt.bin}-${alt.pcn}`, // Unique composite ID
+      name: alt.drugName,
+   /*   ndc: alt.ndcCode,
+      acq: alt.acqCost || 0, // Provide fallback if undefined
+      awp: alt.awpPrice || 0, // Provide fallback if undefined
+      strength: alt.strength || 'N/A'
+      */
+    };
+    addToCart(drugItem);
+  };
   return (
     <section className="mt-8">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -887,6 +1127,9 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
         <table className="min-w-full table-auto">
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Cart
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Name
               </th>
@@ -904,6 +1147,17 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                 key={`${alt.ndcCode}-${index}`}
                 className="hover:bg-gray-50 dark:hover:bg-gray-600"
               >
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="my-4 flex justify-end">
+                  <button
+                    onClick={() => handleAddToCart(alt)}
+                    className="flex items-center bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add 
+                  </button>
+                </div>
+</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     <a
@@ -935,6 +1189,16 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
             ))}
           </tbody>
         </table>
+                {/* Cart Sidebar - same one we created earlier */}
+      <CartSidebar isOpen={isOpen} onClose={closeCart} />
+      
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={closeCart}
+        />
+      )}
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">

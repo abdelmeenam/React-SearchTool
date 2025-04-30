@@ -5,11 +5,14 @@ import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
+import { useCart } from "../context/CartContext";
+import { ShoppingCart as CartIcon } from "lucide-react";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { openCart, items } = useCart();
 
   const handleToggle = () => {
     if (window.innerWidth >= 991) {
@@ -90,6 +93,8 @@ const AppHeader: React.FC = () => {
             )}
           </button>
   
+
+
           {/* Logo Link */}
           <Link to="/" className="lg:hidden" aria-label="Home">
             <img
@@ -104,6 +109,23 @@ const AppHeader: React.FC = () => {
             />
           </Link>
   
+        
+
+{/* Shopping Cart Button */}
+<button
+  onClick={openCart}
+  className="relative p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+  aria-label="Open Cart"
+>
+  <CartIcon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+  {items.length > 0 && (
+    <span className="absolute top-0 right-0 inline-flex items-center justify-center h-4 w-4 text-xs font-semibold text-white bg-red-500 rounded-full">
+      {items.length}
+    </span>
+  )}
+</button>
+
+
           {/* Application Menu Toggle Button */}
           <button
             onClick={toggleApplicationMenu}

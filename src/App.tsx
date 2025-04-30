@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -63,6 +63,7 @@ import { DrugDetails } from "./old/DrugDetails";
 
 import ScriptDetails from "./old/ScriptDetails";
 import InsuranceDetails from "./old/InsuranceDetails";
+import { PrescriptionPage } from "./old/recipe";
 //import { ProfilePage } from "./old/profile";
 
 import { AboutUs } from "./old/about";
@@ -71,6 +72,57 @@ import InsurancePCNDetails from "./old/InsurancePCNDetails";
 import HelpPage from "./old/HelpPage";
 import SyncData from "./old/SyncData";
 // PrivateRoute and PublicRoute components
+
+// new shop
+
+import { CartProvider } from './context/CartContext';
+import Header from './src/components/Header';
+import DrugsList from './src/components/DrugsList';
+import Cart from './src/components/Cart';
+import Checkout from './src/components/Checkout';
+import Receipt from './src/components/Receipt';
+
+import {
+  CartItem,
+  PatientInfo,
+  PrescriptionInfo,
+  OrderSummary,
+} from './src/types';
+import { drugs } from './src/data/drugs';
+import {
+  generateOrderId,
+  formatDate,
+  calculateSubtotal,
+  calculateTax,
+  calculateTotal,
+} from './src/utils/helpers';
+
+import ShopApp from './shopApp';
+
+// … your other page imports …
+// … etc …
+
+/*-- Guards --
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const role = localStorage.getItem('role');
+  if (!role) return <Navigate to="/login" />;
+  return <>{children}</>;
+};
+
+
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isAuth = !!localStorage.getItem('role');
+  if (isAuth) return <Navigate to="/" />;
+  return <>{children}</>;
+};
+*/
+// -- SHOPPING APP COMPONENT --
+
+// -- MAIN APP WITH ROUTES --
+
+
+
+//  old
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
   isAdmin?: boolean;
@@ -102,6 +154,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 export default function App() {
   return (
     <ThemeProvider>
+        
       <Router>
         <ScrollToTop />
         <Routes>
@@ -136,7 +189,16 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-     
+       {/* Protected Shopping Flow */}
+       <Route
+            path="/shop"
+            element={
+              <PrivateRoute>
+                <ShopApp />
+              </PrivateRoute>
+            }
+          />
+
             <Route
               path="search/:id"
               element={
@@ -150,7 +212,9 @@ export default function App() {
               path="drug/:drugId"
               element={
                 <PrivateRoute>
+                
                   <DrugDetails />
+                  
                 </PrivateRoute>
               }
             />
@@ -197,7 +261,17 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+            {/* recipe */}
+            <Route
+              path="/pres"
+              element={
+                <PrivateRoute>
+                  <PrescriptionPage />
+                </PrivateRoute>
+              }
 
+            />
+          
             {/* Insurance Details */}
             <Route
               path="/InsuranceDetails/:insuranceName"

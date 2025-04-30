@@ -389,6 +389,7 @@ export const Search: React.FC = () => {
                 </motion.button>
               )}
             </AnimatePresence>
+
           </motion.div>
         </div>
 

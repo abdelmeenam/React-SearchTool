@@ -6,12 +6,17 @@ import "simplebar-react/dist/simplebar.min.css";
 import App from "./App.tsx";
 import { AppWrapper } from "./components/common/PageMeta.tsx";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
+import { CartProvider } from "./context/CartContext.tsx";
+import { CheckoutModal } from "./components/checkoutModel.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <AppWrapper>
+        <CartProvider>
         <App />
+<CheckoutModal />
+        </CartProvider>
       </AppWrapper>
     </ThemeProvider>
   </StrictMode>
