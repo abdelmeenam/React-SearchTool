@@ -700,13 +700,12 @@ export const InsuranceSearch: React.FC = () => {
         </div>
 
         {/* Redesigned Selected Details Section */}
-        <div className="w-full md:w-1/3">
+        {/* <div className="w-full md:w-1/3">
           <motion.div
             onMouseEnter={() => setDropdownVisible(true)}
             onMouseLeave={() => setDropdownVisible(false)}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
           >
-            {/* Header: Always visible */}
             <div className="flex justify-between items-center p-4">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
                 Selected Details
@@ -719,7 +718,6 @@ export const InsuranceSearch: React.FC = () => {
                 <XIcon className="h-5 w-5 dark:text-white" />
               </button>
             </div>
-            {/* Dropdown Details: Expand on hover */}
             <motion.div
               variants={dropdownVariant}
               initial="hidden"
@@ -796,7 +794,7 @@ export const InsuranceSearch: React.FC = () => {
               )}
             </motion.div>
           </motion.div>
-        </div>
+        </div> */}
       </div>
     </motion.div>
   );
