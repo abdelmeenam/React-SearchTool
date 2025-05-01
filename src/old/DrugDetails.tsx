@@ -19,6 +19,9 @@ import {
   Link2Icon,
   BarChart2,
   Link2,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
 } from "lucide-react";
 import {
   Tag,
@@ -33,8 +36,9 @@ import {
   FileText,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Drug, Prescription } from "../types";
+import { Drug, OrderItem, Prescription, SearchLog } from "../types";
 import axiosInstance from "../api/axiosInstance";
+import { useCart } from "../context/CartContext"; // adjust path
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -78,17 +82,58 @@ interface DrugInformationProps {
   drug: Drug;
   drugDetail?: Prescription | null;
   classNameStr: string;
+  bestDrugNet: Prescription | null;
 }
 export const DrugInformation: React.FC<DrugInformationProps> = ({
   drug,
   drugDetail,
+  bestDrugNet,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const net = drugDetail?.net ?? 0;
   const netPositive = net >= 0;
-
+  const bestNet = bestDrugNet?.net ?? 0;
+  const { addToCart } = useCart();
+  const cartItems = useCart().cartItems;
   return (
-    <div className="max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+    <div className="relative max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+      {bestNet !== 0 && (
+        <div
+          className={`absolute bottom-4 left-4 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium text-white shadow-md
+          ${
+            net === bestNet
+              ? "bg-green-600"
+              : net >= bestNet * 0.7
+              ? "bg-yellow-500"
+              : net >= bestNet * 0.5
+              ? "bg-orange-400"
+              : "bg-red-500"
+          }`}
+        >
+          {net === bestNet ? (
+            <>
+              <CheckCircle className="w-4 h-4" />
+              Top Recommendation
+            </>
+          ) : net >= bestNet * 0.7 ? (
+            <>
+              <AlertTriangle className="w-4 h-4" />
+              Good Option
+            </>
+          ) : net >= bestNet * 0.5 ? (
+            <>
+              <AlertTriangle className="w-4 h-4" />
+              Average Option
+            </>
+          ) : (
+            <>
+              <XCircle className="w-4 h-4" />
+              Not Recommended
+            </>
+          )}
+        </div>
+      )}
+
       {/* Summary Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="flex items-center space-x-2">
@@ -140,7 +185,11 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
                   netPositive ? "bg-green-500" : "bg-red-500"
                 }`}
                 style={{
-                  width: `${Math.min((drug.acq / drug.awp) * 100, 100)}%`,
+                  width: `${
+                    bestDrugNet?.net !== undefined && bestDrugNet.net !== 0
+                      ? Math.min((net / bestNet) * 100, 100)
+                      : 0
+                  }%`,
                 }}
               />
             </div>
@@ -155,8 +204,6 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
       >
         {showDetails ? "Hide Details" : "Show Details"}
       </button>
-
-      {/* Detailed Section with ARIA Landmark */}
       {showDetails && (
         <section
           aria-labelledby="drug-details-heading"
@@ -244,6 +291,61 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
           </details>
         </section>
       )}
+
+<div className="mt-6 flex justify-end">
+  {cartItems.some((item) => item.id === drug.ndc) ? (
+    <button
+      disabled
+      className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg shadow-md cursor-not-allowed"
+      aria-label={`"${drug.name || "Unnamed Drug"}" is already in the cart`}
+    >
+      Added
+    </button>
+  ) : (
+    <button
+      onClick={() => {
+        if (drug.acq !== undefined && drug.acq !== null) {
+          addToCart({
+            id: drug.ndc || Date.now().toString(),
+            name: drug.name || "Unnamed Drug",
+            price: drug.acq,
+            quantity: 1,
+          });
+
+          const storedSearchLog = localStorage.getItem("searchLogDetails");
+          if (storedSearchLog) {
+            const searchLog: SearchLog = JSON.parse(storedSearchLog);
+            const newOrderItem: OrderItem = {
+              drugId: drug.id,
+              netPrice: drugDetail?.net ?? 0,
+              patientPay: drugDetail?.patientPayment ?? 0,
+              insurancePay: drugDetail?.insurancePayment ?? 0,
+              acquisitionCost: drug.acq,
+              additionalCost: 0,
+              insuranceRxId: drugDetail?.rxgroupId ?? 0,
+              amount: 1,
+            };
+
+            const currentOrder = JSON.parse(
+              localStorage.getItem("orderRequestBody") ||
+                '{"orderItems":[],"searchLogs":[]}'
+            );
+            currentOrder.orderItems.push(newOrderItem);
+            currentOrder.searchLogs.push(searchLog);
+            localStorage.setItem(
+              "orderRequestBody",
+              JSON.stringify(currentOrder)
+            );
+          }
+        }
+      }}
+      className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105"
+      aria-label={`Add "${drug.name || "Unnamed Drug"}" to cart`}
+    >
+      Add to Cart
+    </button>
+  )}
+</div>
     </div>
   );
 };
@@ -265,6 +367,7 @@ interface AlternativesTableProps {
   uniquePcnValues: string[];
   handleSort: () => void;
   sortOrder: "asc" | "desc";
+  setBestNetDrug: (drug: Prescription) => void;
 }
 export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   alternatives,
@@ -281,6 +384,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   uniquePcnValues,
   handleSort,
   sortOrder,
+  setBestNetDrug,
 }) => {
   // Filter and pagination logic
   const filtered = useMemo(
@@ -293,12 +397,14 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
       ),
     [alternatives, selectedInsurance, selectedBin, selectedPcn]
   );
+  setBestNetDrug(filtered[0]);
 
   const [page, setPage] = useState(1);
   const perPage = 10;
   const totalPages = Math.ceil(filtered.length / perPage);
   const pageItems = filtered.slice((page - 1) * perPage, page * perPage);
-
+  const { addToCart } = useCart();
+  const cartItems = useCart().cartItems;
   useEffect(
     () => setPage(1),
     [selectedInsurance, selectedBin, selectedPcn, alternatives]
@@ -441,6 +547,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                 "Coverage",
                 "Patient Pay",
                 "ACQ",
+                "Add",
               ].map((col) => (
                 <th
                   key={col}
@@ -452,81 +559,128 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {pageItems.map((rec, idx) => (
-              <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                  {new Date(rec.date).toISOString().split("T")[0]}
-                </td>
-                <td className="px-4 py-2">
-                  <a
-                    href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
-                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                  >
-                    {rec.drugName}
-                  </a>
-                </td>
-                <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
-                  {rec.drugClass}
-                </td>
-                <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
-                  {rec.branchName}
-                </td>
-                <td className="px-4 py-2 font-mono">
-                  <a
-                    href={`https://ndclist.com/ndc/${padCode(rec.ndcCode)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                  >
-                    {padCode(rec.ndcCode)}
-                  </a>
-                </td>
-                <td className="px-4 py-2">
-                  <a
-                    href={`/InsuranceDetails/${rec.rxgroupId}`}
-                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                  >
-                    {rec.insuranceName}
-                  </a>
-                </td>
-                <td className="px-4 py-2">
-                  <a
-                    href={`/InsuranceBINDetails/${rec.binId}`}
-                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                  >
-                    {rec.bin}
-                  </a>
-                </td>
-                <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
-                  <a
-                    href={`/InsuranceBINDetails/${rec.binId}`}
-                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                  >
-                    {rec.binFullName}
-                  </a>
-                </td>
-                <td className="px-4 py-2">
-                  <a
-                    href={`/InsurancePCNDetails/${rec.pcnId}`}
-                    className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                  >
-                    {rec.pcn}
-                  </a>
-                </td>
-                <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                  ${rec.net.toFixed(2)}
-                </td>
-                <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                  ${rec.insurancePayment.toFixed(2)}
-                </td>
-                <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                  ${rec.patientPayment.toFixed(2)}
-                </td>
-                <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                  ${rec.acquisitionCost.toFixed(2)}
-                </td>
-              </tr>
-            ))}
+            {pageItems.map((rec, idx) => {
+              // Determine row background color based on rank
+              let rowBgClass = "";
+              if (sortOrder === "desc") {
+                if (idx === 0) {
+                  rowBgClass = "bg-green-100 dark:bg-green-800"; // Most recommended
+                } else if (idx === 1) {
+                  rowBgClass = "bg-yellow-100 dark:bg-yellow-800"; // Semi-recommended
+                }
+              } else if (sortOrder === "asc") {
+                if (idx === 0) {
+                  rowBgClass = "bg-red-100 dark:bg-red-800"; // Least recommended
+                } else if (idx === 1) {
+                  rowBgClass = "bg-orange-100 dark:bg-orange-800"; // Second least recommended
+                }
+              }
+              return (
+                <tr
+                  key={idx}
+                  className={`hover:bg-gray-200 dark:hover:bg-gray-600 ${rowBgClass}`}
+                >
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    {new Date(rec.date).toISOString().split("T")[0]}
+                  </td>
+                  <td className="px-4 py-2">
+                    <a
+                      href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
+                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                    >
+                      {rec.drugName}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
+                    {rec.drugClass}
+                  </td>
+                  <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
+                    {rec.branchName}
+                  </td>
+                  <td className="px-4 py-2 font-mono">
+                    <a
+                      href={`https://ndclist.com/ndc/${padCode(rec.ndcCode)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                    >
+                      {padCode(rec.ndcCode)}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2">
+                    <a
+                      href={`/InsuranceDetails/${rec.rxgroupId}`}
+                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                    >
+                      {rec.insuranceName}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2">
+                    <a
+                      href={`/InsuranceBINDetails/${rec.binId}`}
+                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                    >
+                      {rec.bin}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2">
+                    <a
+                      href={`/InsuranceBINDetails/${rec.binId}`}
+                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                    >
+                      {rec.binFullName}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2">
+                    <a
+                      href={`/InsurancePCNDetails/${rec.pcnId}`}
+                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                    >
+                      {rec.pcn}
+                    </a>
+                  </td>
+                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                    ${rec.net.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                    ${rec.insurancePayment.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                    ${rec.patientPayment.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    ${rec.acquisitionCost.toFixed(2)}
+                  </td>
+                  {/* Add to Cart Button */}
+                  <td className="px-4 py-2 text-right">
+                    {cartItems.some((item) => item.id === rec.ndcCode) ? (
+                      <button
+                        disabled
+                        className="px-3 py-1 bg-gray-400 text-white text-sm font-semibold rounded cursor-not-allowed"
+                        aria-label={`${rec.drugName} already added to cart`}
+                      >
+                        Added
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          addToCart({
+                            id: rec.ndcCode || `${rec.drugId}-${idx}`,
+                            name: rec.drugName || "Unnamed Drug",
+                            price: rec.acquisitionCost,
+                            quantity: 1,
+                          })
+                        }
+                        className="px-3 py-1 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label={`Add ${rec.drugName || "Drug"} to cart`}
+                      >
+                        Add
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -994,7 +1148,7 @@ export const DrugDetails: React.FC = () => {
 
   const [otherSelectedBin, setOtherSelectedBin] = useState<string>("");
   const [otherSelectedPcn, setOtherSelectedPcn] = useState<string>("");
-
+  const [bestNetDrug, setBestNetDrug] = useState<Prescription | null>(null);
   // activeTable state controls which table is shown: "insurance" or "branch"
   const [activeTable, setActiveTable] = useState<"insurance" | "branch">(
     "insurance"
@@ -1049,6 +1203,7 @@ export const DrugDetails: React.FC = () => {
           response2 = await axiosInstance.get(
             `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
           );
+          console.log("sadasd:  ", response2.data);
           const response3 = await axiosInstance.get(
             `/drug/GetClassById?id=${response.data.drugClassId}`
           );
@@ -1237,6 +1392,7 @@ export const DrugDetails: React.FC = () => {
               drug={drug}
               drugDetail={drugDetail}
               classNameStr={classNameStr}
+              bestDrugNet={bestNetDrug}
             />
 
             {activeTable === "insurance" ? (
@@ -1258,6 +1414,7 @@ export const DrugDetails: React.FC = () => {
                       uniquePcnValues={uniquePcnValues}
                       handleSort={handleSort}
                       sortOrder={alternativesSortOrder}
+                      setBestNetDrug={setBestNetDrug}
                     />
 
                     <button

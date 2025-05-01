@@ -21,7 +21,7 @@ const SyncData: React.FC = () => {
 
   const listName = "Audit Scripts Test List";
   const drugEndpoint =
-    "http://localhost:5107/drug/AddScritps";
+    "http://localhost:5107/drug/GetAllLatestScriptsPaginatedv2";
   const steps = [
     'Getting data from DB',
     'Filtering new data',
@@ -71,7 +71,7 @@ const SyncData: React.FC = () => {
       
       // Use the new /list/sync alias endpoint
       const response = await axiosInstancePython.post<SyncResult>(
-        "/list/sync",
+        "/list/detailed-sync",
         payload,
         {
           headers: {

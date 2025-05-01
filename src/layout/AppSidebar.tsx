@@ -127,12 +127,12 @@ const othersItems: NavItem[] = [
     pro: false,
     icon: <WandSparkles />,
   },
-  // {
-  //   name: "Sync New Data",
-  //   path: "/SyncData",
-  //   pro: false,
-  //   icon: <FaSync />,
-  // },
+  {
+    name: "Sync New Data",
+    path: "/SyncData",
+    pro: false,
+    icon: <FaSync />,
+  },
   {
     name: "Help & Support",
     path: "/help",

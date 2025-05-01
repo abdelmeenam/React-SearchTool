@@ -3,12 +3,12 @@ import axios from "axios";
 import debounce from "debounce";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X as XIcon } from "lucide-react";
+import { Search, X as XIcon } from "lucide-react";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import axiosInstance from "../api/axiosInstance";
-import { Prescription } from "../types";
+import { Prescription, SearchLog } from "../types";
 
 // Define types
 interface BinModel {
@@ -71,7 +71,8 @@ export const InsuranceSearch: React.FC = () => {
   const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(
     null
   );
-  const [bestDrugNetDetails, setBestDrugNetDetails] =useState<Prescription | null>(null);
+  const [bestDrugNetDetails, setBestDrugNetDetails] =
+    useState<Prescription | null>(null);
 
   // --- Insurance Flow States ---
   const [binQuery, setBinQuery] = useState("");
@@ -84,11 +85,14 @@ export const InsuranceSearch: React.FC = () => {
   // New PCN search state
   const [pcnSearchQuery, setPcnSearchQuery] = useState("");
   const [showPcnSuggestions, setShowPcnSuggestions] = useState(false);
+  const [limitSearch, setLimitSearch] = useState(false); // Toggle state
 
   const [rxGroups, setRxGroups] = useState<RxGroupModel[]>([]);
   const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(
     null
   );
+  const [Details, setDetails] = useState<SearchLog | null>(null);
+
   // New Rx Group search state
   const [rxGroupSearchQuery, setRxGroupSearchQuery] = useState("");
   const [showRxGroupSuggestions, setShowRxGroupSuggestions] = useState(false);
@@ -110,6 +114,10 @@ export const InsuranceSearch: React.FC = () => {
 
   // --- Dropdown state for Selected Details panel ---
   const [dropdownVisible, setDropdownVisible] = useState(false);
+
+  useEffect(() => {
+    localStorage.removeItem("searchLogDetails");
+  }, []);
   useEffect(() => {
     async function fetchDrugDetails() {
       console.log("Hi : ", selectedNdc, selectedRxGroup);
@@ -211,14 +219,15 @@ export const InsuranceSearch: React.FC = () => {
     } else if (bin) {
       url = `/drug/GetDrugsByBin?bin=${bin.bin}`;
     }
-    if (url) {
+    console.log("search query : ", drugSearchQuery);
+    if (url && limitSearch === true) {
       try {
         const { data } = await axiosInstance.get(url);
         setDrugs(data);
       } catch (error) {
         console.error("Error fetching drugs:", error);
       }
-    }
+    } 
   };
 
   // --- PCN Search Input Handlers ---
@@ -305,9 +314,17 @@ export const InsuranceSearch: React.FC = () => {
   };
 
   // --- Drug Flow ---
-  const handleDrugSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDrugSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setDrugSearchQuery(query);
+    try {
+      const url = `/drug/searchByName?name=${drugSearchQuery}`;
+
+      const { data } = await axiosInstance.get(url);
+      setDrugs(data);
+    } catch (error) {
+      console.error("Error fetching drugs:", error);
+    }
     setShowDrugSuggestions(true);
   };
 
@@ -384,7 +401,32 @@ export const InsuranceSearch: React.FC = () => {
                 Search for drugs based on BIN, PCN, and Rx Group criteria.
               </p>
             </div>
-
+            <div className="border-t border-gray-100 dark:border-gray-700 sm:p-6 space-y-6">
+              {/* Toggle to Limit Search */}
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="limit-search-toggle"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-400"
+                >
+                  Limit Search to Selected Insurance Data
+                </label>
+                <button
+                  id="limit-search-toggle"
+                  type="button"
+                  onClick={() => { clearAll(); setLimitSearch(!limitSearch); }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    limitSearch ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                  aria-pressed={limitSearch}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      limitSearch ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
             {/* Search Section */}
             <div className="mb-6 p-4 rounded-lg">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -621,6 +663,14 @@ export const InsuranceSearch: React.FC = () => {
                   animate="animate"
                   exit="exit"
                   onClick={() => {
+                    setDetails({
+                      rxgroupId: selectedInsurance?.insuranceId || 0,
+                      binId: selectedBin?.id || 0, // Assign a default number value
+                      pcnId: selectedPcn?.id || 0,
+                      drugId: selectedDrug?.id || 0,
+                      date: new Date().toISOString(),
+                      searchType: "Search By Drug",
+                    });
                     localStorage.setItem(
                       "selectedRx",
                       selectedInsurance?.insurance || ""

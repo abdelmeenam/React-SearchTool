@@ -31,6 +31,39 @@ export interface BestAlternative {
   pcn: string;
   rxgroup: string;
 }
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+
+export interface OrderRequestBody {
+  orderItems: OrderItem[];
+  searchLogs: SearchLog[];
+}
+
+export interface OrderItem {
+  drugId: number;
+  netPrice: number;
+  patientPay: number;
+  insurancePay: number;
+  acquisitionCost: number;
+  additionalCost: number;
+  insuranceRxId: number;
+  amount: number;
+}
+
+export interface SearchLog {
+  rxgroupId: number;
+  binId: number;
+  pcnId: number;
+  drugId: number;
+  date: string;
+  searchType: string;
+}
+
 export interface Prescription {
   insuranceId: number;
   drugId: number;

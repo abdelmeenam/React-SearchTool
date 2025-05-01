@@ -8,6 +8,7 @@ import {
   Drug,
   DrugInsuranceInfo,
   Prescription,
+  SearchLog,
 } from "../types";
 import BaseUrlLoader, { loadConfig } from "../BaseUrlLoader";
 import PageMeta from "../components/common/PageMeta";
@@ -42,12 +43,24 @@ export const Search: React.FC = () => {
   const [insurances, setInsurances] = useState<DrugInsuranceInfo[]>([]);
   const [selectedInsurance, setSelectedInsurance] =
     useState<DrugInsuranceInfo | null>(null);
+
   const [activeSuggestionIndex, setActiveSuggestionIndex] =
     useState<number>(-1);
 
   // State for controlling the visibility of the selected details dropdown
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [Details, setDetails] = useState<SearchLog | null>(null);
 
+  useEffect(() => {
+    localStorage.removeItem("searchLogDetails");
+
+  }, []);
+
+  useEffect(() => {
+    if (Details) {
+      localStorage.setItem("searchLogDetails", JSON.stringify(Details));
+    }
+  }, [Details]);
   // New state to store drug details (e.g. net price information)
   const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(
     null
@@ -125,6 +138,7 @@ export const Search: React.FC = () => {
     axiosInstance
       .get(`/drug/GetInsuranceByNdc?ndc=${ndc}`)
       .then(({ data }) => {
+        console.log("Fetched insurance data:", data);
         setInsurances(data);
       })
       .catch((error) => {
@@ -133,6 +147,16 @@ export const Search: React.FC = () => {
   };
 
   const handleSearch = () => {
+    console.log("selected insurance ", selectedInsurance);
+    setDetails({
+      rxgroupId: selectedInsurance?.insuranceId || 0,
+      binId: 0, // Assign a default number value
+      pcnId: 0,
+      drugId: selectedDrug?.id || 0,
+      date: new Date().toISOString(),
+      searchType: "Search By Drug",
+    });
+
     if (selectedDrug) {
       localStorage.setItem("selectedRx", selectedInsurance?.insurance || "");
       navigate(
