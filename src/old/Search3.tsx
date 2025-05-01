@@ -495,7 +495,7 @@ export const Search3: React.FC = () => {
         </section>
 
         {/* Selected Details Panel */}
-        <aside
+        {/* <aside
           className="w-full md:w-1/3"
           aria-labelledby="selected-details-heading"
         >
@@ -557,7 +557,7 @@ export const Search3: React.FC = () => {
               )}
             </div>
           </div>
-        </aside>
+        </aside> */}
       </div>
     </motion.div>
   );
