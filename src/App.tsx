@@ -50,7 +50,7 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-
+import OrderHistoryPage from "./old/ordersHistory";
 //import { MHome } from "./old/Home";
 import { Layout } from "./components/Layout";
 
@@ -177,7 +177,15 @@ export default function App() {
             <Route path="/blank" element={<Blank />} />
 
             {/*search pages */}
+<Route 
+path="/orders"
 
+element={
+<PrivateRoute>
+<OrderHistoryPage />
+</PrivateRoute>
+} 
+/>
             {/* Audits */}
          
             <Route
