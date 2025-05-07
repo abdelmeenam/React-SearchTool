@@ -118,6 +118,11 @@ export const InsuranceSearch: React.FC = () => {
   useEffect(() => {
     localStorage.removeItem("searchLogDetails");
   }, []);
+    useEffect(() => {
+      if (Details) {
+        localStorage.setItem("searchLogDetails", JSON.stringify(Details));
+      }
+    }, [Details]);
   useEffect(() => {
     async function fetchDrugDetails() {
       console.log("Hi : ", selectedNdc, selectedRxGroup);
@@ -678,9 +683,7 @@ export const InsuranceSearch: React.FC = () => {
                     localStorage.setItem("selectedPcn", selectedPcn?.pcn || "");
                     localStorage.setItem(
                       "selectedBin",
-                      (selectedBin?.name || "") +
-                        " - " +
-                        (selectedBin?.bin || "")
+                      (selectedPcn?.pcn || "") 
                     );
                     navigate(
                       `/drug/${

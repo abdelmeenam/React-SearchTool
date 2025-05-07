@@ -39,6 +39,7 @@ import { motion } from "framer-motion";
 import { Drug, OrderItem, Prescription, SearchLog } from "../types";
 import axiosInstance from "../api/axiosInstance";
 import { useCart } from "../context/CartContext"; // adjust path
+import DrugDetailPopup from "./DrugDetailPopup";
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -95,6 +96,8 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
   const bestNet = bestDrugNet?.net ?? 0;
   const { addToCart } = useCart();
   const cartItems = useCart().cartItems;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="relative max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
       {bestNet !== 0 && (
@@ -292,60 +295,36 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
         </section>
       )}
 
-<div className="mt-6 flex justify-end">
-  {cartItems.some((item) => item.id === drug.ndc) ? (
-    <button
-      disabled
-      className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg shadow-md cursor-not-allowed"
-      aria-label={`"${drug.name || "Unnamed Drug"}" is already in the cart`}
-    >
-      Added
-    </button>
-  ) : (
-    <button
-      onClick={() => {
-        if (drug.acq !== undefined && drug.acq !== null) {
-          addToCart({
-            id: drug.ndc || Date.now().toString(),
-            name: drug.name || "Unnamed Drug",
-            price: drug.acq,
-            quantity: 1,
-          });
-
-          const storedSearchLog = localStorage.getItem("searchLogDetails");
-          if (storedSearchLog) {
-            const searchLog: SearchLog = JSON.parse(storedSearchLog);
-            const newOrderItem: OrderItem = {
-              drugId: drug.id,
-              netPrice: drugDetail?.net ?? 0,
-              patientPay: drugDetail?.patientPayment ?? 0,
-              insurancePay: drugDetail?.insurancePayment ?? 0,
-              acquisitionCost: drug.acq,
-              additionalCost: 0,
-              insuranceRxId: drugDetail?.rxgroupId ?? 0,
-              amount: 1,
-            };
-
-            const currentOrder = JSON.parse(
-              localStorage.getItem("orderRequestBody") ||
-                '{"orderItems":[],"searchLogs":[]}'
-            );
-            currentOrder.orderItems.push(newOrderItem);
-            currentOrder.searchLogs.push(searchLog);
-            localStorage.setItem(
-              "orderRequestBody",
-              JSON.stringify(currentOrder)
-            );
-          }
-        }
-      }}
-      className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105"
-      aria-label={`Add "${drug.name || "Unnamed Drug"}" to cart`}
-    >
-      Add to Cart
-    </button>
-  )}
-</div>
+      <div className="mt-6 flex justify-end">
+        {cartItems.some((item) => item.id === drug.ndc) ? (
+          <button
+            disabled
+            className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg shadow-md cursor-not-allowed"
+            aria-label={`"${
+              drug.name || "Unnamed Drug"
+            }" is already in the cart`}
+          >
+            Added
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setIsModalOpen(true);
+            }}
+            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105"
+            aria-label={`Add "${drug.name || "Unnamed Drug"}" to cart`}
+          >
+            Add to Cart
+          </button>
+        )}
+        {isModalOpen && (
+          <DrugDetailPopup
+            drug={drug}
+            drugDetail={drugDetail ?? null}
+            onClose={() => setIsModalOpen(false)}
+          />
+        )}
+      </div>
     </div>
   );
 };
@@ -427,7 +406,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             htmlFor="insuranceFilter"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            Insurance
+            RxGroup
           </label>
           <select
             id="insuranceFilter"
@@ -435,7 +414,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             onChange={handleInsuranceFilterChange}
             className="w-full border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">All Insurances</option>
+            <option value="">All RxGroups</option>
             {uniqueInsuranceNames.map((name) => (
               <option key={name} value={name}>
                 {name}
@@ -1045,6 +1024,24 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                 Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Form
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Strength
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                ApplicationNumber
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                ApplicationType
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Route
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                TE Code
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Class
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -1070,7 +1067,37 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {classNameStr}
+                    {alt.form}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.strength}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.applicationNumber}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.applicationType}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.route}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.teCode}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.drugClass}
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -1181,6 +1208,7 @@ export const DrugDetails: React.FC = () => {
           response2 = await axiosInstance.get(
             `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
           );
+          console.log("response2: ", response2.data);
           const sortedData = response2.data.sort(
             (a: Prescription, b: Prescription) => b.net - a.net
           );
@@ -1242,7 +1270,7 @@ export const DrugDetails: React.FC = () => {
 
   // Map the provided insuranceId to the insurance name using the sorted alternatives
   useEffect(() => {
-    if (insuranceId && sortedAlternatives.length > 0) {
+    if (sortedAlternatives.length > 0) {
       const matchingInsurance = sortedAlternatives.find(
         (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
       );
@@ -1262,6 +1290,31 @@ export const DrugDetails: React.FC = () => {
         setBranchSelectedBin(matchingInsurance.bin || "");
         setBranchSelectedInsurance(matchingInsurance.rxgroup || "");
         setBranchSelectedPcn(matchingInsurance.pcn || "");
+      } else {
+        console.log("local : ", localStorage.getItem("selectedBin"));
+        const matchingInsurance = sortedAlternatives.find(
+          (alt) =>
+            alt.insuranceId &&
+            alt.binFullName === localStorage.getItem("selectedBin")
+        );
+        console.log("matchingInsurance", matchingInsurance);
+
+        if (matchingInsurance) {
+          localStorage.setItem("selectedRx", matchingInsurance.rxgroup || "");
+          localStorage.setItem("selectedPcn", matchingInsurance.pcn || "");
+          localStorage.setItem(
+            "selectedBin",
+            (matchingInsurance.bin || "") +
+              " - " +
+              (matchingInsurance.binFullName || "")
+          );
+          setSelectedInsurance(matchingInsurance.rxgroup || "");
+          setSelectedBin(matchingInsurance.bin || "");
+          setSelectedPcn(matchingInsurance.pcn || "");
+          setBranchSelectedBin(matchingInsurance.bin || "");
+          setBranchSelectedInsurance(matchingInsurance.rxgroup || "");
+          setBranchSelectedPcn(matchingInsurance.pcn || "");
+        }
       }
     }
   }, [insuranceId, sortedAlternatives]);

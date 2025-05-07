@@ -350,7 +350,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 z-99999 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out  border-r border-gray-200 
       ${
         isExpanded || isMobileOpen
           ? "w-[290px]"
@@ -387,51 +387,54 @@ const AppSidebar: React.FC = () => {
 
       {/* Sidebar Content */}
       {/* Sidebar Content */}
-<div className="flex flex-col h-full overflow-y-auto duration-300 ease-linear no-scrollbar">
-  <nav className="mb-6 flex-grow">
-    <div className="flex flex-col gap-4">
-      {/* Main Menu */}
-      <div>
-        <h1
-          className={`mb-4 text-xs uppercase flex leading-[20px] ${
-            !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-          } text-gray-600 dark:text-gray-300`}
-        >
-          {isExpanded || isHovered || isMobileOpen ? (
-            "Menu"
-          ) : (
-            <HorizontaLDots className="size-6" />
-          )}
-        </h1>
-        {renderMenuItems(navItems, "main")}
-      </div>
+      <div className="flex flex-col h-full overflow-y-auto duration-300 ease-linear no-scrollbar">
+        <nav className="mb-6 flex-grow">
+          <div className="flex flex-col gap-4">
+            {/* Main Menu */}
+            <div>
+              <h1
+                className={`mb-4 text-xs uppercase flex leading-[20px] ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "justify-start"
+                } text-gray-600 dark:text-gray-300`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "Menu"
+                ) : (
+                  <HorizontaLDots className="size-6" />
+                )}
+              </h1>
+              {renderMenuItems(navItems, "main")}
+            </div>
 
-      {/* Other Menu */}
-      <div>
-        <h2
-          className={`mb-4 text-xs uppercase flex leading-[20px] ${
-            !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-          } text-gray-600 dark:text-gray-300`}
-        >
-          {isExpanded || isHovered || isMobileOpen ? (
-            "Other"
-          ) : (
-            <HorizontaLDots />
-          )}
-        </h2>
-        {renderMenuItems(othersItems, "others")}
-      </div>
-    </div>
-  </nav>
+            {/* Other Menu */}
+            <div>
+              <h2
+                className={`mb-4 text-xs uppercase flex leading-[20px] ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "justify-start"
+                } text-gray-600 dark:text-gray-300`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "Other"
+                ) : (
+                  <HorizontaLDots />
+                )}
+              </h2>
+              {renderMenuItems(othersItems, "others")}
+            </div>
+          </div>
+        </nav>
 
-  {/* Sidebar Widget */}
-  {(isExpanded || isHovered || isMobileOpen) && (
-    <div className="mt-auto w-[calc(100%-32px)] mb-4 mx-4">
-      <SidebarWidget />
-    </div>
-  )}
-</div>
-    
+        {/* Sidebar Widget */}
+        {(isExpanded || isHovered || isMobileOpen) && (
+          <div className="mt-auto w-[calc(100%-32px)] mb-4 mx-4">
+            <SidebarWidget />
+          </div>
+        )}
+      </div>
     </aside>
   );
 };

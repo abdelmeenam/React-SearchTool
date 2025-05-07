@@ -38,7 +38,6 @@ export interface CartItem {
   quantity: number;
 }
 
-
 export interface OrderRequestBody {
   orderItems: OrderItem[];
   searchLogs: SearchLog[];
@@ -90,6 +89,12 @@ export interface Prescription {
 
   rxgroupId: number;
   rxgroup: string;
+  applicationNumber: string;
+  applicationType: string;
+  strength: string;
+  form: string;
+  route: string;
+  teCode: string;
 }
 
 export interface DrugInsuranceInfo {
@@ -135,7 +140,7 @@ export interface DrugTransaction {
   drugName: string;
   drugId: number;
   insurance: string;
-  insuranceId : number;
+  insuranceId: number;
   pf: string;
   prescriber: string;
   quantity: number;

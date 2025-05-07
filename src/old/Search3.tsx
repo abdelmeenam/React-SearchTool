@@ -70,6 +70,11 @@ export const Search3: React.FC = () => {
   useEffect(() => {
     localStorage.removeItem("searchLogDetails");
   }, []);
+  useEffect(() => {
+    if (Details) {
+      localStorage.setItem("searchLogDetails", JSON.stringify(Details));
+    }
+  }, [Details]);
   // --- Fetch all Rx Groups on component mount ---
   useEffect(() => {
     const fetchRxGroups = async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import debounce from "debounce";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,10 +50,12 @@ export const Search: React.FC = () => {
   // State for controlling the visibility of the selected details dropdown
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [Details, setDetails] = useState<SearchLog | null>(null);
+  const [pageNumber, setPageNumber] = useState(1); // Track the current page
+  const [isLoading, setIsLoading] = useState(false); // Track loading state
+  const [hasMore, setHasMore] = useState(true); // Track if more data is available
 
   useEffect(() => {
     localStorage.removeItem("searchLogDetails");
-
   }, []);
 
   useEffect(() => {
@@ -67,18 +69,45 @@ export const Search: React.FC = () => {
   );
   const [bestDrugNetDetails, setBestDrugNetDetails] =
     useState<Prescription | null>(null);
-
+  const dropdownRef = useRef<HTMLDivElement | null>(null); // Ref for the dropdown container
+  const handleDropdownScroll = () => {
+    if (dropdownRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = dropdownRef.current;
+      if (
+        scrollTop + clientHeight >= scrollHeight - 10 &&
+        hasMore &&
+        !isLoading
+      ) {
+        loadMoreSuggestions();
+      }
+    }
+  };
+  useEffect(() => {
+    const dropdownElement = dropdownRef.current;
+    if (dropdownElement) {
+      dropdownElement.addEventListener("scroll", handleDropdownScroll);
+    }
+    return () => {
+      if (dropdownElement) {
+        dropdownElement.removeEventListener("scroll", handleDropdownScroll);
+      }
+    };
+  }, [hasMore, isLoading]);
   const debouncedSearch = useCallback(
-    debounce(async (query: string) => {
+    debounce(async (query: string, page: number) => {
       if (query.length >= 1) {
         try {
+          setIsLoading(true);
           const { data } = await axiosInstance.get(
-            `/drug/searchByName?name=${query}`
+            `/drug/searchByName?name=${query}&pageNumber=${page}&pageSize=20`
           );
-          setSuggestions(data);
+          setSuggestions((prev) => (page === 1 ? data : [...prev, ...data]));
           setShowSuggestions(true);
+          setHasMore(data.length > 0); // If no data is returned, stop further loading
         } catch (error) {
           console.error("Error searching drugs:", error);
+        } finally {
+          setIsLoading(false);
         }
       } else {
         setSuggestions([]);
@@ -91,8 +120,33 @@ export const Search: React.FC = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    debouncedSearch(query);
+    setPageNumber(1); // Reset to the first page
+    debouncedSearch(query, 1);
   };
+  const loadMoreSuggestions = () => {
+    if (!isLoading && hasMore) {
+      setPageNumber((prev) => {
+        const nextPage = prev + 1;
+        debouncedSearch(searchQuery, nextPage);
+        return nextPage;
+      });
+    }
+  };
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+          document.documentElement.offsetHeight - 100 &&
+        showSuggestions &&
+        hasMore
+      ) {
+        loadMoreSuggestions();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [showSuggestions, hasMore, isLoading]);
 
   const clearSearch = () => {
     setSearchQuery("");
@@ -212,6 +266,7 @@ export const Search: React.FC = () => {
 
       <div className="flex flex-col md:flex-row gap-8 justify-center">
         {/* Search Form Column */}
+
         <div className="flex-1 max-w-2xl">
           <motion.div
             layout
@@ -309,6 +364,7 @@ export const Search: React.FC = () => {
                       id="suggestion-list"
                       role="listbox"
                       aria-label="Drug search suggestions"
+                      ref={dropdownRef} // Attach the ref to the dropdown container
                       className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto"
                     >
                       {suggestions.map((drug: Drug, index) => (
@@ -327,6 +383,11 @@ export const Search: React.FC = () => {
                           {drug.name}
                         </button>
                       ))}
+                      {isLoading && (
+                        <div className="text-center py-2 text-sm text-gray-500">
+                          Loading more...
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -486,8 +547,8 @@ export const Search: React.FC = () => {
                   </p>
                 </motion.div>
               )} */}
-              {/* ---------------------------------------------------- */}
-              {/* {bestDrugNetDetails && (
+        {/* ---------------------------------------------------- */}
+        {/* {bestDrugNetDetails && (
                 <motion.div
                   layout
                   variants={fadeVariant}
@@ -513,7 +574,7 @@ export const Search: React.FC = () => {
                   </p>
                 </motion.div>
               )} */}
-            {/* </motion.div>
+        {/* </motion.div>
           </motion.div>
         </div> */}
       </div>
