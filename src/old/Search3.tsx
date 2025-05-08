@@ -67,6 +67,44 @@ export const Search3: React.FC = () => {
   const [selectedNdc, setSelectedNdc] = useState("");
   const [ndcSearchQuery, setNdcSearchQuery] = useState("");
   const [showNdcSuggestions, setShowNdcSuggestions] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadMoreDrugs = async () => {
+    if (isLoadingMore || !drugSearchQuery) return;
+
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const { data } = await axiosInstance.get(
+        `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`
+      );
+      setDrugs((prevDrugs) => [...prevDrugs, ...data]); // Append new drugs
+      setCurrentPage(nextPage);
+    } catch (error) {
+      console.error("Error loading more drugs:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.scrollHeight - target.scrollTop === target.clientHeight &&
+        !isLoadingMore
+      ) {
+        loadMoreDrugs();
+      }
+    };
+
+    const suggestionBox = document.querySelector(".drug-suggestions-box");
+    suggestionBox?.addEventListener("scroll", handleScroll);
+
+    return () => {
+      suggestionBox?.removeEventListener("scroll", handleScroll);
+    };
+  }, [drugSearchQuery, currentPage, isLoadingMore]);
   useEffect(() => {
     localStorage.removeItem("searchLogDetails");
   }, []);
@@ -102,10 +140,11 @@ export const Search3: React.FC = () => {
         }
       } else if (drugSearchQuery) {
         try {
+          const page = currentPage; // Use the current page state
           const { data } = await axiosInstance.get(
-            `/drug/searchByName?name=${drugSearchQuery}`
+            `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${page}&pageSize=20`
           );
-          setDrugs(data);
+          setDrugs((prevDrugs) => [...prevDrugs, ...data]); // Append new drugs to the existing list
         } catch (error) {
           console.error("Error fetching drugs by name:", error);
         }
@@ -384,6 +423,16 @@ export const Search3: React.FC = () => {
                         id="drug-listbox"
                         role="listbox"
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-xs max-h-60 overflow-y-auto"
+                        onScroll={(e) => {
+                          const target = e.target as HTMLElement;
+                          if (
+                            target.scrollHeight - target.scrollTop ===
+                              target.clientHeight &&
+                            !isLoadingMore
+                          ) {
+                            loadMoreDrugs();
+                          }
+                        }}
                       >
                         {uniqueFilteredDrugs.map((drug) => (
                           <li
@@ -400,12 +449,16 @@ export const Search3: React.FC = () => {
                             {drug.name}
                           </li>
                         ))}
+                        {isLoadingMore && (
+                          <li className="px-4 py-2 text-sm text-gray-500 text-center">
+                            Loading more...
+                          </li>
+                        )}
                       </ul>
                     )}
                   </div>
                 </div>
               )}
-
               {/* NDC Combobox */}
               {ndcList.length > 0 && (
                 <div>
