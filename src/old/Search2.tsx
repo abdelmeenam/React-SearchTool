@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import axios from "axios";
 import debounce from "debounce";
 import { useNavigate } from "react-router-dom";
@@ -118,11 +118,11 @@ export const InsuranceSearch: React.FC = () => {
   useEffect(() => {
     localStorage.removeItem("searchLogDetails");
   }, []);
-    useEffect(() => {
-      if (Details) {
-        localStorage.setItem("searchLogDetails", JSON.stringify(Details));
-      }
-    }, [Details]);
+  useEffect(() => {
+    if (Details) {
+      localStorage.setItem("searchLogDetails", JSON.stringify(Details));
+    }
+  }, [Details]);
   useEffect(() => {
     async function fetchDrugDetails() {
       console.log("Hi : ", selectedNdc, selectedRxGroup);
@@ -232,7 +232,7 @@ export const InsuranceSearch: React.FC = () => {
       } catch (error) {
         console.error("Error fetching drugs:", error);
       }
-    } 
+    }
   };
 
   // --- PCN Search Input Handlers ---
@@ -319,19 +319,64 @@ export const InsuranceSearch: React.FC = () => {
   };
 
   // --- Drug Flow ---
-  const handleDrugSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const handleDrugSearchChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const query = e.target.value;
     setDrugSearchQuery(query);
-    try {
-      const url = `/drug/searchByName?name=${drugSearchQuery}`;
+    setCurrentPage(1);
 
+    try {
+      const url = `/drug/searchByName?name=${query}&pageNumber=1&pageSize=20`;
       const { data } = await axiosInstance.get(url);
       setDrugs(data);
     } catch (error) {
       console.error("Error fetching drugs:", error);
     }
+
     setShowDrugSuggestions(true);
   };
+
+  const loadMoreDrugs = async () => {
+    if (limitSearch ||isLoadingMore || !drugSearchQuery) return;
+
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const url = `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`;
+      const { data } = await axiosInstance.get(url);
+
+      setDrugs((prev) => [...prev, ...data]);
+      setCurrentPage(nextPage);
+    } catch (error) {
+      console.error("Error loading more drugs:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    const target = dropdownRef.current;
+    if (!target) return;
+
+    const handleScroll = (e: Event) => {
+      const el = e.target as HTMLElement;
+      const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 5;
+
+      if (atBottom && showDrugSuggestions && !isLoadingMore) {
+        loadMoreDrugs();
+      }
+    };
+
+    target.addEventListener("scroll", handleScroll);
+    return () => {
+      target.removeEventListener("scroll", handleScroll);
+    };
+  }, [showDrugSuggestions, drugSearchQuery, currentPage, isLoadingMore]);
 
   const filteredDrugs = drugSearchQuery
     ? drugs.filter((drug) =>
@@ -418,7 +463,10 @@ export const InsuranceSearch: React.FC = () => {
                 <button
                   id="limit-search-toggle"
                   type="button"
-                  onClick={() => { clearAll(); setLimitSearch(!limitSearch); }}
+                  onClick={() => {
+                    clearAll();
+                    setLimitSearch(!limitSearch);
+                  }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     limitSearch ? "bg-blue-600" : "bg-gray-300"
                   }`}
@@ -577,7 +625,7 @@ export const InsuranceSearch: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              {/* Drug Search Input (remains unchanged) */}
+              {/* Drug Search Input with Infinite Scrolling */}
               {(selectedBin?.bin ?? "").length > 0 && (
                 <div className="relative">
                   <label className="mb-1.5 mt-6 block text-sm font-medium text-gray-700 dark:text-gray-400">
@@ -592,15 +640,18 @@ export const InsuranceSearch: React.FC = () => {
                     className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                   />
                   <AnimatePresence>
-                    {showDrugSuggestions && uniqueFilteredDrugs.length > 0 && (
+                    {showDrugSuggestions && drugs.length > 0 && (
                       <motion.div
+                        ref={dropdownRef}
                         layout
-                        initial={fadeVariant.initial}
-                        animate={fadeVariant.animate}
-                        exit={fadeVariant.exit}
-                        className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        role="listbox"
+                        aria-label="Drug search suggestions"
+                        className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto drug-suggestions-box"
                       >
-                        {uniqueFilteredDrugs.map((drug) => (
+                        {drugs.map((drug) => (
                           <button
                             key={drug.id}
                             onClick={() => handleDrugSelect(drug)}
@@ -609,12 +660,16 @@ export const InsuranceSearch: React.FC = () => {
                             {drug.name}
                           </button>
                         ))}
+                        {isLoadingMore && (
+                          <div className="text-center py-2 text-sm text-gray-500">
+                            Loading more...
+                          </div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               )}
-
               {/* NDC Search Input */}
               {ndcList.length > 0 && (
                 <div className="relative">
@@ -681,10 +736,7 @@ export const InsuranceSearch: React.FC = () => {
                       selectedInsurance?.insurance || ""
                     );
                     localStorage.setItem("selectedPcn", selectedPcn?.pcn || "");
-                    localStorage.setItem(
-                      "selectedBin",
-                      (selectedPcn?.pcn || "") 
-                    );
+                    localStorage.setItem("selectedBin", selectedPcn?.pcn || "");
                     navigate(
                       `/drug/${
                         selectedDrug.id

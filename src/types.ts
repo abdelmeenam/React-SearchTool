@@ -9,6 +9,8 @@ export interface Drug {
   acq: number;
   awp: number;
   rxcui: number;
+  ingrdient : string;
+
 }
 export interface BestAlternative {
   classId: number;
@@ -95,6 +97,7 @@ export interface Prescription {
   form: string;
   route: string;
   teCode: string;
+  ingrdient : string;
 }
 
 export interface DrugInsuranceInfo {

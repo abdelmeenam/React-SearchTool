@@ -22,6 +22,7 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
+  Microscope,
 } from "lucide-react";
 import {
   Tag,
@@ -99,7 +100,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="relative max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+    <div className="relative max-w-5xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
       {bestNet !== 0 && (
         <div
           className={`absolute bottom-4 left-4 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium text-white shadow-md
@@ -138,7 +139,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
       )}
 
       {/* Summary Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="flex items-center space-x-2">
           <DollarSign className="h-5 w-5 text-gray-400" />
           <dl>
@@ -165,6 +166,15 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
             <dt className="text-sm font-medium text-gray-500">Strength</dt>
             <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
               {drug.strength}
+            </dd>
+          </dl>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Microscope className="h-7 w-7 text-gray-400" />
+          <dl>
+            <dt className="text-sm font-medium text-gray-500">Ingrdiant</dt>
+            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+              {drug.ingrdient}
             </dd>
           </dl>
         </div>
@@ -1030,17 +1040,13 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                 Strength
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                ApplicationNumber
+                Ingrdiant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                ApplicationType
-              </th>
+          
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Route
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                TE Code
-              </th>
+           
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Class
               </th>
@@ -1058,46 +1064,38 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     <a
-                      href={`/drug/${alt.drugId}`}
+                      href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}`}
                       className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
                     >
-                      {alt.drugName}
+                      {alt.drugName? alt.drugName : "N/A"}
                     </a>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.form}
+                    {alt.form? alt.form : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.strength}
+                    {alt.strength? alt.strength : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.applicationNumber}
+                    {alt.ingrdient? alt.ingrdient : "N/A"}
                   </div>
                 </td>
+
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.applicationType}
+                    {alt.route? alt.route : "N/A"}
                   </div>
                 </td>
+               
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.route}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.teCode}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.drugClass}
+                    {alt.drugClass? alt.drugClass : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -1203,6 +1201,7 @@ export const DrugDetails: React.FC = () => {
               `/drug/GetDrugById?id=${drugId}`
             );
           }
+          console.log("response: ", response.data);
           setDrug(response.data);
           // Get all alternatives and sort descending by net price:
           response2 = await axiosInstance.get(
