@@ -461,7 +461,9 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   };
 
   return (
-    <section className={`bg-white dark:bg-gray-800 shadow rounded-lg p-6 ${classNameStr}`}>
+    <section className={`bg-white dark:bg-gray-800 shadow rounded-lg p-6 ${classNameStr}
+     overflow-y-auto  transition-transform duration-1600 ease-in-out transform translate-x-0 ` }
+    >
       {/* Modal */}
       {showModal && modalDrug && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 mt-18">
@@ -475,7 +477,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   </div>
 
   {/* Modal card with 3D effect */}
-  <div className="relative w-133">
+  <div className="relative w-137">
     {/* Floating card shadow */}
     <div className="absolute -inset-2 bg-blue-500/10 rounded-2xl blur-xl opacity-70 animate-float" />
     
