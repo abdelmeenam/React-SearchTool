@@ -475,7 +475,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   </div>
 
   {/* Modal card with 3D effect */}
-  <div className="relative w-full max-w-md">
+  <div className="relative w-133">
     {/* Floating card shadow */}
     <div className="absolute -inset-2 bg-blue-500/10 rounded-2xl blur-xl opacity-70 animate-float" />
     

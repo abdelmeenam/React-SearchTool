@@ -16,15 +16,16 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
   const { cartItems, addToCart } = useCart();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0  z-50 flex items-center justify-center p-4">
       {/* Enhanced backdrop with subtle gradient */}
       <div 
-        className="absolute inset-0 bg-gradient-to-br from-gray-900/30 to-blue-900/10 backdrop-blur-sm"
+        className="absolute inset-0  bg-gradient-to-br from-gray-900/30 to-blue-900/10 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Refined modal container */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20 dark:border-gray-700/50">
+      <div className="relative bg-white w-122 dark:bg-gray-800 rounded-xl shadow-2xl 
+       overflow-hidden border border-white/20 dark:border-gray-700/50">
         {/* Glossy header with improved gradient */}
         <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 flex justify-between items-center relative">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmZmZmZmYwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybikiIG9wYWNpdHk9IjAuMiIvPjwvc3ZnPg==')] opacity-20" />
