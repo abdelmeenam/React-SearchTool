@@ -22,7 +22,7 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
-  Microscope,
+  BookCheck,
 } from "lucide-react";
 import {
   Tag,
@@ -37,10 +37,17 @@ import {
   FileText,
 } from "lucide-react";
 import { motion } from "framer-motion";
+
+// Utility function to format numbers as currency
+const formatCurrency = (value: number): string =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
 import { Drug, OrderItem, Prescription, SearchLog } from "../types";
 import axiosInstance from "../api/axiosInstance";
 import { useCart } from "../context/CartContext"; // adjust path
-import DrugDetailPopup from "./DrugDetailPopup";
+import DrugDetailsModal from "../components/DrugDetailsModal";
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -63,6 +70,9 @@ interface DrugHeaderProps {
   padCode: (code: string) => string;
   temp: string;
 }
+/* newwwwww comp */
+// Removed duplicate declaration of DrugInformation to resolve the error.
+
 export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
   <header className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-t-lg text-white flex items-center space-x-4">
     <Pill className="h-8 w-8" />
@@ -97,10 +107,8 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
   const bestNet = bestDrugNet?.net ?? 0;
   const { addToCart } = useCart();
   const cartItems = useCart().cartItems;
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   return (
-    <div className="relative max-w-5xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+    <div className="relative max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
       {bestNet !== 0 && (
         <div
           className={`absolute bottom-4 left-4 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium text-white shadow-md
@@ -138,8 +146,26 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
         </div>
       )}
 
+      {/* try */}
+
+      {/* Show Details Button */}
+
+      {/* Details Modal */}
+
+      {/* Modal Component */}
+      {showDetails && (
+        <DrugDetailsModal
+          drug={drug}
+          drugDetail={drugDetail ?? null}
+          onClose={() => setShowDetails(false)}
+          formatCurrency={formatCurrency}
+        />
+      )}
+
+      {/* Modal Backdrop */}
+
       {/* Summary Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="flex items-center space-x-2">
           <DollarSign className="h-5 w-5 text-gray-400" />
           <dl>
@@ -166,15 +192,6 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
             <dt className="text-sm font-medium text-gray-500">Strength</dt>
             <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
               {drug.strength}
-            </dd>
-          </dl>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Microscope className="h-7 w-7 text-gray-400" />
-          <dl>
-            <dt className="text-sm font-medium text-gray-500">Ingrdiant</dt>
-            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-              {drug.ingrdient}
             </dd>
           </dl>
         </div>
@@ -304,44 +321,80 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
           </details>
         </section>
       )}
-
-      <div className="mt-6 flex justify-end">
-        {cartItems.some((item) => item.id === drug.ndc) ? (
-          <button
-            disabled
-            className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg shadow-md cursor-not-allowed"
-            aria-label={`"${
-              drug.name || "Unnamed Drug"
-            }" is already in the cart`}
-          >
-            Added
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              setIsModalOpen(true);
-            }}
-            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105"
-            aria-label={`Add "${drug.name || "Unnamed Drug"}" to cart`}
-          >
-            Add to Cart
-          </button>
-        )}
-        {isModalOpen && (
-          <DrugDetailPopup
-            drug={drug}
-            drugDetail={drugDetail ?? null}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
+      {/* Show Details Button */}
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={() => setShowDetails(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        >
+          Show Details
+        </button>
       </div>
+      {/*
+<div className="mt-6 flex justify-end">
+  {cartItems.some((item) => item.id === drug.ndc) ? (
+    <button
+      disabled
+      className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg shadow-md cursor-not-allowed"
+      aria-label={`"${drug.name || "Unnamed Drug"}" is already in the cart`}
+    >
+      Added
+    </button>
+  ) : (
+
+
+    <button
+      onClick={() => {
+        if (drug.acq !== undefined && drug.acq !== null) {
+          addToCart({
+            id: drug.ndc || Date.now().toString(),
+            name: drug.name || "Unnamed Drug",
+            price: drug.acq,
+            quantity: 1,
+          });
+
+          const storedSearchLog = localStorage.getItem("searchLogDetails");
+          if (storedSearchLog) {
+            const searchLog: SearchLog = JSON.parse(storedSearchLog);
+            const newOrderItem: OrderItem = {
+              drugId: drug.id,
+              netPrice: drugDetail?.net ?? 0,
+              patientPay: drugDetail?.patientPayment ?? 0,
+              insurancePay: drugDetail?.insurancePayment ?? 0,
+              acquisitionCost: drug.acq,
+              additionalCost: 0,
+              insuranceRxId: drugDetail?.rxgroupId ?? 0,
+              amount: 1,
+            };
+
+            const currentOrder = JSON.parse(
+              localStorage.getItem("orderRequestBody") ||
+                '{"orderItems":[],"searchLogs":[]}'
+            );
+            currentOrder.orderItems.push(newOrderItem);
+            currentOrder.searchLogs.push(searchLog);
+            localStorage.setItem(
+              "orderRequestBody",
+              JSON.stringify(currentOrder)
+            );
+          }
+        }
+      }}
+      className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105"
+      aria-label={`Add "${drug.name || "Unnamed Drug"}" to cart`}
+    >
+      Add to Cart2
+    </button>
+  )}
+</div>
+*/}
     </div>
   );
 };
 
 interface AlternativesTableProps {
   alternatives: Prescription[];
-  classNameStr: string;
+  classNameStr?: string;
   padCode: (code: string) => string;
   selectedInsurance: string;
   handleInsuranceFilterChange: (
@@ -358,6 +411,7 @@ interface AlternativesTableProps {
   sortOrder: "asc" | "desc";
   setBestNetDrug: (drug: Prescription) => void;
 }
+
 export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   alternatives,
   classNameStr = "",
@@ -375,6 +429,10 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   sortOrder,
   setBestNetDrug,
 }) => {
+  // State for modal
+  const [showModal, setShowModal] = useState(false);
+  const [modalDrug, setModalDrug] = useState<Prescription | null>(null);
+
   // Filter and pagination logic
   const filtered = useMemo(
     () =>
@@ -392,22 +450,401 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   const perPage = 10;
   const totalPages = Math.ceil(filtered.length / perPage);
   const pageItems = filtered.slice((page - 1) * perPage, page * perPage);
-  const { addToCart } = useCart();
-  const cartItems = useCart().cartItems;
+  const { addToCart, cartItems } = useCart();
+
   useEffect(
     () => setPage(1),
     [selectedInsurance, selectedBin, selectedPcn, alternatives]
   );
 
+  // Handlers
+  const openModal = (drug: Prescription) => {
+    setModalDrug(drug);
+    setShowModal(true);
+  };
+  const closeModal = () => {
+    setShowModal(false);
+    setModalDrug(null);
+  };
+
   return (
     <section
       className={`bg-white dark:bg-gray-800 shadow rounded-lg p-6 ${classNameStr}`}
     >
+      {/* Modal */}
+      {showModal && modalDrug && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 mt-18">
+          {/* Animated gradient backdrop */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-purple-900/5 to-gray-900/20 backdrop-blur-lg animate-gradientBackground" />
+            <div
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300"
+              onClick={closeModal}
+            />
+          </div>
+
+          {/* Modal card with 3D effect */}
+          <div className="relative w-full max-w-md">
+            {/* Floating card shadow */}
+            <div className="absolute -inset-2 bg-blue-500/10 rounded-2xl blur-xl opacity-70 animate-float" />
+
+            {/* Main card */}
+            <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/30 dark:border-gray-700/50 overflow-hidden transform transition-all duration-500 will-change-transform animate-cardEntry">
+              {/* Dynamic status indicator */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 animate-pulse-slow" />
+
+              {/* Header with contextual icon */}
+              <div className="px-6 py-4 flex items-start justify-between">
+                <div className="flex items-start space-x-3">
+                  <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-300">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
+                      {modalDrug.drugName}
+                    </h3>
+                    <div className="flex items-center mt-1 space-x-2">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                        {modalDrug.drugClass}
+                      </span>
+                      <a
+                        href={`https://ndclist.com/ndc/${padCode(
+                          modalDrug.ndcCode
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                      >
+                        {padCode(modalDrug.ndcCode)}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={closeModal}
+                  className="p-1.5 -m-1.5 rounded-full hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 group"
+                  aria-label="Close modal"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content with scrollable area */}
+              <div className="px-6 pb-2 max-h-[60vh] overflow-y-auto custom-scrollbar-ultra">
+                {/* Animated price indicator */}
+                <div className="mb-6 px-4 py-3 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-gray-700/30 dark:to-gray-700/20 rounded-xl border border-gray-200/30 dark:border-gray-700/30 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmZmZmZmYwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybikiLz48L3N2Zz4=')] opacity-10 dark:opacity-5" />
+                  <div className="relative flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Net Price
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                        ${modalDrug.net.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Acquisition Cost
+                      </p>
+                      <p className="text-xl font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                        ${modalDrug.acquisitionCost.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details grid */}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="p-3 rounded-lg bg-gray-50/50 dark:bg-gray-700/20 border border-gray-200/30 dark:border-gray-700/30">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                      <svg
+                        className="w-3 h-3 mr-1.5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                      Branch
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1.5">
+                      {modalDrug.branchName}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-gray-50/50 dark:bg-gray-700/20 border border-gray-200/30 dark:border-gray-700/30">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                      <svg
+                        className="w-3 h-3 mr-1.5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
+                      </svg>
+                      Drug Class
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1.5">
+                      {modalDrug.drugClass}
+                    </p>
+                  </div>
+                  {/* <div className="p-3 rounded-lg bg-gray-50/50 dark:bg-gray-700/20 border border-gray-200/30 dark:border-gray-700/30">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                      <svg
+                        className="w-3 h-3 mr-1.5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Last Updated
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1.5">
+                      Just now
+                    </p>
+                  </div> */}
+                  <div className="p-3 rounded-lg bg-gray-50/50 dark:bg-gray-700/20 border border-gray-200/30 dark:border-gray-700/30">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                      <svg
+                        className="w-3 h-3 mr-1.5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                        />
+                      </svg>
+                      Inventory
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1.5">
+                      In Stock
+                    </p>
+                  </div>
+                </div>
+
+                {/* Alternatives section */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+                      <BookCheck />
+                      Recommended Alternatives
+                    </h4>
+                  </div>
+
+                  <div className="space-y-2">
+                    {pageItems.map((alt, index) => {
+                      // Determine row background color based on rank
+                      let rowBgClass = "";
+                      if (sortOrder === "desc") {
+                        if (index === 0) {
+                          rowBgClass = "bg-green-100 dark:bg-green-800"; // Most recommended
+                        } else if (index === 1) {
+                          rowBgClass = "bg-yellow-100 dark:bg-yellow-800"; // Semi-recommended
+                        }
+                      } else if (sortOrder === "asc") {
+                        if (index === 0) {
+                          rowBgClass = "bg-red-100 dark:bg-red-800"; // Least recommended
+                        } else if (index === 1) {
+                          rowBgClass = "bg-orange-100 dark:bg-orange-800"; // Second least recommended
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={index}
+                          className={`group relative p-3 rounded-lg border border-gray-200/50 dark:border-gray-700/30 hover:border-blue-300/50 dark:hover:border-blue-500/30 transition-all duration-200 cursor-pointer hover:shadow-sm ${rowBgClass}`}
+                        >
+                          <a
+                            href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}&insuranceId=${alt.rxgroupId}`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-start space-x-3">
+                                <div
+                                  className={`mt-0.5 flex-shrink-0 w-2.5 h-2.5 rounded-full ${
+                                    index === 0
+                                      ? "bg-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-400/30"
+                                      : index === 1
+                                      ? "bg-blue-400 ring-1 ring-blue-200 dark:ring-blue-400/30"
+                                      : "bg-purple-400 ring-1 ring-purple-200 dark:ring-purple-400/30"
+                                  }`}
+                                />
+                                <div>
+                                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {alt.drugName}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    {alt.drugClass}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                  {padCode(alt.ndcCode)}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-green-700 dark:text-white ">
+                                  ${alt.net}
+                                </p>
+                              </div>
+                            </div>
+                            <button className="absolute right-3 top-3 p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-blue-500">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                />
+                              </svg>
+                            </button>
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer with contextual actions */}
+              <div className="px-6 py-4 bg-gray-50/70 dark:bg-gray-700/30 border-t border-gray-200/30 dark:border-gray-700/30 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <svg
+                    className="w-4 h-4 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Prices updated according to the last scripts
+                  </span>
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={closeModal}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  >
+                    Close
+                  </button>
+
+                  {cartItems.some((item) => item.id === modalDrug.ndcCode) ? (
+                    <button
+                      disabled
+                      className="px-4 py-2 text-sm font-medium text-white bg-emerald-500/90 rounded-lg flex items-center space-x-1.5 cursor-not-allowed"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>Added</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        addToCart({
+                          id:
+                            modalDrug.ndcCode || `${modalDrug.drugId}-uniqueId`,
+                          name: modalDrug.drugName || "Unnamed Drug",
+                          price: modalDrug.net,
+                          quantity: 1,
+                        })
+                      }
+                      className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] flex items-center space-x-1.5"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      <span>Add to Cart</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
           Insurance Alternatives
         </h2>
       </header>
+
+      {/* Filters & Controls omitted for brevity, keep existing JSX here */}
 
       {/* Filters */}
       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -416,7 +853,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             htmlFor="insuranceFilter"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            RxGroup
+            Insurance
           </label>
           <select
             id="insuranceFilter"
@@ -424,7 +861,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             onChange={handleInsuranceFilterChange}
             className="w-full border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">All RxGroups</option>
+            <option value="">All Insurances</option>
             {uniqueInsuranceNames.map((name) => (
               <option key={name} value={name}>
                 {name}
@@ -516,7 +953,6 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           </div>
         )}
       </div>
-
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -536,7 +972,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                 "Coverage",
                 "Patient Pay",
                 "ACQ",
-                "Add",
+                "Details",
               ].map((col) => (
                 <th
                   key={col}
@@ -640,32 +1076,17 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
                     ${rec.acquisitionCost.toFixed(2)}
                   </td>
+
                   {/* Add to Cart Button */}
-                  <td className="px-4 py-2 text-right">
-                    {cartItems.some((item) => item.id === rec.ndcCode) ? (
-                      <button
-                        disabled
-                        className="px-3 py-1 bg-gray-400 text-white text-sm font-semibold rounded cursor-not-allowed"
-                        aria-label={`${rec.drugName} already added to cart`}
-                      >
-                        Added
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          addToCart({
-                            id: rec.ndcCode || `${rec.drugId}-${idx}`,
-                            name: rec.drugName || "Unnamed Drug",
-                            price: rec.acquisitionCost,
-                            quantity: 1,
-                          })
-                        }
-                        className="px-3 py-1 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        aria-label={`Add ${rec.drugName || "Drug"} to cart`}
-                      >
-                        Add
-                      </button>
-                    )}
+
+                  {/* ...other td cells... */}
+                  <td key={idx} className="px-4 py-2 text-right space-x-2">
+                    <button
+                      onClick={() => openModal(rec)}
+                      className="px-3 py-1 bg-indigo-600 text-white text-sm font-semibold rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      Details
+                    </button>
                   </td>
                 </tr>
               );
@@ -1042,11 +1463,11 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Ingrdiant
               </th>
-          
+
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Route
               </th>
-           
+
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Class
               </th>
@@ -1067,35 +1488,35 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                       href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}`}
                       className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
                     >
-                      {alt.drugName? alt.drugName : "N/A"}
+                      {alt.drugName ? alt.drugName : "N/A"}
                     </a>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.form? alt.form : "N/A"}
+                    {alt.form ? alt.form : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.strength? alt.strength : "N/A"}
+                    {alt.strength ? alt.strength : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.ingrdient? alt.ingrdient : "N/A"}
+                    {alt.ingrdient ? alt.ingrdient : "N/A"}
                   </div>
                 </td>
 
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.route? alt.route : "N/A"}
+                    {alt.route ? alt.route : "N/A"}
                   </div>
                 </td>
-               
+
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.drugClass? alt.drugClass : "N/A"}
+                    {alt.drugClass ? alt.drugClass : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -1201,13 +1622,11 @@ export const DrugDetails: React.FC = () => {
               `/drug/GetDrugById?id=${drugId}`
             );
           }
-          console.log("response: ", response.data);
           setDrug(response.data);
           // Get all alternatives and sort descending by net price:
           response2 = await axiosInstance.get(
             `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
           );
-          console.log("response2: ", response2.data);
           const sortedData = response2.data.sort(
             (a: Prescription, b: Prescription) => b.net - a.net
           );
@@ -1269,7 +1688,7 @@ export const DrugDetails: React.FC = () => {
 
   // Map the provided insuranceId to the insurance name using the sorted alternatives
   useEffect(() => {
-    if (sortedAlternatives.length > 0) {
+    if (insuranceId && sortedAlternatives.length > 0) {
       const matchingInsurance = sortedAlternatives.find(
         (alt) => alt.insuranceId && alt.insuranceId.toString() === insuranceId
       );
@@ -1289,31 +1708,6 @@ export const DrugDetails: React.FC = () => {
         setBranchSelectedBin(matchingInsurance.bin || "");
         setBranchSelectedInsurance(matchingInsurance.rxgroup || "");
         setBranchSelectedPcn(matchingInsurance.pcn || "");
-      } else {
-        console.log("local : ", localStorage.getItem("selectedBin"));
-        const matchingInsurance = sortedAlternatives.find(
-          (alt) =>
-            alt.insuranceId &&
-            alt.binFullName === localStorage.getItem("selectedBin")
-        );
-        console.log("matchingInsurance", matchingInsurance);
-
-        if (matchingInsurance) {
-          localStorage.setItem("selectedRx", matchingInsurance.rxgroup || "");
-          localStorage.setItem("selectedPcn", matchingInsurance.pcn || "");
-          localStorage.setItem(
-            "selectedBin",
-            (matchingInsurance.bin || "") +
-              " - " +
-              (matchingInsurance.binFullName || "")
-          );
-          setSelectedInsurance(matchingInsurance.rxgroup || "");
-          setSelectedBin(matchingInsurance.bin || "");
-          setSelectedPcn(matchingInsurance.pcn || "");
-          setBranchSelectedBin(matchingInsurance.bin || "");
-          setBranchSelectedInsurance(matchingInsurance.rxgroup || "");
-          setBranchSelectedPcn(matchingInsurance.pcn || "");
-        }
       }
     }
   }, [insuranceId, sortedAlternatives]);

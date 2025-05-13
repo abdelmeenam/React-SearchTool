@@ -107,13 +107,13 @@ const UserInfoCard: React.FC = () => {
   if (!user)
     return (
       <h3 className="text-center text-gray-500">
-      <Link
-        to="/signin"
-        className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] text-gray-500 hover:text-blue-600"
-      >
-        Log In
-      </Link>
-    </h3>
+        <Link
+          to="/signin"
+          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] text-gray-500 hover:text-blue-600"
+        >
+          Log In
+        </Link>
+      </h3>
     );
 
   // Return initials if no user image is available
@@ -176,6 +176,16 @@ const UserInfoCard: React.FC = () => {
                   Edit Profile
                 </DropdownItem>
               </li>
+              <li>
+                <DropdownItem
+                  onItemClick={closeDropdown}
+                  tag="a"
+                  to="/OrderHistory"
+                >
+                  Orders History
+                </DropdownItem>
+              </li>
+
               {/* Additional menu items can be added here */}
             </ul>
             <button

@@ -729,7 +729,7 @@ export const InsuranceSearch: React.FC = () => {
                       pcnId: selectedPcn?.id || 0,
                       drugId: selectedDrug?.id || 0,
                       date: new Date().toISOString(),
-                      searchType: "Search By Drug",
+                      searchType: "Search By Full Insurance",
                     });
                     localStorage.setItem(
                       "selectedRx",

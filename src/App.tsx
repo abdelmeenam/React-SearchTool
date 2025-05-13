@@ -70,6 +70,7 @@ import { Services } from "./old/services";
 import InsurancePCNDetails from "./old/InsurancePCNDetails";
 import HelpPage from "./old/HelpPage";
 import SyncData from "./old/SyncData";
+import OrderHistory from "./old/OrdersHistory";
 // PrivateRoute and PublicRoute components
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -136,7 +137,7 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-     
+
             <Route
               path="search/:id"
               element={
@@ -145,7 +146,14 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-
+            <Route
+              path="OrderHistory"
+              element={
+                <PrivateRoute>
+                  <OrderHistory />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="drug/:drugId"
               element={
@@ -179,7 +187,7 @@ export default function App() {
             {/*search pages */}
 
             {/* Audits */}
-         
+
             <Route
               path="/dashboard/:dashboardId"
               element={
@@ -207,7 +215,7 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-             <Route
+            <Route
               path="/Help"
               element={
                 <PrivateRoute>
@@ -215,7 +223,7 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-             <Route
+            <Route
               path="/InsurancePCNDetails/:insuranceName"
               element={
                 <PrivateRoute>
@@ -250,7 +258,6 @@ export default function App() {
             <Route path="/script-item-form" element={<ScriptItemForm />} />
             <Route path="/specialty-form" element={<SpecialtyForm />} />
             <Route path="/user-form" element={<UserForm />} /> */}
-          
 
             {/* Ui Elements */}
 
