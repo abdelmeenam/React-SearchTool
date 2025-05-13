@@ -444,8 +444,12 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
       ),
     [alternatives, selectedInsurance, selectedBin, selectedPcn]
   );
-  setBestNetDrug(filtered[0]);
-
+  // setBestNetDrug(filtered[0]);
+  useEffect(() => {
+    if (filtered.length > 0) {
+      setBestNetDrug(filtered[0]);
+    }
+  }, [filtered, setBestNetDrug]);
   const [page, setPage] = useState(1);
   const perPage = 10;
   const totalPages = Math.ceil(filtered.length / perPage);
@@ -1403,6 +1407,17 @@ interface OtherAlternativesTableProps {
   handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   uniquePcnValues: string[];
 }
+interface OtherAlternativesTablePropsV2 {
+  alternatives: Drug[];
+  classNameStr: string;
+  padCode: (code: string) => string;
+  selectedBin: string;
+  handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniqueBinValues: { bin: string; binFullName: string }[];
+  selectedPcn: string;
+  handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  uniquePcnValues: string[];
+}
 const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   alternatives,
   classNameStr,
@@ -1568,7 +1583,158 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
     </section>
   );
 };
+const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
+  alternatives,
+  classNameStr,
+  padCode,
+  selectedBin,
+  handleBinFilterChange,
+  uniqueBinValues,
+  selectedPcn,
+  handlePcnFilterChange,
+  uniquePcnValues,
+}) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(alternatives.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = alternatives.slice(indexOfFirstItem, indexOfLastItem);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedBin, selectedPcn, alternatives]);
+
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+
+  return (
+    <section className="mt-8">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        Suggested Alternative Drugs Without Available Insurance Price Data
+      </h3>
+      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4">
+        <table className="min-w-full table-auto">
+          <thead className="bg-gray-100 dark:bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Form
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Strength
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Ingrdiant
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Route
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Class
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                NDC Codes
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {currentItems.map((alt, index) => (
+              <tr
+                key={`${alt.ndc}-${index}`}
+                className="hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <a
+                      href={`/drug/${alt.id}?ndc=${alt.ndc}`}
+                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                    >
+                      {alt.name ? alt.name : "N/A"}
+                    </a>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.form ? alt.form : "N/A"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.strength ? alt.strength : "N/A"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.ingrdient ? alt.ingrdient : "N/A"}
+                  </div>
+                </td>
+
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.route ? alt.route : "N/A"}
+                  </div>
+                </td>
+
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.drugClassV2Id ? alt.drugClassV2Id : "N/A"}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    <a
+                      href={`https://ndclist.com/ndc/${padCode(alt.ndc)}`}
+                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {padCode(alt.ndc)}
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-md ${
+              currentPage === 1
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
+            }`}
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-md ${
+              currentPage === totalPages
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-blue-700 text-white"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </section>
+  );
+};
 export const DrugDetails: React.FC = () => {
   const { drugId } = useParams();
   const [searchParams] = useSearchParams();
@@ -1579,6 +1745,7 @@ export const DrugDetails: React.FC = () => {
   const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
     []
   );
+  const [sortedAlternativesV2, setSortedAlternativesV2] = useState<Drug[]>([]);
   const [drugDetail, setDrugDetail] = useState<Prescription | null>(null);
   const [branchDrugs, setBranchDrugs] = useState<Prescription[]>([]);
   const [classNameStr, setClassName] = useState("");
@@ -1605,7 +1772,7 @@ export const DrugDetails: React.FC = () => {
   const [temp, setTemp] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [classV1, setClassV1] = useState<Boolean>(true);
   // Fetch drug details and alternatives
   useEffect(() => {
     const fetchDrugDetails = async () => {
@@ -1624,13 +1791,25 @@ export const DrugDetails: React.FC = () => {
           }
           setDrug(response.data);
           // Get all alternatives and sort descending by net price:
-          response2 = await axiosInstance.get(
-            `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
-          );
-          const sortedData = response2.data.sort(
-            (a: Prescription, b: Prescription) => b.net - a.net
-          );
-          setSortedAlternatives(sortedData);
+          if (classV1 === true) {
+            response2 = await axiosInstance.get(
+              `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
+            );
+            console.log("response2: ", response2.data);
+
+            const sortedData = response2.data.sort(
+              (a: Prescription, b: Prescription) => b.net - a.net
+            );
+
+            setSortedAlternatives(sortedData);
+          } else {
+            response2 = await axiosInstance.get(
+              `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
+            );
+            console.log("response2V2: ", response2.data);
+            const sortedData = response2.data;
+            setSortedAlternativesV2(sortedData);
+          }
           const response10 = await axiosInstance.get(
             `/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`
           );
@@ -1660,9 +1839,14 @@ export const DrugDetails: React.FC = () => {
           setDrugDetail(response2.data);
           setBranchDrugs(response10.data);
           if (response3.data.name !== "other") {
-            const response4 = await axiosInstance.get(
-              `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
-            );
+            const response4 =
+              classV1 === true
+                ? await axiosInstance.get(
+                    `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
+                  )
+                : await axiosInstance.get(
+                    `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
+                  );
             const matchingAlt = response4.data.find(
               (alt: Prescription) => alt.insuranceId.toString() === insuranceId
             );
@@ -1684,7 +1868,7 @@ export const DrugDetails: React.FC = () => {
     };
 
     fetchDrugDetails();
-  }, [drugId, ndcCode, insuranceId]);
+  }, [drugId, ndcCode, insuranceId, classV1]);
 
   // Map the provided insuranceId to the insurance name using the sorted alternatives
   useEffect(() => {
@@ -1774,7 +1958,7 @@ export const DrugDetails: React.FC = () => {
   const alternativesWithoutInsurance = sortedAlternatives.filter(
     (alt) => !alt.bin
   );
-
+  const alternativesWithoutInsuranceV2 = sortedAlternativesV2;
   const uniqueInsuranceNames: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
   ].sort();
@@ -1843,6 +2027,25 @@ export const DrugDetails: React.FC = () => {
 
             {activeTable === "insurance" ? (
               <section aria-label="Alternative Medications with Insurance">
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="classV1Toggle"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Toggle Class Version
+                  </label>
+                  <button
+                    id="classV1Toggle"
+                    onClick={() => setClassV1((prev) => !prev)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      classV1
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                    }`}
+                  >
+                    {classV1 ? "Class V1" : "Class V2"}
+                  </button>
+                </div>
                 {sortedAlternatives.length > 0 && (
                   <>
                     <AlternativesTable
@@ -1874,17 +2077,31 @@ export const DrugDetails: React.FC = () => {
 
                     {showOtherAlternatives && (
                       <section aria-label="Other Alternatives Without Insurance">
-                        <OtherAlternativesTable
-                          alternatives={alternativesWithoutInsurance}
-                          classNameStr={classNameStr}
-                          padCode={padCode}
-                          selectedBin={otherSelectedBin}
-                          handleBinFilterChange={handleOtherBinFilterChange}
-                          uniqueBinValues={uniqueOtherBinValues}
-                          selectedPcn={otherSelectedPcn}
-                          handlePcnFilterChange={handleOtherPcnFilterChange}
-                          uniquePcnValues={uniqueOtherPcnValues}
-                        />
+                        {classV1 ? (
+                          <OtherAlternativesTable
+                            alternatives={alternativesWithoutInsurance}
+                            classNameStr={classNameStr}
+                            padCode={padCode}
+                            selectedBin={otherSelectedBin}
+                            handleBinFilterChange={handleOtherBinFilterChange}
+                            uniqueBinValues={uniqueOtherBinValues}
+                            selectedPcn={otherSelectedPcn}
+                            handlePcnFilterChange={handleOtherPcnFilterChange}
+                            uniquePcnValues={uniqueOtherPcnValues}
+                          />
+                        ) : (
+                          <OtherAlternativesTableV2
+                            alternatives={alternativesWithoutInsuranceV2}
+                            classNameStr={classNameStr}
+                            padCode={padCode}
+                            selectedBin={otherSelectedBin}
+                            handleBinFilterChange={handleOtherBinFilterChange}
+                            uniqueBinValues={uniqueOtherBinValues}
+                            selectedPcn={otherSelectedPcn}
+                            handlePcnFilterChange={handleOtherPcnFilterChange}
+                            uniquePcnValues={uniqueOtherPcnValues}
+                          />
+                        )}
                       </section>
                     )}
                   </>
@@ -1923,6 +2140,10 @@ export const DrugDetails: React.FC = () => {
   );
 };
 
-const padCode = (code: string) => code.padStart(11, "0");
-
+const padCode = (code: string | undefined): string => {
+  if (!code) {
+    return "N/A"; // Return a default value if code is undefined or null
+  }
+  return code.padStart(11, "0");
+};
 export default DrugDetails;
