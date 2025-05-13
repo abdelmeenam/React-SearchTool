@@ -1,16 +1,18 @@
 export interface Drug {
+  route: any;
+  ndcCode(ndcCode: any): unknown;
   id: number;
   name: string;
   ndc: string;
   form: string;
   strength: string;
   classId: number;
+  drugClassV2Id: number;
   drugClass: string | null;
   acq: number;
   awp: number;
   rxcui: number;
-  ingrdient : string;
-
+  ingrdient: string;
 }
 export interface BestAlternative {
   classId: number;
@@ -97,7 +99,7 @@ export interface Prescription {
   form: string;
   route: string;
   teCode: string;
-  ingrdient : string;
+  ingrdient: string;
 }
 
 export interface DrugInsuranceInfo {
