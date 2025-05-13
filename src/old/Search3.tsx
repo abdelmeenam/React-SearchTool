@@ -526,7 +526,7 @@ export const Search3: React.FC = () => {
                       pcnId: 0,
                       drugId: selectedDrug?.id || 0,
                       date: new Date().toISOString(),
-                      searchType: "Search By Drug",
+                      searchType: "Search By RXGroup",
                     });
                     if (selectedRxGroup) {
                       localStorage.setItem(

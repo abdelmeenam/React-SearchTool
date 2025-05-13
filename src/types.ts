@@ -222,3 +222,48 @@ export interface SalesAnalytics {
     };
   };
 }
+export interface SearchLogReadDto {
+  id: number;
+  rxgroupId: number;
+  rxgroupName: string;
+  binId: number;
+  pcnId: number;
+  binName: string | null;
+  pcnName: string | null;
+  drugId: number;
+  drugName: string;
+  ndc: string;
+  userId: number;
+  orderItemId: number;
+  date: string;
+  searchType: string;
+}
+
+export interface OrderItemReadDto {
+  id: number;
+  orderId: number;
+  drugId: number;
+  drugName: string;
+  ndc: string;
+  netPrice: number;
+  patientPay: number;
+  insurancePay: number;
+  acquisitionCost: number;
+  addtionalCost: number;
+  insuranceRxId: number;
+  insuranceRxName: string;
+  amount: number;
+  searchLogReadDto: SearchLogReadDto;
+}
+
+export interface OrderReadDto {
+  id: number;
+  userId: string;
+  date: string;
+  totalNet: number;
+  totalPatientPay: number;
+  totalInsurancePay: number;
+  totalAcquisitionCost: number;
+  additionalCost: number;
+  orderItemReadDtos: OrderItemReadDto[];
+}
