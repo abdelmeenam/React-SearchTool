@@ -26,7 +26,13 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
       />
 
       {/* Refined modal container */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20 dark:border-gray-700/50">
+
+      {/* Refined modal container */}
+      <div
+        className="relative bg-white w-122 dark:bg-gray-800 rounded-xl shadow-2xl 
+       overflow-hidden border border-white/20 dark:border-gray-700/50"
+      >
+        {" "}
         {/* Glossy header with improved gradient */}
         <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 flex justify-between items-center relative">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmZmZmZmYwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybikiIG9wYWNpdHk9IjAuMiIvPjwvc3ZnPg==')] opacity-20" />
@@ -46,7 +52,6 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
             </svg>
           </button> */}
         </div>
-
         {/* Enhanced body with subtle animations */}
         <div className="px-5 py-4 space-y-4">
           {/* Metrics grid with hover effects */}
@@ -152,7 +157,6 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
             </div>
           </div>
         </div>
-
         {/* Premium footer with better button styling */}
         <div className="px-5 py-3 bg-gray-50/80 dark:bg-gray-700/30 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end space-x-3">
           <button
@@ -187,7 +191,7 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                   addToCart({
                     id: drug.ndc || Date.now().toString(),
                     name: drug.name || "Unnamed Drug",
-                    price: drugDetail?.net?? 0,
+                    price: drugDetail?.net ?? 0,
                     quantity: 1,
                   });
 
