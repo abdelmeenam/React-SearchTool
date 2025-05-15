@@ -1,14 +1,16 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CartItem } from "../types";
 import { generateReceiptText } from "../../utils/receipt";
 import axiosInstance from "../api/axiosInstance";
 import { Link } from "react-router";
+import { CheckCircle, XCircle } from "react-feather"; // Import icons for success and error
 
 interface CartProps {
   cartItems: CartItem[];
   onClearCart: () => void;
   onUpdateQuantity: (id: string, newQty: number) => void;
   onRemoveItem: (id: string) => void;
+  toggleCart: () => void;
 }
 
 export const Cart: React.FC<CartProps> = ({
@@ -16,6 +18,7 @@ export const Cart: React.FC<CartProps> = ({
   onClearCart,
   onUpdateQuantity,
   onRemoveItem,
+  toggleCart,
 }) => {
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -23,13 +26,18 @@ export const Cart: React.FC<CartProps> = ({
   );
 
   const total = subtotal; // Assuming no additional charges for simplicity
-
+  const cartRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [message, setMessage] = useState<string>("");
+
   const handleCheckout = async () => {
     const orderBody = localStorage.getItem("orderRequestBody");
 
     if (!orderBody) {
-      alert("No order data found.");
+      setStatus("error");
+      setMessage("No order data found.");
       return;
     }
 
@@ -43,15 +51,18 @@ export const Cart: React.FC<CartProps> = ({
 
       // Success: clear cart + order body + notify
       console.log("Order submitted successfully:", response.data);
-      alert("✅ Order submitted successfully!");
+      setStatus("success");
+      setMessage("Order submitted successfully!");
       onClearCart();
       localStorage.removeItem("orderRequestBody");
       localStorage.setItem("lastOrderSubmitted", JSON.stringify(parsedOrder));
     } catch (error) {
-      console.error("❌ Order submission failed:", error);
-      alert("❌ Failed to submit order. Please try again.");
+      console.error("Order submission failed:", error);
+      setStatus("error");
+      setMessage("Failed to submit order. Please try again.");
     }
   };
+
   const handlePrint = () => {
     const printContent = receiptRef.current?.innerText;
     const printWindow = window.open("", "_blank", "width=600,height=800");
@@ -62,10 +73,46 @@ export const Cart: React.FC<CartProps> = ({
     }
   };
 
+  useEffect(() => {
+    // Trigger the slide-in animation after component mounts
+    setIsVisible(true);
+  }, []);
+  useEffect(() => {
+    if (status) {
+      const timer = setTimeout(() => {
+        setStatus(null); // Reset the status to close the popup
+      }, 3000); // Close after 3 seconds
+
+      return () => clearTimeout(timer); // Cleanup the timer
+    }
+  }, [status]);
   return (
-    <div className="relative bg-white dark:bg-gray-900 ">
+    <div className="relative bg-white dark:bg-gray-900">
+      {/* Success Popup */}
+      {status === "success" && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-6 shadow-lg z-50">
+          <CheckCircle className="w-12 h-12 text-green-500 animate-bounce mb-4" />
+          <p className="font-medium text-green-800 dark:text-green-200 mb-2">
+            ✅ {message}
+          </p>
+        </div>
+      )}
+
+      {/* Error Popup */}
+      {status === "error" && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-6 shadow-lg z-50">
+          <XCircle className="w-12 h-12 text-red-500 animate-shake mb-4" />
+          <p className="font-medium text-red-800 dark:text-red-200">
+            ❌ {message}
+          </p>
+        </div>
+      )}
+
       <section
-        className="fixed top-[64px] right-0 w-96 max-w-full h-[calc(100vh-64px)] p-6 shadow-2xl bg-white dark:bg-gray-900 z-50 overflow-y-auto border-l border-gray-200/70 dark:border-gray-800/80"
+        ref={cartRef}
+        className={`fixed top-20 right-0 w-105 max-w-full h-[calc(100vh-60px)] p-6 shadow-2xl bg-white dark:bg-gray-900 z-50
+        overflow-y-auto border-l border-gray-200/70 dark:border-gray-800/80 transition-transform duration-600 ease-in-out transform
+        ${isVisible ? "translate-x-0" : "translate-x-full"}`}
         aria-label="Shopping Cart"
       >
         {/* Cart Header with Close Button */}
@@ -91,7 +138,14 @@ export const Cart: React.FC<CartProps> = ({
               {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
             </span>
           </div>
-          <button className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-light">
+          <button
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-light"
+            onClick={() => {
+              setIsVisible(false);
+              toggleCart();
+            }}
+            aria-label="Close cart"
+          >
             &times;
           </button>
         </div>
@@ -284,7 +338,6 @@ export const Cart: React.FC<CartProps> = ({
                   </svg>
                   Print Receipt
                 </button>
-               
               </div>
             </div>
           </>

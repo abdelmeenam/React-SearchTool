@@ -23,6 +23,11 @@ import {
   AlertTriangle,
   XCircle,
   BookCheck,
+  Weight,
+  ShieldCheck,
+  Droplet,
+  Fingerprint,
+  Eye,
 } from "lucide-react";
 import {
   Tag,
@@ -44,7 +49,7 @@ const formatCurrency = (value: number): string =>
     style: "currency",
     currency: "USD",
   }).format(value);
-import { Drug, OrderItem, Prescription, SearchLog } from "../types";
+import { Drug, DrugMedi, OrderItem, Prescription, SearchLog } from "../types";
 import axiosInstance from "../api/axiosInstance";
 import { useCart } from "../context/CartContext"; // adjust path
 import DrugDetailsModal from "../components/DrugDetailsModal";
@@ -89,6 +94,181 @@ export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
     </div>
   </header>
 );
+// Define the DrugMediSection interface
+interface DrugMediSection {
+  drugMedi: DrugMedi[]; // Adjust the type of drugMedi based on your data structure
+}
+
+export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchNdc, setSearchNdc] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const itemsPerPage = 10;
+
+  // Filter logic for search
+  const filteredDrugs = drugMedi.filter((item) => {
+    const ndcMatch = searchNdc
+      ? item.drugNDC?.toLowerCase().includes(searchNdc.toLowerCase())
+      : true;
+    const nameMatch = searchName
+      ? item.drugName?.toLowerCase().includes(searchName.toLowerCase())
+      : true;
+    return ndcMatch && nameMatch;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredDrugs.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredDrugs.slice(indexOfFirstItem, indexOfLastItem);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 on search
+  }, [searchNdc, searchName]);
+
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+
+  return (
+    <div className="mt-6">
+      {/* Search Inputs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+        <div className="flex flex-col">
+          <label
+            htmlFor="searchNdc"
+            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Search by NDC
+          </label>
+          <input
+            id="searchNdc"
+            type="text"
+            value={searchNdc}
+            onChange={(e) => setSearchNdc(e.target.value)}
+            placeholder="Enter NDC code"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label
+            htmlFor="searchName"
+            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Search by Name
+          </label>
+          <input
+            id="searchName"
+            type="text"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            placeholder="Enter drug name"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+          <thead className="bg-gray-100 dark:bg-gray-700">
+            <tr>
+              {[
+                "#",
+                "Name",
+                "NDC",
+                "Prior Authorization",
+                "Extended Duration",
+                "Cost Ceiling Tier",
+                "Non-Capitated Indicator",
+                "CCS Panel Authority",
+              ].map((head) => (
+                <th
+                  key={head}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  {head}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {currentItems.map((item, index) => (
+              <tr
+                key={index}
+                className="hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
+                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {indexOfFirstItem + index + 1}
+                </td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {item.drugName || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <a
+                    href={`https://ndclist.com/ndc/${padCode(item.drugNDC)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {item.drugNDC || "N/A"}
+                  </a>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                  {item.priorAuthorization || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                  {item.extendedDuration || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                  {item.costCeilingTier || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                  {item.nonCapitatedDrugIndicator || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                  {item.ccsPanelAuthority || "N/A"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-md transition ${
+              currentPage === 1
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
+            }`}
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-md transition ${
+              currentPage === totalPages
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface DrugInformationProps {
   drug: Drug;
@@ -102,6 +282,8 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
   bestDrugNet,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [showDrugDetails, setShowDrugDetails] = useState(false);
+
   const net = drugDetail?.net ?? 0;
   const netPositive = net >= 0;
   const bestNet = bestDrugNet?.net ?? 0;
@@ -164,54 +346,49 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
 
       {/* Modal Backdrop */}
 
-      {/* Summary Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="flex items-center space-x-2">
-          <DollarSign className="h-5 w-5 text-gray-400" />
-          <dl>
-            <dt className="text-sm font-medium text-gray-500">ACQ</dt>
-            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-              ${drug.acq.toFixed(2)}
-            </dd>
-          </dl>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Percent className="h-5 w-5 text-gray-400" />
-          <dl>
-            <dt className="text-sm font-medium text-gray-500">AWP</dt>
-            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-              ${drug.awp}
-            </dd>
-          </dl>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Zap className="h-5 w-5 text-gray-400" />
-          <dl>
-            <dt className="text-sm font-medium text-gray-500">Strength</dt>
-            <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-              {drug.strength}
-            </dd>
-          </dl>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <BarChart2 className="h-5 w-5 text-gray-400" />
-          <div className="flex-1">
+      <section className="space-y-8">
+        {/* Summary Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* ACQ */}
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
+            <DollarSign className="h-6 w-6 text-gray-400" />
             <dl>
-              <dt className="text-sm font-medium text-gray-500">Net</dt>
-              <dd
-                className={`mt-1 text-base font-semibold ${
-                  netPositive ? "text-gray-800" : "text-red-600"
-                }`}
-              >
-                {netPositive ? "+" : "-"}${Math.abs(net).toFixed(2)}
+              <dt className="text-sm text-gray-500">ACQ</dt>
+              <dd className="text-base font-semibold text-gray-900 dark:text-white">
+                ${drug.acq.toFixed(2)}
               </dd>
             </dl>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded mt-1">
+          </div>
+
+          {/* AWP */}
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
+            <Percent className="h-6 w-6 text-gray-400" />
+            <dl>
+              <dt className="text-sm text-gray-500">AWP</dt>
+              <dd className="text-base font-semibold text-gray-900 dark:text-white">
+                ${drug.awp}
+              </dd>
+            </dl>
+          </div>
+
+          {/* Net */}
+          <div className="flex flex-col p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
+            <div className="flex items-center gap-3">
+              <BarChart2 className="h-6 w-6 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">Net</dt>
+                <dd
+                  className={`text-base font-semibold ${
+                    netPositive ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {netPositive ? "+" : "-"}${Math.abs(net).toFixed(2)}
+                </dd>
+              </dl>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded mt-2">
               <div
-                className={`h-2 rounded ${
+                className={`h-2 rounded transition-all duration-500 ease-out ${
                   netPositive ? "bg-green-500" : "bg-red-500"
                 }`}
                 style={{
@@ -225,111 +402,169 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Toggle Details Button */}
-      <button
-        onClick={() => setShowDetails(!showDetails)}
-        className="mt-6 text-sm font-medium text-blue-600 hover:underline"
-      >
-        {showDetails ? "Hide Details" : "Show Details"}
-      </button>
-      {showDetails && (
-        <section
-          aria-labelledby="drug-details-heading"
-          className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6 space-y-6"
-        >
-          <h2 id="drug-details-heading" className="sr-only">
-            Drug Details
+        {/* Drug Reference Section */}
+        <section>
+          <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-4">
+            <Package className="h-5 w-5 text-gray-400" /> Drug Reference
+            Information
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* RxCUI */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <Fingerprint className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">RxCUI</dt>
+                <dd className="text-base font-semibold">
+                  {drug?.rxcui ?? "NA"}
+                </dd>
+              </dl>
+            </div>
+
+            {/* Ingredient */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <Droplet className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">Ingredient</dt>
+                <dd className="text-base font-semibold">
+                  {drug?.ingrdient ?? "NA"}
+                </dd>
+              </dl>
+            </div>
+
+            {/* TE Code */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <ShieldCheck className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">TE Code</dt>
+                <dd className="text-base font-semibold">
+                  {drug?.teCode || "NA"}
+                </dd>
+              </dl>
+            </div>
+
+            {/* Market Type */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <Tag className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">Market Type</dt>
+                <dd className="text-base font-semibold">
+                  {drug?.type || "NA"}
+                </dd>
+              </dl>
+            </div>
+
+            {/* Strength */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <Weight className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">Strength</dt>
+                <dd className="text-base font-semibold">
+                  {drug.strength ?? "NA"} {drug?.strengthUnit ?? ""}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        {/* Drug Detail Section */}
+        <section aria-labelledby="drug-details-heading">
+          <h2
+            id="drug-details-heading"
+            className="text-lg font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-4"
+          >
+            <CreditCard className="h-5 w-5 text-gray-400" /> Drug Details
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="flex items-center space-x-2">
+            {/* Insurance Pay */}
+            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
               <CreditCard className="h-5 w-5 text-gray-400" />
               <dl>
-                <dt className="text-sm font-medium text-gray-500">
-                  Insurance Pay
-                </dt>
-                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                <dt className="text-sm text-gray-500">Insurance Pay</dt>
+                <dd className="text-base font-semibold">
                   {drugDetail?.insurancePayment ?? "NA"}
                 </dd>
               </dl>
             </div>
 
-            <div className="flex items-center space-x-2">
+            {/* Patient Pay */}
+            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
               <User className="h-5 w-5 text-gray-400" />
               <dl>
-                <dt className="text-sm font-medium text-gray-500">
-                  Patient Pay
-                </dt>
-                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
+                <dt className="text-sm text-gray-500">Patient Pay</dt>
+                <dd className="text-base font-semibold">
                   {drugDetail?.patientPayment ?? 0}
                 </dd>
               </dl>
             </div>
 
-            <div className="flex items-center space-x-2">
+            {/* Quantity */}
+            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
               <Package className="h-5 w-5 text-gray-400" />
               <dl>
-                <dt className="text-sm font-medium text-gray-500">Quantity</dt>
-                <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                  NA
+                <dt className="text-sm text-gray-500">Quantity</dt>
+                <dd className="text-base font-semibold">NA</dd>
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        {/* Insurance Details Section */}
+        <section className="mt-8">
+          <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-4">
+            <Building className="h-5 w-5 text-gray-400" /> Insurance Details
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* BIN */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <Building className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">BIN</dt>
+                <dd className="text-base font-semibold">
+                  {drugDetail?.bin
+                    ? `${drugDetail.binFullName} - ${drugDetail.bin}`
+                    : "NA"}
+                </dd>
+              </dl>
+            </div>
+
+            {/* PCN */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <FileText className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">PCN</dt>
+                <dd className="text-base font-semibold">
+                  {drugDetail?.pcn ?? "NA"}
+                </dd>
+              </dl>
+            </div>
+
+            {/* RXGroup */}
+            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
+              <Activity className="h-5 w-5 text-gray-400" />
+              <dl>
+                <dt className="text-sm text-gray-500">RXGroup</dt>
+                <dd className="text-base font-semibold">
+                  {drugDetail?.rxgroup ?? "NA"}
                 </dd>
               </dl>
             </div>
           </div>
-
-          <details className="mt-4 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-            <summary className="flex items-center space-x-2 cursor-pointer">
-              <Building className="h-5 w-5 text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                Insurance Details
-              </span>
-            </summary>
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="flex items-center space-x-2">
-                <Building className="h-5 w-5 text-gray-400" />
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500">BIN</dt>
-                  <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                    {drugDetail?.bin
-                      ? `${drugDetail.binFullName} - ${drugDetail.bin}`
-                      : "NA"}
-                  </dd>
-                </dl>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <FileText className="h-5 w-5 text-gray-400" />
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500">PCN</dt>
-                  <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                    {drugDetail?.pcn ?? "NA"}
-                  </dd>
-                </dl>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Activity className="h-5 w-5 text-gray-400" />
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500">RXGroup</dt>
-                  <dd className="mt-1 text-base text-gray-900 dark:text-gray-100">
-                    {drugDetail?.rxgroup ?? "NA"}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </details>
         </section>
-      )}
+      </section>
+
       {/* Show Details Button */}
-      <div className="mt-4 flex justify-end">
+      <div className="mt-6 flex justify-center sm:justify-end">
         <button
           onClick={() => setShowDetails(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
+          aria-label="Show more drug details"
         >
+          <Eye className="h-5 w-5" />
           Show Details
         </button>
       </div>
+
       {/*
 <div className="mt-6 flex justify-end">
   {cartItems.some((item) => item.id === drug.ndc) ? (
@@ -488,10 +723,9 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           </div>
 
           {/* Modal card with 3D effect */}
-          <div className="relative w-full max-w-md">
-            {/* Floating card shadow */}
+          <div className="relative w-137">
+            ` {/* Floating card shadow */}
             <div className="absolute -inset-2 bg-blue-500/10 rounded-2xl blur-xl opacity-70 animate-float" />
-
             {/* Main card */}
             <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/30 dark:border-gray-700/50 overflow-hidden transform transition-all duration-500 will-change-transform animate-cardEntry">
               {/* Dynamic status indicator */}
@@ -808,15 +1042,42 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     </button>
                   ) : (
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         addToCart({
                           id:
                             modalDrug.ndcCode || `${modalDrug.drugId}-uniqueId`,
                           name: modalDrug.drugName || "Unnamed Drug",
                           price: modalDrug.net,
                           quantity: 1,
-                        })
-                      }
+                        });
+                        const storedSearchLog =
+                          localStorage.getItem("searchLogDetails");
+                        if (storedSearchLog) {
+                          const searchLog: SearchLog =
+                            JSON.parse(storedSearchLog);
+                          const newOrderItem: OrderItem = {
+                            drugId: modalDrug.drugId,
+                            netPrice: modalDrug?.net ?? 0,
+                            patientPay: modalDrug?.patientPayment ?? 0,
+                            insurancePay: modalDrug?.insurancePayment ?? 0,
+                            acquisitionCost: modalDrug.acquisitionCost,
+                            additionalCost: 0,
+                            insuranceRxId: modalDrug?.rxgroupId ?? 0,
+                            amount: 1,
+                          };
+
+                          const currentOrder = JSON.parse(
+                            localStorage.getItem("orderRequestBody") ||
+                              '{"orderItems":[],"searchLogs":[]}'
+                          );
+                          currentOrder.orderItems.push(newOrderItem);
+                          currentOrder.searchLogs.push(searchLog);
+                          localStorage.setItem(
+                            "orderRequestBody",
+                            JSON.stringify(currentOrder)
+                          );
+                        }
+                      }}
                       className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] flex items-center space-x-1.5"
                     >
                       <svg
@@ -1429,18 +1690,24 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   handlePcnFilterChange,
   uniquePcnValues,
 }) => {
-  const filteredAlternatives = useMemo(
-    () =>
-      alternatives.filter(
-        (alt) =>
-          (!selectedBin || alt.bin === selectedBin) &&
-          (!selectedPcn || alt.pcn === selectedPcn)
-      ),
-    [alternatives, selectedBin, selectedPcn]
-  );
-
+  const [searchNdc, setSearchNdc] = useState("");
+  const [searchName, setSearchName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Filter alternatives based on search inputs and selected filters
+  const filteredAlternatives = useMemo(() => {
+    return alternatives.filter(
+      (alt) =>
+        (!selectedBin || alt.bin === selectedBin) &&
+        (!selectedPcn || alt.pcn === selectedPcn) &&
+        (!searchNdc ||
+          alt.ndcCode?.toLowerCase().includes(searchNdc.toLowerCase())) &&
+        (!searchName ||
+          alt.drugName?.toLowerCase().includes(searchName.toLowerCase()))
+    );
+  }, [alternatives, selectedBin, selectedPcn, searchNdc, searchName]);
+
   const totalPages = Math.ceil(filteredAlternatives.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -1451,7 +1718,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedBin, selectedPcn, alternatives]);
+  }, [selectedBin, selectedPcn, searchNdc, searchName, alternatives]);
 
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () =>
@@ -1462,6 +1729,47 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
         Suggested Alternative Drugs Without Available Insurance Price Data
       </h3>
+
+      {/* Search Inputs */}
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* NDC Search */}
+        <div className="flex flex-col">
+          <label
+            htmlFor="searchNdc"
+            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Search by NDC
+          </label>
+          <input
+            id="searchNdc"
+            type="text"
+            value={searchNdc}
+            onChange={(e) => setSearchNdc(e.target.value)}
+            placeholder="Enter NDC code"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+
+        {/* Name Search */}
+        <div className="flex flex-col">
+          <label
+            htmlFor="searchName"
+            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Search by Name
+          </label>
+          <input
+            id="searchName"
+            type="text"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            placeholder="Enter drug name"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
       <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4">
         <table className="min-w-full table-auto">
           <thead className="bg-gray-100 dark:bg-gray-700">
@@ -1476,15 +1784,19 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                 Strength
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Ingrdiant
+                Ingredient
               </th>
-
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Route
               </th>
-
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Class
+                TE Code
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Market Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Strength Unit
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 NDC Codes
@@ -1522,16 +1834,24 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     {alt.ingrdient ? alt.ingrdient : "N/A"}
                   </div>
                 </td>
-
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
                     {alt.route ? alt.route : "N/A"}
                   </div>
                 </td>
-
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.drugClass ? alt.drugClass : "N/A"}
+                    {alt.teCode !== "" ? alt.teCode : "N/A"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.type !== "" ? alt.type : "N/A"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                    {alt.strengthUnit !== "" ? alt.strengthUnit : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -1551,6 +1871,8 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <button
@@ -1583,6 +1905,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
     </section>
   );
 };
+
 const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
   alternatives,
   classNameStr,
@@ -1595,15 +1918,33 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
   uniquePcnValues,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchNdc, setSearchNdc] = useState("");
+  const [searchName, setSearchName] = useState("");
+
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(alternatives.length / itemsPerPage);
+
+  // ✅ Apply search filters
+  const filteredAlternatives = alternatives.filter((alt) => {
+    const ndcMatch = searchNdc
+      ? alt.ndc.toLowerCase().includes(searchNdc.toLowerCase())
+      : true;
+    const nameMatch = searchName
+      ? alt.name?.toLowerCase().includes(searchName.toLowerCase())
+      : true;
+    return ndcMatch && nameMatch;
+  });
+
+  const totalPages = Math.ceil(filteredAlternatives.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = alternatives.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredAlternatives.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedBin, selectedPcn, alternatives]);
+  }, [searchNdc, searchName, selectedBin, selectedPcn, alternatives]);
 
   const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNextPage = () =>
@@ -1614,33 +1955,67 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
         Suggested Alternative Drugs Without Available Insurance Price Data
       </h3>
+
+      {/* 🔍 Search Inputs */}
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col">
+          <label
+            htmlFor="searchNdc"
+            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Search by NDC
+          </label>
+          <input
+            id="searchNdc"
+            type="text"
+            value={searchNdc}
+            onChange={(e) => setSearchNdc(e.target.value)}
+            placeholder="Enter NDC code"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label
+            htmlFor="searchName"
+            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Search by Name
+          </label>
+          <input
+            id="searchName"
+            type="text"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            placeholder="Enter drug name"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+      </div>
+
+      {/* 📋 Table */}
       <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4">
         <table className="min-w-full table-auto">
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Form
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Strength
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Ingrdiant
-              </th>
-
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Route
-              </th>
-
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Class
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                NDC Codes
-              </th>
+              {[
+                "Name",
+                "Form",
+                "Strength",
+                "Ingredient",
+                "Route",
+                "TE Code",
+                "Market Status",
+                "Strength Unit",
+                "NDC Codes",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  {header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -1650,68 +2025,60 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
                 className="hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <a
-                      href={`/drug/${alt.id}?ndc=${alt.ndc}`}
-                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
-                    >
-                      {alt.name ? alt.name : "N/A"}
-                    </a>
-                  </div>
+                  <a
+                    href={`/drug/${alt.id}?ndc=${alt.ndc}`}
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                  >
+                    {alt.name || "N/A"}
+                  </a>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.form ? alt.form : "N/A"}
-                  </div>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {alt.form || "N/A"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.strength ? alt.strength : "N/A"}
-                  </div>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {alt.strength || "N/A"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.ingrdient ? alt.ingrdient : "N/A"}
-                  </div>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {alt.ingrdient || "N/A"}
                 </td>
-
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.route ? alt.route : "N/A"}
-                  </div>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {alt.route || "N/A"}
                 </td>
-
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    {alt.drugClassV2Id ? alt.drugClassV2Id : "N/A"}
-                  </div>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {alt.teCode || "N/A"}
                 </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
-                    <a
-                      href={`https://ndclist.com/ndc/${padCode(alt.ndc)}`}
-                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {padCode(alt.ndc)}
-                    </a>
-                  </div>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {alt.type || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {alt.strengthUnit || "N/A"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  <a
+                    href={`https://ndclist.com/ndc/${padCode(alt.ndc)}`}
+                    className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {padCode(alt.ndc)}
+                  </a>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* 📍 Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-md ${
+            className={`px-4 py-2 rounded-md transition ${
               currentPage === 1
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 dark:bg-blue-700 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
             }`}
           >
             Previous
@@ -1722,10 +2089,10 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-md ${
+            className={`px-4 py-2 rounded-md transition ${
               currentPage === totalPages
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 dark:bg-blue-700 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
             }`}
           >
             Next
@@ -1735,6 +2102,7 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
     </section>
   );
 };
+
 export const DrugDetails: React.FC = () => {
   const { drugId } = useParams();
   const [searchParams] = useSearchParams();
@@ -1773,6 +2141,8 @@ export const DrugDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [classV1, setClassV1] = useState<Boolean>(true);
+  const [drugmedi, setDrugmedi] = useState<DrugMedi[]>([]);
+  const [mediToggle, setMediToggle] = useState(false);
   // Fetch drug details and alternatives
   useEffect(() => {
     const fetchDrugDetails = async () => {
@@ -1797,9 +2167,9 @@ export const DrugDetails: React.FC = () => {
             );
             console.log("response2: ", response2.data);
 
-            const sortedData = response2.data.sort(
-              (a: Prescription, b: Prescription) => b.net - a.net
-            );
+            const sortedData = response2.data
+              .sort((a: Prescription, b: Prescription) => b.net - a.net)
+              .filter((alt: Prescription) => alt.type !== "DISCN");
 
             setSortedAlternatives(sortedData);
           } else {
@@ -1828,6 +2198,13 @@ export const DrugDetails: React.FC = () => {
           response2 = await axiosInstance.get(
             `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
           );
+
+          if (insuranceId === "615") {
+            const mediResponse = await axiosInstance.get(
+              `/drug/GetAllMediDrugs?classId=${response.data?.drugClassId}`
+            );
+            setDrugmedi(mediResponse.data);
+          }
           console.log("sadasd:  ", response2.data);
           const response3 = await axiosInstance.get(
             `/drug/GetClassById?id=${response.data.drugClassId}`
@@ -1839,23 +2216,31 @@ export const DrugDetails: React.FC = () => {
           setDrugDetail(response2.data);
           setBranchDrugs(response10.data);
           if (response3.data.name !== "other") {
-            const response4 =
-              classV1 === true
-                ? await axiosInstance.get(
-                    `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
-                  )
-                : await axiosInstance.get(
-                    `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
-                  );
-            const matchingAlt = response4.data.find(
-              (alt: Prescription) => alt.insuranceId.toString() === insuranceId
-            );
-            setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-            const sortedData = response4.data.sort(
-              (a: Prescription, b: Prescription) => b.net - a.net
-            );
-            setSortedAlternatives(sortedData);
-            console.log("sortedData", sortedData);
+            let response4;
+            if (classV1 === true) {
+              response4 = await axiosInstance.get(
+                `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
+              );
+              console.log("response4: ", response4.data);
+
+              const matchingAlt = response4.data.find(
+                (alt: Prescription) =>
+                  alt.insuranceId.toString() === insuranceId
+              );
+              setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
+              const sortedData = response4.data
+                .sort((a: Prescription, b: Prescription) => b.net - a.net)
+                .filter((alt: Prescription) => alt.type !== "DISCN");
+              setSortedAlternatives(sortedData);
+              console.log("sortedData", sortedData);
+            } else {
+              response4 = await axiosInstance.get(
+                `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
+              );
+              console.log("response2V2: ", response4.data);
+              const sortedData = response4.data;
+              setSortedAlternativesV2(sortedData);
+            }
           } else {
             setSortedAlternatives([]);
           }
@@ -2026,28 +2411,12 @@ export const DrugDetails: React.FC = () => {
             />
 
             {activeTable === "insurance" ? (
-              <section aria-label="Alternative Medications with Insurance">
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="classV1Toggle"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Toggle Class Version
-                  </label>
-                  <button
-                    id="classV1Toggle"
-                    onClick={() => setClassV1((prev) => !prev)}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      classV1
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                    }`}
-                  >
-                    {classV1 ? "Class V1" : "Class V2"}
-                  </button>
-                </div>
+              <section
+                aria-label="Alternative Medications with Insurance"
+                className="mt-6"
+              >
                 {sortedAlternatives.length > 0 && (
-                  <>
+                  <div className="space-y-6">
                     <AlternativesTable
                       alternatives={alternativesWithInsurance}
                       classNameStr={classNameStr}
@@ -2066,45 +2435,86 @@ export const DrugDetails: React.FC = () => {
                       setBestNetDrug={setBestNetDrug}
                     />
 
-                    <button
-                      onClick={() => setShowOtherAlternatives((prev) => !prev)}
-                      className="mt-4 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md transition-colors duration-200"
-                    >
-                      {showOtherAlternatives
-                        ? "Hide Other Alternatives"
-                        : "Show Other Alternatives"}
-                    </button>
+                    {/* Action Buttons Group */}
+                    <div className="flex flex-wrap items-center gap-4">
+                      <button
+                        onClick={() =>
+                          setShowOtherAlternatives((prev) => !prev)
+                        }
+                        className="px-5 py-2 rounded-md bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 transition duration-200"
+                      >
+                        {showOtherAlternatives
+                          ? "Hide Other Alternatives"
+                          : "Show Other Alternatives"}
+                      </button>
+                    </div>
 
+                    {/* Other Alternatives Table */}
                     {showOtherAlternatives && (
-                      <section aria-label="Other Alternatives Without Insurance">
-                        {classV1 ? (
-                          <OtherAlternativesTable
-                            alternatives={alternativesWithoutInsurance}
-                            classNameStr={classNameStr}
-                            padCode={padCode}
-                            selectedBin={otherSelectedBin}
-                            handleBinFilterChange={handleOtherBinFilterChange}
-                            uniqueBinValues={uniqueOtherBinValues}
-                            selectedPcn={otherSelectedPcn}
-                            handlePcnFilterChange={handleOtherPcnFilterChange}
-                            uniquePcnValues={uniqueOtherPcnValues}
-                          />
-                        ) : (
-                          <OtherAlternativesTableV2
-                            alternatives={alternativesWithoutInsuranceV2}
-                            classNameStr={classNameStr}
-                            padCode={padCode}
-                            selectedBin={otherSelectedBin}
-                            handleBinFilterChange={handleOtherBinFilterChange}
-                            uniqueBinValues={uniqueOtherBinValues}
-                            selectedPcn={otherSelectedPcn}
-                            handlePcnFilterChange={handleOtherPcnFilterChange}
-                            uniquePcnValues={uniqueOtherPcnValues}
-                          />
-                        )}
-                      </section>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <label
+                            htmlFor="classV1Toggle"
+                            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            Toggle Class Version
+                          </label>
+                          <button
+                            id="classV1Toggle"
+                            onClick={() => setClassV1((prev) => !prev)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              classV1
+                                ? "bg-blue-600 text-white hover:bg-blue-700"
+                                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                            }`}
+                          >
+                            {classV1 ? "Class V1" : "Class V2"}
+                          </button>
+                        </div>
+
+                        <section aria-label="Other Alternatives Without Insurance">
+                          {classV1 ? (
+                            <OtherAlternativesTable
+                              alternatives={alternativesWithoutInsurance}
+                              classNameStr={classNameStr}
+                              padCode={padCode}
+                              selectedBin={otherSelectedBin}
+                              handleBinFilterChange={handleOtherBinFilterChange}
+                              uniqueBinValues={uniqueOtherBinValues}
+                              selectedPcn={otherSelectedPcn}
+                              handlePcnFilterChange={handleOtherPcnFilterChange}
+                              uniquePcnValues={uniqueOtherPcnValues}
+                            />
+                          ) : (
+                            <OtherAlternativesTableV2
+                              alternatives={alternativesWithoutInsuranceV2}
+                              classNameStr={classNameStr}
+                              padCode={padCode}
+                              selectedBin={otherSelectedBin}
+                              handleBinFilterChange={handleOtherBinFilterChange}
+                              uniqueBinValues={uniqueOtherBinValues}
+                              selectedPcn={otherSelectedPcn}
+                              handlePcnFilterChange={handleOtherPcnFilterChange}
+                              uniquePcnValues={uniqueOtherPcnValues}
+                            />
+                          )}
+                        </section>
+                      </div>
                     )}
-                  </>
+                    {/* Medi Button */}
+                    <button
+                      onClick={() => setMediToggle(!mediToggle)}
+                      className="px-5 py-2 rounded-md bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 transition duration-200"
+                    >
+                      {mediToggle ? "Hide Medi Section" : "Show Medi Section"}
+                    </button>
+                    {/* Medi Section */}
+                    {mediToggle && (
+                      <div className="pt-4">
+                        <DrugMediSection drugMedi={drugmedi} />
+                      </div>
+                    )}
+                  </div>
                 )}
               </section>
             ) : (

@@ -43,25 +43,24 @@ const AppHeader: React.FC = () => {
         item.id === id ? { ...item, quantity: Math.max(1, newQty) } : item
       )
     );
-  
+
     const orderData = localStorage.getItem("orderRequestBody");
     if (orderData) {
       const parsed = JSON.parse(orderData);
       const index = cartItems.findIndex((item) => item.id === id);
-  
+
       if (index !== -1 && parsed.orderItems[index]) {
         parsed.orderItems[index].amount = Math.max(1, newQty);
         localStorage.setItem("orderRequestBody", JSON.stringify(parsed));
       }
     }
   };
-  
-  
+
   const removeCartItem = (id: string) => {
     const index = cartItems.findIndex((item) => item.id === id);
-  
+
     setCartItems((prev) => prev.filter((_, i) => i !== index));
-  
+
     const orderData = localStorage.getItem("orderRequestBody");
     if (orderData && index !== -1) {
       const parsed = JSON.parse(orderData);
@@ -70,8 +69,7 @@ const AppHeader: React.FC = () => {
       localStorage.setItem("orderRequestBody", JSON.stringify(parsed));
     }
   };
-  
-  
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -213,17 +211,17 @@ const AppHeader: React.FC = () => {
             <UserDropdown />
           </div>
         </div>
-          {/* 🛒 Cart Sidebar Component */}
-      {isCartOpen && (
-        <Cart
-          cartItems={cartItems}
-          onClearCart={clearCart}
-          onUpdateQuantity={updateCartItemQuantity}
-          onRemoveItem={removeCartItem}
-        />
-      )}
+        {/* 🛒 Cart Sidebar Component */}
+        {isCartOpen && (
+          <Cart
+            cartItems={cartItems}
+            onClearCart={clearCart}
+            onUpdateQuantity={updateCartItemQuantity}
+            onRemoveItem={removeCartItem}
+            toggleCart={toggleCart}
+          />
+        )}
       </header>
-    
     </>
   );
 };
