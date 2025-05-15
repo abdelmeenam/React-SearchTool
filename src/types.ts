@@ -13,7 +13,21 @@ export interface Drug {
   awp: number;
   rxcui: number;
   ingrdient: string;
+  teCode: string;
+  type: string;
+  strengthUnit: string;
 }
+export interface DrugMedi {
+  drugName: string;
+  drugId: number;
+  drugNDC: string;
+  priorAuthorization: string;
+  extendedDuration: string;
+  costCeilingTier: string;
+  nonCapitatedDrugIndicator: string;
+  ccsPanelAuthority: string;
+}
+
 export interface BestAlternative {
   classId: number;
   date: string; // ISO date string, e.g., "2024-01-01T00:00:00Z"
@@ -33,7 +47,7 @@ export interface BestAlternative {
   binFullName: string;
   bin: string;
   pcn: string;
-  rxgroup: string;
+  rxgroup: string; 
 }
 export interface CartItem {
   id: string;
@@ -100,6 +114,8 @@ export interface Prescription {
   route: string;
   teCode: string;
   ingrdient: string;
+  type: string;
+  strengthUnit: string;
 }
 
 export interface DrugInsuranceInfo {
