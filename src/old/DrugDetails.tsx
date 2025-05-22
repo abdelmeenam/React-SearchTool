@@ -544,7 +544,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
               <div className="flex items-center gap-2 mb-4">
                 <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 tracking-tight">
-                  Drug Medi Information
+                  Drug Medical Information
                 </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -2655,7 +2655,9 @@ export const DrugDetails: React.FC = () => {
                         }
                       `}
                       >
-                        {mediToggle ? "Hide Medi Section" : "Show Medi Section"}
+                        {mediToggle
+                          ? "Hide Medicale Section"
+                          : "Show Medicale Section"}
                       </button>
                     </div>
 
