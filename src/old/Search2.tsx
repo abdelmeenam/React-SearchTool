@@ -652,7 +652,7 @@ export const InsuranceSearch: React.FC = () => {
                     className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                   />
                   <AnimatePresence>
-                    {showDrugSuggestions && drugs.length > 0 && (
+                    {showDrugSuggestions && (
                       <motion.div
                         ref={dropdownRef}
                         layout
@@ -663,6 +663,17 @@ export const InsuranceSearch: React.FC = () => {
                         aria-label="Drug search suggestions"
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto drug-suggestions-box"
                       >
+                        {/* Show loading skeletons if drugs are not loaded yet */}
+                        {drugs.length === 0 && !isLoadingMore && (
+                          <div className="p-4">
+                            {[...Array(5)].map((_, i) => (
+                              <div
+                                key={i}
+                                className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"
+                              />
+                            ))}
+                          </div>
+                        )}
                         {uniqueFilteredDrugs.map((drug) => (
                           <button
                             key={drug.id}
