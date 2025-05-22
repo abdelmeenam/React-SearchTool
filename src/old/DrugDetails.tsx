@@ -28,6 +28,7 @@ import {
   Droplet,
   Fingerprint,
   Eye,
+  Clock,
 } from "lucide-react";
 import {
   Tag,
@@ -170,8 +171,8 @@ export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
               {[
@@ -197,7 +198,7 @@ export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
             {currentItems.map((item, index) => (
               <tr
                 key={index}
-                className="hover:bg-gray-50 dark:hover:bg-gray-600"
+                className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                   {indexOfFirstItem + index + 1}
@@ -210,7 +211,7 @@ export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
                     href={`https://ndclist.com/ndc/${padCode(item.drugNDC)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition"
                   >
                     {item.drugNDC || "N/A"}
                   </a>
@@ -275,11 +276,13 @@ interface DrugInformationProps {
   drugDetail?: Prescription | null;
   classNameStr: string;
   bestDrugNet: Prescription | null;
+  drugMedi: DrugMedi | null;
 }
 export const DrugInformation: React.FC<DrugInformationProps> = ({
   drug,
   drugDetail,
   bestDrugNet,
+  drugMedi,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [showDrugDetails, setShowDrugDetails] = useState(false);
@@ -290,19 +293,20 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
   const { addToCart } = useCart();
   const cartItems = useCart().cartItems;
   return (
-    <div className="relative max-w-4xl mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+    <div className="relative mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
+      {/* Recommendation Badge */}
       {bestNet !== 0 && (
         <div
           className={`absolute bottom-4 left-4 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium text-white shadow-md
-          ${
-            net === bestNet
-              ? "bg-green-600"
-              : net >= bestNet * 0.7
-              ? "bg-yellow-500"
-              : net >= bestNet * 0.5
-              ? "bg-orange-400"
-              : "bg-red-500"
-          }`}
+        ${
+          net === bestNet
+            ? "bg-green-600"
+            : net >= bestNet * 0.7
+            ? "bg-yellow-500"
+            : net >= bestNet * 0.5
+            ? "bg-orange-400"
+            : "bg-red-500"
+        }`}
         >
           {net === bestNet ? (
             <>
@@ -328,13 +332,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
         </div>
       )}
 
-      {/* try */}
-
-      {/* Show Details Button */}
-
       {/* Details Modal */}
-
-      {/* Modal Component */}
       {showDetails && (
         <DrugDetailsModal
           drug={drug}
@@ -344,51 +342,44 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
         />
       )}
 
-      {/* Modal Backdrop */}
-
       <section className="space-y-8">
         {/* Summary Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* ACQ */}
-          <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
-            <DollarSign className="h-6 w-6 text-gray-400" />
-            <dl>
-              <dt className="text-sm text-gray-500">ACQ</dt>
-              <dd className="text-base font-semibold text-gray-900 dark:text-white">
-                ${drug.acq.toFixed(2)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded shadow-sm min-w-0">
+            <DollarSign className="h-5 w-5 text-blue-500 dark:text-blue-300 flex-shrink-0" />
+            <dl className="min-w-0">
+              <dt className="text-xs text-gray-500 truncate">ACQ</dt>
+              <dd className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                ${drug.acq?.toFixed(2) ?? "NA"}
               </dd>
             </dl>
           </div>
-
-          {/* AWP */}
-          <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
-            <Percent className="h-6 w-6 text-gray-400" />
-            <dl>
-              <dt className="text-sm text-gray-500">AWP</dt>
-              <dd className="text-base font-semibold text-gray-900 dark:text-white">
-                ${drug.awp}
+          <div className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded shadow-sm min-w-0">
+            <Percent className="h-5 w-5 text-blue-500 dark:text-blue-300 flex-shrink-0" />
+            <dl className="min-w-0">
+              <dt className="text-xs text-gray-500 truncate">AWP</dt>
+              <dd className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                ${drug.awp ?? "NA"}
               </dd>
             </dl>
           </div>
-
-          {/* Net */}
-          <div className="flex flex-col p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
-            <div className="flex items-center gap-3">
-              <BarChart2 className="h-6 w-6 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">Net</dt>
+          <div className="flex flex-col p-3 bg-white dark:bg-gray-800 rounded shadow-sm min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <BarChart2 className="h-5 w-5 text-blue-500 dark:text-blue-300 flex-shrink-0" />
+              <dl className="min-w-0">
+                <dt className="text-xs text-gray-500 truncate">Net</dt>
                 <dd
-                  className={`text-base font-semibold ${
+                  className={`text-sm font-semibold ${
                     netPositive ? "text-green-600" : "text-red-600"
-                  }`}
+                  } truncate`}
                 >
                   {netPositive ? "+" : "-"}${Math.abs(net).toFixed(2)}
                 </dd>
               </dl>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded mt-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded mt-2">
               <div
-                className={`h-2 rounded transition-all duration-500 ease-out ${
+                className={`h-1.5 rounded transition-all duration-500 ease-out ${
                   netPositive ? "bg-green-500" : "bg-red-500"
                 }`}
                 style={{
@@ -405,65 +396,78 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
 
         {/* Drug Reference Section */}
         <section>
-          <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-4">
-            <Package className="h-5 w-5 text-gray-400" /> Drug Reference
-            Information
+          <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-3">
+            <Package className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+            Drug Reference Information
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* RxCUI */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <Fingerprint className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">RxCUI</dt>
-                <dd className="text-base font-semibold">
-                  {drug?.rxcui ?? "NA"}
-                </dd>
-              </dl>
-            </div>
-
-            {/* Ingredient */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <Droplet className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">Ingredient</dt>
-                <dd className="text-base font-semibold">
-                  {drug?.ingrdient ?? "NA"}
-                </dd>
-              </dl>
-            </div>
-
-            {/* TE Code */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <ShieldCheck className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">TE Code</dt>
-                <dd className="text-base font-semibold">
-                  {drug?.teCode || "NA"}
-                </dd>
-              </dl>
-            </div>
-
-            {/* Market Type */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <Tag className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">Market Type</dt>
-                <dd className="text-base font-semibold">
-                  {drug?.type || "NA"}
-                </dd>
-              </dl>
-            </div>
-
-            {/* Strength */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <Weight className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">Strength</dt>
-                <dd className="text-base font-semibold">
-                  {drug.strength ?? "NA"} {drug?.strengthUnit ?? ""}
-                </dd>
-              </dl>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {[
+              {
+                icon: (
+                  <Fingerprint className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "RxCUI",
+                value: drug?.rxcui ?? "NA",
+              },
+              {
+                icon: (
+                  <Droplet className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "Ingredient",
+                value: drug?.ingrdient ?? "NA",
+              },
+              {
+                icon: (
+                  <ShieldCheck className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "TE Code",
+                value: drug?.teCode || "NA",
+              },
+              {
+                icon: (
+                  <Tag className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "Market Type",
+                value: drug?.type || "NA",
+              },
+              {
+                icon: (
+                  <Weight className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "Strength",
+                value: `${drug.strength ?? "NA"} ${drug?.strengthUnit ?? ""}`,
+              },
+            ].map((item, idx) => (
+              <div
+                key={item.label}
+                className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 p-2 rounded min-w-0"
+              >
+                {item.icon}
+                <dl className="min-w-0">
+                  <dt className="text-xs text-gray-500 truncate">
+                    {item.label}
+                  </dt>
+                  <dd
+                    className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[120px] cursor-pointer"
+                    title={
+                      item.value !== undefined ? String(item.value) : undefined
+                    }
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(item.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(item.value);
+                      }
+                    }}
+                  >
+                    {item.value}
+                  </dd>
+                </dl>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -471,158 +475,224 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
         <section aria-labelledby="drug-details-heading">
           <h2
             id="drug-details-heading"
-            className="text-lg font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-4"
+            className="text-base font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-3"
           >
-            <CreditCard className="h-5 w-5 text-gray-400" /> Drug Details
+            <CreditCard className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+            Drug Details
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Insurance Pay */}
-            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
-              <CreditCard className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">Insurance Pay</dt>
-                <dd className="text-base font-semibold">
-                  {drugDetail?.insurancePayment ?? "NA"}
-                </dd>
-              </dl>
-            </div>
-
-            {/* Patient Pay */}
-            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
-              <User className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">Patient Pay</dt>
-                <dd className="text-base font-semibold">
-                  {drugDetail?.patientPayment ?? 0}
-                </dd>
-              </dl>
-            </div>
-
-            {/* Quantity */}
-            <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
-              <Package className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">Quantity</dt>
-                <dd className="text-base font-semibold">NA</dd>
-              </dl>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[
+              {
+                icon: (
+                  <CreditCard className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "Insurance Pay",
+                value: drugDetail?.insurancePayment ?? "NA",
+              },
+              {
+                icon: (
+                  <User className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "Patient Pay",
+                value: drugDetail?.patientPayment ?? 0,
+              },
+              {
+                icon: (
+                  <Package className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "Quantity",
+                value: "NA",
+              },
+            ].map((item, idx) => (
+              <div
+                key={item.label}
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded shadow-sm min-w-0"
+              >
+                {item.icon}
+                <dl className="min-w-0">
+                  <dt className="text-xs text-gray-500 truncate">
+                    {item.label}
+                  </dt>
+                  <dd
+                    className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[120px] cursor-pointer"
+                    title={
+                      item.value !== undefined ? String(item.value) : undefined
+                    }
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(item.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(item.value);
+                      }
+                    }}
+                  >
+                    {item.value}
+                  </dd>
+                </dl>
+              </div>
+            ))}
           </div>
         </section>
+
+        {/* Drug Medi Section */}
+        {drugMedi && (
+          <section>
+            <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg p-4 border border-blue-100 dark:border-gray-700">
+              <div className="flex items-center gap-2 mb-4">
+                <Building className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 tracking-tight">
+                  Drug Medi Information
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {[
+                  {
+                    icon: (
+                      <FileText className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                    ),
+                    label: "Prior Authorization",
+                    value: drugMedi.priorAuthorization,
+                  },
+                  {
+                    icon: (
+                      <Clock className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                    ),
+                    label: "Extended Duration",
+                    value: drugMedi.extendedDuration,
+                  },
+                  {
+                    icon: (
+                      <Wallet className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                    ),
+                    label: "Cost Ceiling Tier",
+                    value: drugMedi.costCeilingTier,
+                  },
+                  {
+                    icon: (
+                      <ShieldCheck className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                    ),
+                    label: "Non-Capitated Indicator",
+                    value: drugMedi.nonCapitatedDrugIndicator,
+                  },
+                  {
+                    icon: (
+                      <UserCheck className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                    ),
+                    label: "CCS Panel Authority",
+                    value: drugMedi.ccsPanelAuthority,
+                  },
+                ].map((item, idx) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded shadow p-2 min-w-0"
+                  >
+                    {item.icon}
+                    <div className="min-w-0">
+                      <span className="block text-xs text-gray-500 dark:text-gray-400 font-semibold truncate">
+                        {item.label}
+                      </span>
+                      <span
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-[120px] cursor-pointer"
+                        title={item.value}
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          alert(item.value);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            alert(item.value);
+                          }
+                        }}
+                      >
+                        {item.value}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Insurance Details Section */}
-        <section className="mt-8">
-          <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-4">
-            <Building className="h-5 w-5 text-gray-400" /> Insurance Details
+        <section className="mt-6">
+          <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-3">
+            <Building className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+            Insurance Details
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* BIN */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <Building className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">BIN</dt>
-                <dd className="text-base font-semibold">
-                  {drugDetail?.bin
-                    ? `${drugDetail.binFullName} - ${drugDetail.bin}`
-                    : "NA"}
-                </dd>
-              </dl>
-            </div>
-
-            {/* PCN */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <FileText className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">PCN</dt>
-                <dd className="text-base font-semibold">
-                  {drugDetail?.pcn ?? "NA"}
-                </dd>
-              </dl>
-            </div>
-
-            {/* RXGroup */}
-            <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded">
-              <Activity className="h-5 w-5 text-gray-400" />
-              <dl>
-                <dt className="text-sm text-gray-500">RXGroup</dt>
-                <dd className="text-base font-semibold">
-                  {drugDetail?.rxgroup ?? "NA"}
-                </dd>
-              </dl>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[
+              {
+                icon: (
+                  <Building className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "BIN",
+                value: drugDetail?.bin
+                  ? `${drugDetail.binFullName} - ${drugDetail.bin}`
+                  : "NA",
+              },
+              {
+                icon: (
+                  <FileText className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "PCN",
+                value: drugDetail?.pcn ?? "NA",
+              },
+              {
+                icon: (
+                  <Activity className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                ),
+                label: "RXGroup",
+                value: drugDetail?.rxgroup ?? "NA",
+              },
+            ].map((item, idx) => (
+              <div
+                key={item.label}
+                className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 p-2 rounded min-w-0"
+              >
+                {item.icon}
+                <dl className="min-w-0">
+                  <dt className="text-xs text-gray-500 truncate">
+                    {item.label}
+                  </dt>
+                  <dd
+                    className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[120px] cursor-pointer"
+                    title={item.value}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(item.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(item.value);
+                      }
+                    }}
+                  >
+                    {item.value}
+                  </dd>
+                </dl>
+              </div>
+            ))}
           </div>
         </section>
+
+        {/* Show Details Button */}
+        <div className="mt-6 flex justify-center sm:justify-end">
+          <button
+            onClick={() => setShowDetails(true)}
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition text-sm"
+            aria-label="Show more drug details"
+          >
+            <Eye className="h-4 w-4" />
+            Show Details
+          </button>
+        </div>
       </section>
-
-      {/* Show Details Button */}
-      <div className="mt-6 flex justify-center sm:justify-end">
-        <button
-          onClick={() => setShowDetails(true)}
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
-          aria-label="Show more drug details"
-        >
-          <Eye className="h-5 w-5" />
-          Show Details
-        </button>
-      </div>
-
-      {/*
-<div className="mt-6 flex justify-end">
-  {cartItems.some((item) => item.id === drug.ndc) ? (
-    <button
-      disabled
-      className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg shadow-md cursor-not-allowed"
-      aria-label={`"${drug.name || "Unnamed Drug"}" is already in the cart`}
-    >
-      Added
-    </button>
-  ) : (
-
-
-    <button
-      onClick={() => {
-        if (drug.acq !== undefined && drug.acq !== null) {
-          addToCart({
-            id: drug.ndc || Date.now().toString(),
-            name: drug.name || "Unnamed Drug",
-            price: drug.acq,
-            quantity: 1,
-          });
-
-          const storedSearchLog = localStorage.getItem("searchLogDetails");
-          if (storedSearchLog) {
-            const searchLog: SearchLog = JSON.parse(storedSearchLog);
-            const newOrderItem: OrderItem = {
-              drugId: drug.id,
-              netPrice: drugDetail?.net ?? 0,
-              patientPay: drugDetail?.patientPayment ?? 0,
-              insurancePay: drugDetail?.insurancePayment ?? 0,
-              acquisitionCost: drug.acq,
-              additionalCost: 0,
-              insuranceRxId: drugDetail?.rxgroupId ?? 0,
-              amount: 1,
-            };
-
-            const currentOrder = JSON.parse(
-              localStorage.getItem("orderRequestBody") ||
-                '{"orderItems":[],"searchLogs":[]}'
-            );
-            currentOrder.orderItems.push(newOrderItem);
-            currentOrder.searchLogs.push(searchLog);
-            localStorage.setItem(
-              "orderRequestBody",
-              JSON.stringify(currentOrder)
-            );
-          }
-        }
-      }}
-      className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105"
-      aria-label={`Add "${drug.name || "Unnamed Drug"}" to cart`}
-    >
-      Add to Cart2
-    </button>
-  )}
-</div>
-*/}
     </div>
   );
 };
@@ -1726,7 +1796,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
 
   return (
     <section className="mt-8">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
         Suggested Alternative Drugs Without Available Insurance Price Data
       </h3>
 
@@ -1770,97 +1840,209 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4">
+      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4 border border-gray-200 dark:border-gray-700">
         <table className="min-w-full table-auto">
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Form
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Strength
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Ingredient
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Route
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                TE Code
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Market Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Strength Unit
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                NDC Codes
-              </th>
+              {[
+                "Name",
+                "Form",
+                "Strength",
+                "Ingredient",
+                "Route",
+                "TE Code",
+                "Market Status",
+                "Strength Unit",
+                "NDC Codes",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  {header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {currentItems.map((alt, index) => (
               <tr
                 key={`${alt.ndcCode}-${index}`}
-                className="hover:bg-gray-50 dark:hover:bg-gray-600"
+                className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[160px]">
+                  <div
+                    className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate cursor-pointer"
+                    title={alt.drugName || "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.drugName || "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(alt.drugName || "N/A");
+                      }
+                    }}
+                  >
                     <a
                       href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}`}
                       className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                      tabIndex={-1}
                     >
                       {alt.drugName ? alt.drugName : "N/A"}
                     </a>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[120px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.form || "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.form || "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(alt.form || "N/A");
+                      }
+                    }}
+                  >
                     {alt.form ? alt.form : "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[100px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.strength || "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.strength || "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(alt.strength || "N/A");
+                      }
+                    }}
+                  >
                     {alt.strength ? alt.strength : "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[120px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.ingrdient || "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.ingrdient || "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(alt.ingrdient || "N/A");
+                      }
+                    }}
+                  >
                     {alt.ingrdient ? alt.ingrdient : "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[100px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.route || "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.route || "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(alt.route || "N/A");
+                      }
+                    }}
+                  >
                     {alt.route ? alt.route : "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[100px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.teCode !== "" ? alt.teCode : "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.teCode !== "" ? alt.teCode : "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(alt.teCode !== "" ? alt.teCode : "N/A");
+                      }
+                    }}
+                  >
                     {alt.teCode !== "" ? alt.teCode : "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[100px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.type !== "" ? alt.type : "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.type !== "" ? alt.type : "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(alt.type !== "" ? alt.type : "N/A");
+                      }
+                    }}
+                  >
                     {alt.type !== "" ? alt.type : "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[100px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.strengthUnit !== "" ? alt.strengthUnit : "N/A"}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(alt.strengthUnit !== "" ? alt.strengthUnit : "N/A");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(
+                          alt.strengthUnit !== "" ? alt.strengthUnit : "N/A"
+                        );
+                      }
+                    }}
+                  >
                     {alt.strengthUnit !== "" ? alt.strengthUnit : "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-300">
+                <td className="px-6 py-4 whitespace-nowrap max-w-[120px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={padCode(alt.ndcCode)}
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert(padCode(alt.ndcCode));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        alert(padCode(alt.ndcCode));
+                      }
+                    }}
+                  >
                     <a
                       href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
                       className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
                       target="_blank"
                       rel="noopener noreferrer"
+                      tabIndex={-1}
                     >
                       {padCode(alt.ndcCode)}
                     </a>
@@ -1871,17 +2053,16 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
           </tbody>
         </table>
       </div>
-
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-md ${
+            className={`px-4 py-2 rounded-md transition ${
               currentPage === 1
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 dark:bg-blue-700 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
             }`}
           >
             Previous
@@ -1892,10 +2073,10 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-md ${
+            className={`px-4 py-2 rounded-md transition ${
               currentPage === totalPages
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 dark:bg-blue-700 text-white"
+                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
             }`}
           >
             Next
@@ -1956,7 +2137,7 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
         Suggested Alternative Drugs Without Available Insurance Price Data
       </h3>
 
-      {/* 🔍 Search Inputs */}
+      {/* Search Inputs */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col">
           <label
@@ -1993,8 +2174,8 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
         </div>
       </div>
 
-      {/* 📋 Table */}
-      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4">
+      {/* Table */}
+      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4 border border-gray-200 dark:border-gray-700">
         <table className="min-w-full table-auto">
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
@@ -2022,12 +2203,12 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
             {currentItems.map((alt, index) => (
               <tr
                 key={`${alt.ndc}-${index}`}
-                className="hover:bg-gray-50 dark:hover:bg-gray-600"
+                className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <a
                     href={`/drug/${alt.id}?ndc=${alt.ndc}`}
-                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition"
                   >
                     {alt.name || "N/A"}
                   </a>
@@ -2056,7 +2237,7 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
                 <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                   <a
                     href={`https://ndclist.com/ndc/${padCode(alt.ndc)}`}
-                    className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
+                    className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -2069,7 +2250,7 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
         </table>
       </div>
 
-      {/* 📍 Pagination Controls */}
+      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <button
@@ -2142,7 +2323,10 @@ export const DrugDetails: React.FC = () => {
   const [error, setError] = useState("");
   const [classV1, setClassV1] = useState<Boolean>(true);
   const [drugmedi, setDrugmedi] = useState<DrugMedi[]>([]);
+  const [drugDeatilsMedi, setDrugDeatilsMedi] = useState<DrugMedi>();
   const [mediToggle, setMediToggle] = useState(false);
+  const [showAlternativesTable, setShowAlternativesTable] = useState(false);
+
   // Fetch drug details and alternatives
   useEffect(() => {
     const fetchDrugDetails = async () => {
@@ -2204,6 +2388,11 @@ export const DrugDetails: React.FC = () => {
               `/drug/GetAllMediDrugs?classId=${response.data?.drugClassId}`
             );
             setDrugmedi(mediResponse.data);
+            setDrugDeatilsMedi(
+              mediResponse.data.find(
+                (item: DrugMedi) => item.drugNDC === ndcCode
+              )
+            );
           }
           console.log("sadasd:  ", response2.data);
           const response3 = await axiosInstance.get(
@@ -2399,15 +2588,20 @@ export const DrugDetails: React.FC = () => {
           </header>
 
           {/* Main content section */}
-          <section
+          <motion.section
             aria-label="Drug Information and Alternatives"
             className="p-6 space-y-6"
+            initial={{ opacity: 0, y: 32 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 32 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
             <DrugInformation
               drug={drug}
               drugDetail={drugDetail}
               classNameStr={classNameStr}
               bestDrugNet={bestNetDrug}
+              drugMedi={drugDeatilsMedi ?? null}
             />
 
             {activeTable === "insurance" ? (
@@ -2417,37 +2611,76 @@ export const DrugDetails: React.FC = () => {
               >
                 {sortedAlternatives.length > 0 && (
                   <div className="space-y-6">
-                    <AlternativesTable
-                      alternatives={alternativesWithInsurance}
-                      classNameStr={classNameStr}
-                      padCode={padCode}
-                      selectedInsurance={selectedInsurance}
-                      handleInsuranceFilterChange={handleInsuranceFilterChange}
-                      uniqueInsuranceNames={uniqueInsuranceNames}
-                      selectedBin={selectedBin}
-                      handleBinFilterChange={handleBinFilterChange}
-                      uniqueBinValues={uniqueBinValues}
-                      selectedPcn={selectedPcn}
-                      handlePcnFilterChange={handlePcnFilterChange}
-                      uniquePcnValues={uniquePcnValues}
-                      handleSort={handleSort}
-                      sortOrder={alternativesSortOrder}
-                      setBestNetDrug={setBestNetDrug}
-                    />
-
-                    {/* Action Buttons Group */}
-                    <div className="flex flex-wrap items-center gap-4">
+                    {/* Button Group */}
+                    <div className="flex flex-wrap gap-3 mb-2">
+                      <button
+                        onClick={() =>
+                          setShowAlternativesTable((prev) => !prev)
+                        }
+                        className={`inline-flex items-center gap-2 px-5 py-2 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition
+                        ${
+                          showAlternativesTable
+                            ? "bg-gray-200 dark:bg-gray-600 text-blue-700 dark:text-blue-300 hover:bg-gray-300 dark:hover:bg-gray-700"
+                            : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
+                        }
+                      `}
+                      >
+                        {showAlternativesTable
+                          ? "Hide Insurance Alternative Table"
+                          : "Show Insurance Alternative Table"}
+                      </button>
                       <button
                         onClick={() =>
                           setShowOtherAlternatives((prev) => !prev)
                         }
-                        className="px-5 py-2 rounded-md bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 transition duration-200"
+                        className={`inline-flex items-center gap-2 px-5 py-2 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition
+                        ${
+                          showOtherAlternatives
+                            ? "bg-gray-200 dark:bg-gray-600 text-blue-700 dark:text-blue-300 hover:bg-gray-300 dark:hover:bg-gray-700"
+                            : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
+                        }
+                      `}
                       >
                         {showOtherAlternatives
                           ? "Hide Other Alternatives"
                           : "Show Other Alternatives"}
                       </button>
+                      <button
+                        onClick={() => setMediToggle(!mediToggle)}
+                        className={`inline-flex items-center gap-2 px-5 py-2 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition
+                        ${
+                          mediToggle
+                            ? "bg-gray-200 dark:bg-gray-600 text-blue-700 dark:text-blue-300 hover:bg-gray-300 dark:hover:bg-gray-700"
+                            : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
+                        }
+                      `}
+                      >
+                        {mediToggle ? "Hide Medi Section" : "Show Medi Section"}
+                      </button>
                     </div>
+
+                    {/* Insurance Alternatives Table */}
+                    {showAlternativesTable && (
+                      <AlternativesTable
+                        alternatives={alternativesWithInsurance}
+                        classNameStr={classNameStr}
+                        padCode={padCode}
+                        selectedInsurance={selectedInsurance}
+                        handleInsuranceFilterChange={
+                          handleInsuranceFilterChange
+                        }
+                        uniqueInsuranceNames={uniqueInsuranceNames}
+                        selectedBin={selectedBin}
+                        handleBinFilterChange={handleBinFilterChange}
+                        uniqueBinValues={uniqueBinValues}
+                        selectedPcn={selectedPcn}
+                        handlePcnFilterChange={handlePcnFilterChange}
+                        uniquePcnValues={uniquePcnValues}
+                        handleSort={handleSort}
+                        sortOrder={alternativesSortOrder}
+                        setBestNetDrug={setBestNetDrug}
+                      />
+                    )}
 
                     {/* Other Alternatives Table */}
                     {showOtherAlternatives && (
@@ -2471,7 +2704,6 @@ export const DrugDetails: React.FC = () => {
                             {classV1 ? "Class V1" : "Class V2"}
                           </button>
                         </div>
-
                         <section aria-label="Other Alternatives Without Insurance">
                           {classV1 ? (
                             <OtherAlternativesTable
@@ -2501,13 +2733,7 @@ export const DrugDetails: React.FC = () => {
                         </section>
                       </div>
                     )}
-                    {/* Medi Button */}
-                    <button
-                      onClick={() => setMediToggle(!mediToggle)}
-                      className="px-5 py-2 rounded-md bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 transition duration-200"
-                    >
-                      {mediToggle ? "Hide Medi Section" : "Show Medi Section"}
-                    </button>
+
                     {/* Medi Section */}
                     {mediToggle && (
                       <div className="pt-4">
@@ -2543,7 +2769,7 @@ export const DrugDetails: React.FC = () => {
                 )}
               </section>
             )}
-          </section>
+          </motion.section>
         </main>
       </div>
     </motion.div>

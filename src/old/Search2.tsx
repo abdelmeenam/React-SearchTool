@@ -85,7 +85,7 @@ export const InsuranceSearch: React.FC = () => {
   // New PCN search state
   const [pcnSearchQuery, setPcnSearchQuery] = useState("");
   const [showPcnSuggestions, setShowPcnSuggestions] = useState(false);
-  const [limitSearch, setLimitSearch] = useState(false); // Toggle state
+  const [limitSearch, setLimitSearch] = useState(true); // Toggle state
 
   const [rxGroups, setRxGroups] = useState<RxGroupModel[]>([]);
   const [selectedRxGroup, setSelectedRxGroup] = useState<RxGroupModel | null>(
@@ -203,6 +203,10 @@ export const InsuranceSearch: React.FC = () => {
         `/drug/GetInsurancesPcnByBinId?binId=${bin.id}`
       );
       setPcnList(data);
+      setSelectedPcn(data[0]);
+      setPcnSearchQuery(data[0]?.pcn || "");
+      handlePcnSelect(data[0]);
+
       await fetchDrugsBasedOnSelection({ selectedBin: bin });
     } catch (error) {
       console.error("Error fetching PCNs:", error);
@@ -266,6 +270,8 @@ export const InsuranceSearch: React.FC = () => {
         `/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`
       );
       setRxGroups(data);
+      setRxGroupSearchQuery(data[0]?.rxGroup || "");
+      setSelectedRxGroup(data[0]);
     } catch (error) {
       console.error("Error fetching Rx Groups:", error);
     }
@@ -321,28 +327,30 @@ export const InsuranceSearch: React.FC = () => {
   // --- Drug Flow ---
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const handleDrugSearchChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const query = e.target.value;
     setDrugSearchQuery(query);
-    setCurrentPage(1);
+    if (!limitSearch) {
+      setCurrentPage(1);
 
-    try {
-      const url = `/drug/searchByName?name=${query}&pageNumber=1&pageSize=20`;
-      const { data } = await axiosInstance.get(url);
-      setDrugs(data);
-    } catch (error) {
-      console.error("Error fetching drugs:", error);
+      try {
+        const url = `/drug/searchByName?name=${query}&pageNumber=1&pageSize=20`;
+        const { data } = await axiosInstance.get(url);
+        setDrugs(data);
+      } catch (error) {
+        console.error("Error fetching drugs:", error);
+      }
     }
 
     setShowDrugSuggestions(true);
   };
 
   const loadMoreDrugs = async () => {
-    if (limitSearch ||isLoadingMore || !drugSearchQuery) return;
+    if (limitSearch || isLoadingMore || !drugSearchQuery) return;
 
     setIsLoadingMore(true);
     try {
@@ -651,7 +659,7 @@ export const InsuranceSearch: React.FC = () => {
                         aria-label="Drug search suggestions"
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto drug-suggestions-box"
                       >
-                        {drugs.map((drug) => (
+                        {uniqueFilteredDrugs.map((drug) => (
                           <button
                             key={drug.id}
                             onClick={() => handleDrugSelect(drug)}

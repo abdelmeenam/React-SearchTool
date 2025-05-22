@@ -40,7 +40,7 @@ export const Search3: React.FC = () => {
   const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(
     null
   );
-  const [limitSearch, setLimitSearch] = useState(false); // Toggle state
+  const [limitSearch, setLimitSearch] = useState(true); // Toggle state
 
   const [bestDrugNetDetails, setBestDrugNetDetails] =
     useState<Prescription | null>(null);

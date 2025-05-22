@@ -26,6 +26,7 @@ const OrderHistory = () => {
         const res = await axiosInstance.get<OrderReadDto[]>(
           "/order/GetAllOrdersByUserId?userId=64"
         );
+        console.log("Fetched orders:", res.data);
         setOrders(res.data);
       } catch (error) {
         console.error("Error fetching orders:", error);

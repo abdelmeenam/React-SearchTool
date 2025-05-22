@@ -1,6 +1,16 @@
 import React from "react";
 import { Drug, OrderItem, Prescription, SearchLog } from "../types";
 import { useCart } from "../context/CartContext";
+import {
+  X,
+  CalendarDays,
+  Pill,
+  BadgeCheck,
+  Package,
+  Route,
+  BadgeDollarSign,
+  FlaskConical,
+} from "lucide-react";
 
 interface DrugDetailsModalProps {
   drug: Drug;
@@ -26,13 +36,10 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
       />
 
       {/* Refined modal container */}
-
-      {/* Refined modal container */}
       <div
         className="relative bg-white w-122 dark:bg-gray-800 rounded-xl shadow-2xl 
        overflow-hidden border border-white/20 dark:border-gray-700/50"
       >
-        {" "}
         {/* Glossy header with improved gradient */}
         <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 flex justify-between items-center relative">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmZmZmZmYwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybikiIG9wYWNpdHk9IjAuMiIvPjwvc3ZnPg==')] opacity-20" />
@@ -40,17 +47,14 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
             <h3 className="text-lg font-bold text-white truncate pr-6">
               {drug.name}
             </h3>
-            <p className="text-blue-100/90 text-sm truncate">{drug.strength}</p>
           </div>
-          {/* <button 
-            onClick={onClose} 
-            className="p-1.5 rounded-full hover:bg-blue-800/50 transition-colors duration-150 group"
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-blue-800/50 transition-colors duration-150 group absolute top-2 right-2"
             aria-label="Close modal"
           >
-            <svg className="w-4 h-4 text-white/90 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button> */}
+            <X className="w-5 h-5 text-white/90 group-hover:text-white transition-colors" />
+          </button>
         </div>
         {/* Enhanced body with subtle animations */}
         <div className="px-5 py-4 space-y-4">
@@ -59,19 +63,23 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
             {[
               {
                 label: "Acquisition",
-                value: formatCurrency(drug.acq),
+                value: formatCurrency(drugDetail?.acquisitionCost ?? 0),
                 color: "blue",
               },
               {
                 label: "Insurance",
-                value: formatCurrency(drug.awp),
+                value: formatCurrency(drugDetail?.insurancePayment ?? 0),
                 color: "purple",
               },
-              { label: "Status", value: "In Stock", color: "green" },
               {
-                label: "Copay",
-                value: formatCurrency(drug.acq ?? 0),
+                label: "Patient Pay",
+                value: formatCurrency(drugDetail?.patientPayment ?? 0),
                 color: "amber",
+              },
+              {
+                label: "Net",
+                value: formatCurrency(drugDetail?.net ?? 0),
+                color: "green",
               },
             ].map((item, index) => (
               <div
@@ -91,70 +99,84 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
           </div>
 
           {/* Details list with improved typography */}
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-              <span className="text-gray-500 dark:text-gray-400 flex items-center">
-                <svg
-                  className="w-3.5 h-3.5 mr-2 opacity-70"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <div className="space-y-2 text-sm">
+            {[
+              {
+                icon: <CalendarDays className="w-4 h-4 mr-2 opacity-70" />,
+                label: "NDC",
+                value: drug.ndc,
+                border: true,
+              },
+              {
+                icon: <BadgeCheck className="w-4 h-4 mr-2 opacity-70" />,
+                label: "Drug Strength",
+                value: `${drug.strength} ${drug.strengthUnit}`,
+                border: true,
+                truncate: true,
+              },
+              {
+                icon: <FlaskConical className="w-4 h-4 mr-2 opacity-70" />,
+                label: "Active Ingredient",
+                value: drug.ingrdient,
+                border: false,
+              },
+              {
+                icon: <BadgeCheck className="w-4 h-4 mr-2 opacity-70" />,
+                label: "TE Code",
+                value: drug.teCode,
+                border: false,
+              },
+              {
+                icon: <Package className="w-4 h-4 mr-2 opacity-70" />,
+                label: "Dosage Form",
+                value: drug.form,
+                border: false,
+              },
+              {
+                icon: <Route className="w-4 h-4 mr-2 opacity-70" />,
+                label: "Route",
+                value: drug.route,
+                border: false,
+              },
+              {
+                icon: <BadgeDollarSign className="w-4 h-4 mr-2 opacity-70" />,
+                label: "Market Status",
+                value: drug.type,
+                border: false,
+              },
+            ].map((item, idx) => (
+              <div
+                key={item.label}
+                className={`flex justify-between items-center py-2 ${
+                  item.border && "border-b border-gray-100 dark:border-gray-700"
+                }`}
+              >
+                <span className="text-gray-500 dark:text-gray-400 flex items-center font-medium">
+                  {item.icon}
+                  {item.label}
+                </span>
+                <span
+                  className={`font-semibold text-gray-900 dark:text-gray-100 ${
+                    item.truncate
+                      ? "truncate max-w-[160px]"
+                      : "truncate max-w-[120px]"
+                  } cursor-pointer`}
+                  title={item.value}
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alert(item.value || "N/A");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      alert(item.value || "N/A");
+                    }
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-                NDC
-              </span>
-              <span className="font-medium text-gray-800 dark:text-gray-200">
-                {drug.ndc}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-              <span className="text-gray-500 dark:text-gray-400 flex items-center">
-                <svg
-                  className="w-3.5 h-3.5 mr-2 opacity-70"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
-                Manufacturer
-              </span>
-              <span className="font-medium text-gray-800 dark:text-gray-200 truncate max-w-[160px]">
-                {drug.acq}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-500 dark:text-gray-400 flex items-center">
-                <svg
-                  className="w-3.5 h-3.5 mr-2 opacity-70"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Retail Price
-              </span>
-              <span className="font-medium text-gray-800 dark:text-gray-200">
-                {formatCurrency(drug.acq)}
-              </span>
-            </div>
+                  {item.value || "N/A"}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
         {/* Premium footer with better button styling */}
@@ -214,7 +236,6 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                       localStorage.getItem("orderRequestBody") ||
                         '{"orderItems":[],"searchLogs":[]}'
                     );
-                    console.log("Current Order:", currentOrder);
                     currentOrder.orderItems.push(newOrderItem);
                     currentOrder.searchLogs.push(searchLog);
                     localStorage.setItem(
