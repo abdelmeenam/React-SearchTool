@@ -418,7 +418,7 @@ export const Search3: React.FC = () => {
                       aria-controls="drug-listbox"
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-xs placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                     />
-                    {showDrugSuggestions && uniqueFilteredDrugs.length > 0 && (
+                    {showDrugSuggestions && (
                       <ul
                         id="drug-listbox"
                         role="listbox"
@@ -434,6 +434,17 @@ export const Search3: React.FC = () => {
                           }
                         }}
                       >
+                        {/* Loading skeletons while suggestions are loading */}
+                        {uniqueFilteredDrugs.length === 0 && !isLoadingMore && (
+                          <li className="px-4 py-2">
+                            {[...Array(5)].map((_, i) => (
+                              <div
+                                key={i}
+                                className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"
+                              />
+                            ))}
+                          </li>
+                        )}
                         {uniqueFilteredDrugs.map((drug) => (
                           <li
                             key={drug.id}
