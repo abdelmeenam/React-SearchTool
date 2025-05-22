@@ -203,9 +203,11 @@ export const InsuranceSearch: React.FC = () => {
         `/drug/GetInsurancesPcnByBinId?binId=${bin.id}`
       );
       setPcnList(data);
-      setSelectedPcn(data[0]);
-      setPcnSearchQuery(data[0]?.pcn || "");
-      handlePcnSelect(data[0]);
+      if (bin.name === "Medicare") {
+        setSelectedPcn(data[0]);
+        setPcnSearchQuery(data[0]?.pcn || "");
+        handlePcnSelect(data[0]);
+      }
 
       await fetchDrugsBasedOnSelection({ selectedBin: bin });
     } catch (error) {
@@ -270,8 +272,10 @@ export const InsuranceSearch: React.FC = () => {
         `/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`
       );
       setRxGroups(data);
-      setRxGroupSearchQuery(data[0]?.rxGroup || "");
-      setSelectedRxGroup(data[0]);
+      if (pcn.pcn === "Medicare") {
+        setRxGroupSearchQuery(data[0]?.rxGroup || "");
+        setSelectedRxGroup(data[0]);
+      }
     } catch (error) {
       console.error("Error fetching Rx Groups:", error);
     }

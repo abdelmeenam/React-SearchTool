@@ -1188,7 +1188,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             htmlFor="insuranceFilter"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            Insurance
+            RxGroups
           </label>
           <select
             id="insuranceFilter"
@@ -1196,7 +1196,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
             onChange={handleInsuranceFilterChange}
             className="w-full border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">All Insurances</option>
+            <option value="">All RxGroups</option>
             {uniqueInsuranceNames.map((name) => (
               <option key={name} value={name}>
                 {name}
