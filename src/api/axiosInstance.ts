@@ -45,7 +45,7 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
+      console.log('Token expired, refreshing...');
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({

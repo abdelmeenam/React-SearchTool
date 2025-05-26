@@ -219,26 +219,26 @@ export const InsuranceSearch: React.FC = () => {
   const fetchDrugsBasedOnSelection = async (
     overrides: SelectionOverrides = {}
   ) => {
-    const rxGroup = overrides.selectedRxGroup ?? selectedRxGroup;
-    const pcn = overrides.selectedPcn ?? selectedPcn;
-    const bin = overrides.selectedBin ?? selectedBin;
-    let url = "";
-    if (rxGroup) {
-      url = `/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`;
-    } else if (pcn) {
-      url = `/drug/GetDrugsByPCN?pcn=${pcn.pcn}`;
-    } else if (bin) {
-      url = `/drug/GetDrugsByBin?bin=${bin.bin}`;
-    }
-    console.log("search query : ", drugSearchQuery);
-    if (url && limitSearch === true) {
-      try {
-        const { data } = await axiosInstance.get(url);
-        setDrugs(data);
-      } catch (error) {
-        console.error("Error fetching drugs:", error);
-      }
-    }
+    // const rxGroup = overrides.selectedRxGroup ?? selectedRxGroup;
+    // const pcn = overrides.selectedPcn ?? selectedPcn;
+    // const bin = overrides.selectedBin ?? selectedBin;
+    // let url = "";
+    // if (rxGroup) {
+    //   url = `/drug/GetDrugsByInsuranceName?insurance=${rxGroup.rxGroup}`;
+    // } else if (pcn) {
+    //   url = `/drug/GetDrugsByPCN?pcn=${pcn.pcn}`;
+    // } else if (bin) {
+    //   url = `/drug/GetDrugsByBin?bin=${bin.bin}`;
+    // }
+    // console.log("search query : ", drugSearchQuery);
+    // if (url && limitSearch === true) {
+    //   try {
+    //     const { data } = await axiosInstance.get(url);
+    //     setDrugs(data);
+    //   } catch (error) {
+    //     console.error("Error fetching drugs:", error);
+    //   }
+    // }
   };
 
   // --- PCN Search Input Handlers ---
@@ -348,27 +348,78 @@ export const InsuranceSearch: React.FC = () => {
       } catch (error) {
         console.error("Error fetching drugs:", error);
       }
+    } else {
+      var url = "";
+      if (selectedRxGroup) {
+        url = `/drug/GetDrugsByInsuranceNamePagintated?insurance=${selectedRxGroup.rxGroup}&drugName=${query}&pageNumber=1&pageSize=20`;
+      } else if (selectedPcn) {
+        url = `/drug/GetDrugsByPCNPagintated?insurance=${selectedPcn.pcn}&drugName=${query}&pageNumber=1&pageSize=20`;
+      } else if (selectedBin) {
+        url = `/drug/GetDrugsByBINPagintated?insurance=${selectedBin.bin}&drugName=${query}&pageNumber=1&pageSize=20`;
+      }
+      try {
+        console.log("URL: ", url);
+        const { data } = await axiosInstance.get(url);
+        console.log("Data: ", data);
+        setDrugs(data);
+      } catch (error) {
+        console.error("Error fetching drugs:", error);
+      }
     }
 
     setShowDrugSuggestions(true);
   };
 
   const loadMoreDrugs = async () => {
-    if (limitSearch || isLoadingMore || !drugSearchQuery) return;
+    if (isLoadingMore || !drugSearchQuery) return;
 
     setIsLoadingMore(true);
-    try {
-      const nextPage = currentPage + 1;
-      const url = `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`;
-      const { data } = await axiosInstance.get(url);
 
-      setDrugs((prev) => [...prev, ...data]);
-      setCurrentPage(nextPage);
-    } catch (error) {
-      console.error("Error loading more drugs:", error);
-    } finally {
-      setIsLoadingMore(false);
+    if (limitSearch) {
+      var url = "";
+      if (selectedRxGroup) {
+        url = `/drug/GetDrugsByInsuranceNamePagintated?insurance=${
+          selectedRxGroup.rxGroup
+        }&drugName=${drugSearchQuery}&pageNumber=${
+          currentPage + 1
+        }&pageSize=20`;
+      } else if (selectedPcn) {
+        url = `/drug/GetDrugsByPCNPagintated?insurance=${
+          selectedPcn.pcn
+        }&drugName=${drugSearchQuery}&pageNumber=${
+          currentPage + 1
+        }&pageSize=20`;
+      } else if (selectedBin) {
+        url = `/drug/GetDrugsByBINPagintated?insurance=${
+          selectedBin.bin
+        }&drugName=${drugSearchQuery}&pageNumber=${
+          currentPage + 1
+        }&pageSize=20`;
+      }
+      try {
+        const { data } = await axiosInstance.get(url);
+        setDrugs((prev) => [...prev, ...data]);
+        setCurrentPage((prev) => prev + 1);
+      } catch (error) {
+        console.error("Error loading more drugs:", error);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    } else {
+      try {
+        const nextPage = currentPage + 1;
+        const url = `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`;
+        const { data } = await axiosInstance.get(url);
+
+        setDrugs((prev) => [...prev, ...data]);
+        setCurrentPage(nextPage);
+      } catch (error) {
+        console.error("Error loading more drugs:", error);
+      } finally {
+        setIsLoadingMore(false);
+      }
     }
+   
   };
 
   useEffect(() => {
