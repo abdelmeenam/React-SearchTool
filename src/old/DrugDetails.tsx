@@ -739,16 +739,16 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   const [modalDrug, setModalDrug] = useState<Prescription | null>(null);
 
   // Filter and pagination logic
-  const filtered = useMemo(
-    () =>
-      alternatives.filter(
-        (alt) =>
-          (!selectedInsurance || alt.insuranceName === selectedInsurance) &&
-          (!selectedBin || alt.bin === selectedBin) &&
-          (!selectedPcn || alt.pcn === selectedPcn)
-      ),
-    [alternatives, selectedInsurance, selectedBin, selectedPcn]
-  );
+  const filtered = useMemo(() => {
+    const result = alternatives.filter(
+      (alt) =>
+        (!selectedInsurance || alt.insuranceName === selectedInsurance) &&
+        (!selectedBin || alt.bin === selectedBin) &&
+        (!selectedPcn || alt.pcn === selectedPcn)
+    );
+    return result.length > 0 ? result : alternatives;
+  }, [alternatives, selectedInsurance, selectedBin, selectedPcn]);
+
   // setBestNetDrug(filtered[0]);
   useEffect(() => {
     if (filtered.length > 0) {
@@ -2054,7 +2054,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
         </table>
       </div>
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {totalPages > 0 && (
         <div className="flex items-center justify-between mt-4">
           <button
             onClick={handlePrevPage}
@@ -2321,11 +2321,19 @@ export const DrugDetails: React.FC = () => {
   const [temp, setTemp] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [classV1, setClassV1] = useState<Boolean>(true);
+  // With a single state:
+  const [classVersion, setClassVersion] = useState<1 | 2 | 3>(1);
+
+  // Helper booleans for compatibility with existing logic:
+  const classV1 = classVersion === 1;
+  const classV2 = classVersion === 2;
+  const classV3 = classVersion === 3;
+
   const [drugmedi, setDrugmedi] = useState<DrugMedi[]>([]);
   const [drugDeatilsMedi, setDrugDeatilsMedi] = useState<DrugMedi>();
   const [mediToggle, setMediToggle] = useState(false);
   const [showAlternativesTable, setShowAlternativesTable] = useState(false);
+  const [showClassLoader, setShowClassLoader] = useState(false);
 
   // Fetch drug details and alternatives
   useEffect(() => {
@@ -2350,6 +2358,28 @@ export const DrugDetails: React.FC = () => {
               `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
             );
             console.log("response2: ", response2.data);
+
+            const sortedData = response2.data
+              .sort((a: Prescription, b: Prescription) => b.net - a.net)
+              .filter((alt: Prescription) => alt.type !== "DISCN");
+
+            setSortedAlternatives(sortedData);
+          } else if (classV2 === true) {
+            response2 = await axiosInstance.get(
+              `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
+            );
+            console.log("response2z2: ", response2.data);
+
+            const sortedData = response2.data
+              .sort((a: Prescription, b: Prescription) => b.net - a.net)
+              .filter((alt: Prescription) => alt.type !== "DISCN");
+
+            setSortedAlternatives(sortedData);
+          } else if (classV3 === true) {
+            response2 = await axiosInstance.get(
+              `/drug/GetAllDrugsV3?classId=${response.data.drugClassV3Id}`
+            );
+            console.log("response2zzz: ", response2.data);
 
             const sortedData = response2.data
               .sort((a: Prescription, b: Prescription) => b.net - a.net)
@@ -2383,17 +2413,14 @@ export const DrugDetails: React.FC = () => {
             `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
           );
 
-          if (insuranceId === "615") {
-            const mediResponse = await axiosInstance.get(
-              `/drug/GetAllMediDrugs?classId=${response.data?.drugClassId}`
-            );
-            setDrugmedi(mediResponse.data);
-            setDrugDeatilsMedi(
-              mediResponse.data.find(
-                (item: DrugMedi) => item.drugNDC === ndcCode
-              )
-            );
-          }
+          const mediResponse = await axiosInstance.get(
+            `/drug/GetAllMediDrugs?classId=${response.data?.drugClassId}`
+          );
+          setDrugmedi(mediResponse.data);
+          setDrugDeatilsMedi(
+            mediResponse.data.find((item: DrugMedi) => item.drugNDC === ndcCode)
+          );
+
           console.log("sadasd:  ", response2.data);
           const response3 = await axiosInstance.get(
             `/drug/GetClassById?id=${response.data.drugClassId}`
@@ -2405,6 +2432,7 @@ export const DrugDetails: React.FC = () => {
           setDrugDetail(response2.data);
           setBranchDrugs(response10.data);
           if (response3.data.name !== "other") {
+            console.log("state : ", classV1, " : ", classV2, " : ", classV3);
             let response4;
             if (classV1 === true) {
               response4 = await axiosInstance.get(
@@ -2416,6 +2444,40 @@ export const DrugDetails: React.FC = () => {
                 (alt: Prescription) =>
                   alt.insuranceId.toString() === insuranceId
               );
+              setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
+              const sortedData = response4.data
+                .sort((a: Prescription, b: Prescription) => b.net - a.net)
+                .filter((alt: Prescription) => alt.type !== "DISCN");
+              setSortedAlternatives(sortedData);
+              console.log("sortedData", sortedData);
+            } else if (classV2 === true) {
+              response4 = await axiosInstance.get(
+                `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
+              );
+              console.log("response4z22: ", response4.data);
+
+              const matchingAlt = response4.data.find(
+                (alt: Prescription) =>
+                  alt.insuranceId.toString() === insuranceId
+              );
+
+              setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
+              const sortedData = response4.data
+                .sort((a: Prescription, b: Prescription) => b.net - a.net)
+                .filter((alt: Prescription) => alt.type !== "DISCN");
+              setSortedAlternatives(sortedData);
+              console.log("sortedData", sortedData);
+            } else if (classV3 === true) {
+              response4 = await axiosInstance.get(
+                `/drug/GetAllDrugsV3?classId=${response.data.drugClassV3Id}`
+              );
+              console.log("response4zzzz: ", response4.data);
+
+              const matchingAlt = response4.data.find(
+                (alt: Prescription) =>
+                  alt.insuranceId.toString() === insuranceId
+              );
+
               setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
               const sortedData = response4.data
                 .sort((a: Prescription, b: Prescription) => b.net - a.net)
@@ -2438,11 +2500,12 @@ export const DrugDetails: React.FC = () => {
         setError("Failed to load drug details");
       } finally {
         setLoading(false);
+        setShowClassLoader(false); // Hide loader after fetch
       }
     };
 
     fetchDrugDetails();
-  }, [drugId, ndcCode, insuranceId, classV1]);
+  }, [drugId, ndcCode, insuranceId, classVersion]);
 
   // Map the provided insuranceId to the insurance name using the sorted alternatives
   useEffect(() => {
@@ -2659,8 +2722,31 @@ export const DrugDetails: React.FC = () => {
                           ? "Hide Medicale Section"
                           : "Show Medicale Section"}
                       </button>
+                      <div className="flex items-center gap-3">
+                        <label
+                          htmlFor="classVersionSelect"
+                          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                          Class Version
+                        </label>
+                        <select
+                          id="classVersionSelect"
+                          value={classVersion}
+                          // Remove onClick, show loader only after selection
+                          onChange={(e) => {
+                            setShowClassLoader(true);
+                            setClassVersion(
+                              Number(e.target.value) as 1 | 2 | 3
+                            );
+                          }}
+                          className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value={1}>Class V1</option>
+                          <option value={2}>Class V2</option>
+                          <option value={3}>Class V3</option>
+                        </select>
+                      </div>
                     </div>
-
                     {/* Insurance Alternatives Table */}
                     {showAlternativesTable && (
                       <AlternativesTable
@@ -2683,45 +2769,26 @@ export const DrugDetails: React.FC = () => {
                         setBestNetDrug={setBestNetDrug}
                       />
                     )}
-
                     {/* Other Alternatives Table */}
+                    {showClassLoader && (
+                      <div
+                        className="fixed inset-0 z-[999] flex items-center justify-center"
+                        style={{ background: "rgba(0,0,0,0.25)" }}
+                      >
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg flex flex-col items-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-500 mb-4"></div>
+                          <span className="text-gray-700 dark:text-gray-200">
+                            Loading class alternatives...
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     {showOtherAlternatives && (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <label
-                            htmlFor="classV1Toggle"
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                          >
-                            Toggle Class Version
-                          </label>
-                          <button
-                            id="classV1Toggle"
-                            onClick={() => setClassV1((prev) => !prev)}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                              classV1
-                                ? "bg-blue-600 text-white hover:bg-blue-700"
-                                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                            }`}
-                          >
-                            {classV1 ? "Class V1" : "Class V2"}
-                          </button>
-                        </div>
                         <section aria-label="Other Alternatives Without Insurance">
-                          {classV1 ? (
+                          {(classV1 || classV2 || classV3) && (
                             <OtherAlternativesTable
                               alternatives={alternativesWithoutInsurance}
-                              classNameStr={classNameStr}
-                              padCode={padCode}
-                              selectedBin={otherSelectedBin}
-                              handleBinFilterChange={handleOtherBinFilterChange}
-                              uniqueBinValues={uniqueOtherBinValues}
-                              selectedPcn={otherSelectedPcn}
-                              handlePcnFilterChange={handleOtherPcnFilterChange}
-                              uniquePcnValues={uniqueOtherPcnValues}
-                            />
-                          ) : (
-                            <OtherAlternativesTableV2
-                              alternatives={alternativesWithoutInsuranceV2}
                               classNameStr={classNameStr}
                               padCode={padCode}
                               selectedBin={otherSelectedBin}
@@ -2735,7 +2802,6 @@ export const DrugDetails: React.FC = () => {
                         </section>
                       </div>
                     )}
-
                     {/* Medi Section */}
                     {mediToggle && (
                       <div className="pt-4">

@@ -70,16 +70,28 @@ export const Search3: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
   const loadMoreDrugs = async () => {
-    if (isLoadingMore || !drugSearchQuery) return;
+    if (isLoadingMore) return;
 
     setIsLoadingMore(true);
     try {
       const nextPage = currentPage + 1;
-      const { data } = await axiosInstance.get(
-        `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`
-      );
-      setDrugs((prevDrugs) => [...prevDrugs, ...data]); // Append new drugs
+      let data = [];
+      if (selectedRxGroup && limitSearch && drugSearchQuery) {
+        // Paginated Rx Group search
+        const response = await axiosInstance.get(
+          `/drug/GetDrugsByInsuranceNameDrugName?insurance=${selectedRxGroup.rxGroup}&drugName=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`
+        );
+        data = response.data;
+      } else if (drugSearchQuery) {
+        // Paginated name search
+        const response = await axiosInstance.get(
+          `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`
+        );
+        data = response.data;
+      }
+      setDrugs((prevDrugs) => [...prevDrugs, ...data]);
       setCurrentPage(nextPage);
     } catch (error) {
       console.error("Error loading more drugs:", error);
@@ -129,32 +141,36 @@ export const Search3: React.FC = () => {
   // --- Fetch Drugs When an Rx Group is Selected ---
   useEffect(() => {
     const fetchDrugs = async () => {
-      if (selectedRxGroup && limitSearch === true) {
+      setCurrentPage(1); // Reset page on new search
+      console.log("hiiii");
+      if (selectedRxGroup && limitSearch && drugSearchQuery) {
         try {
           const { data } = await axiosInstance.get(
-            `/drug/GetDrugsByInsuranceName?insurance=${selectedRxGroup.rxGroup}`
+            `/drug/GetDrugsByInsuranceNameDrugName?insurance=${selectedRxGroup.rxGroup}&drugName=${drugSearchQuery}&pageNumber=1&pageSize=20`
           );
+          console.log("Fetched drugs by insurance:", data);
           setDrugs(data);
         } catch (error) {
           console.error("Error fetching drugs by insurance:", error);
         }
       } else if (drugSearchQuery) {
         try {
-          const page = currentPage; // Use the current page state
           const { data } = await axiosInstance.get(
-            `/drug/searchByName?name=${drugSearchQuery}&pageNumber=${page}&pageSize=20`
+            `/drug/searchByName?name=${drugSearchQuery}&pageNumber=1&pageSize=20`
           );
-          setDrugs((prevDrugs) => [...prevDrugs, ...data]); // Append new drugs to the existing list
+          setDrugs(data);
         } catch (error) {
           console.error("Error fetching drugs by name:", error);
         }
       } else {
-        setDrugs([]); // Clear the drug list if no query or RxGroup is provided
+        setDrugs([]);
       }
     };
 
     fetchDrugs();
+    setCurrentPage(1);
   }, [selectedRxGroup, drugSearchQuery, limitSearch]);
+
   useEffect(() => {
     async function fetchDrugDetails() {
       console.log("Hi : ", selectedNdc, selectedRxGroup);
@@ -388,7 +404,6 @@ export const Search3: React.FC = () => {
                   )}
                 </div>
               </div>
-
               {/* Drug Combobox */}
               {selectedRxGroup?.id && (
                 <div>
@@ -418,7 +433,7 @@ export const Search3: React.FC = () => {
                       aria-controls="drug-listbox"
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-xs placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                     />
-                    {showDrugSuggestions && (
+                    {showDrugSuggestions && drugSearchQuery.length > 0 && (
                       <ul
                         id="drug-listbox"
                         role="listbox"
@@ -434,17 +449,7 @@ export const Search3: React.FC = () => {
                           }
                         }}
                       >
-                        {/* Loading skeletons while suggestions are loading */}
-                        {uniqueFilteredDrugs.length === 0 && !isLoadingMore && (
-                          <li className="px-4 py-2">
-                            {[...Array(5)].map((_, i) => (
-                              <div
-                                key={i}
-                                className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-2"
-                              />
-                            ))}
-                          </li>
-                        )}
+                 
                         {uniqueFilteredDrugs.map((drug) => (
                           <li
                             key={drug.id}
@@ -470,6 +475,7 @@ export const Search3: React.FC = () => {
                   </div>
                 </div>
               )}
+             
               {/* NDC Combobox */}
               {ndcList.length > 0 && (
                 <div>
@@ -525,7 +531,6 @@ export const Search3: React.FC = () => {
                   </div>
                 </div>
               )}
-
               {/* Action Button */}
               {selectedDrug && selectedNdc && (
                 <button
