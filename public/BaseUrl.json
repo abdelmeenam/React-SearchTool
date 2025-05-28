@@ -1,5 +1,5 @@
 {
  
-  "API_BASE_URL": "http://localhost:5107"
+  "API_BASE_URL": "https://api.medisearchtool.com"
 
 }
