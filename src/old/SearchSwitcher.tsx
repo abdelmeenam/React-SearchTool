@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Search } from './Search';
 import { InsuranceSearch } from './Search2';
 import { Search3 } from './Search3';
+import { InsuranceSearch2 } from './Search4'; // <-- Add this import
 
 const SearchSwitcher: React.FC = () => {
   // Clear previous selections on mount
@@ -15,12 +16,14 @@ const SearchSwitcher: React.FC = () => {
 
   // Determine initial flow from URL param
   const { id } = useParams<{ id: string }>();
-  const [activeFlow, setActiveFlow] = useState<'drug' | 'insurance' | 'rx'>(() => {
+  const [activeFlow, setActiveFlow] = useState<'drug' | 'insurance' | 'rx' | 'drugClass'>(() => {
     switch (id) {
       case '2':
         return 'insurance';
       case '3':
         return 'rx';
+      case '4':
+        return 'drugClass';
       default:
         return 'drug';
     }
@@ -30,12 +33,14 @@ const SearchSwitcher: React.FC = () => {
     if (id === '1') setActiveFlow('drug');
     else if (id === '2') setActiveFlow('insurance');
     else if (id === '3') setActiveFlow('rx');
+    else if (id === '4') setActiveFlow('drugClass');
   }, [id]);
 
   const flows = [
     { key: 'drug', label: 'Search by Drug' },
     { key: 'insurance', label: 'Search by Insurance' },
     { key: 'rx', label: 'Search by Rx Group' },
+    { key: 'drugClass', label: 'Search by Drug Class' }, // <-- Add this
   ];
 
   return (
@@ -54,7 +59,7 @@ const SearchSwitcher: React.FC = () => {
             id={`${key}-tab`}
             aria-controls={`${key}-panel`}
             aria-selected={activeFlow === key}
-            onClick={() => setActiveFlow(key)}
+            onClick={() => setActiveFlow(key as any)}
             className={`py-2 px-4 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors
               ${activeFlow === key
                 ? 'bg-blue-600 text-white border-blue-600'
@@ -110,6 +115,21 @@ const SearchSwitcher: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <Search3 />
+            </motion.div>
+          )}
+
+          {activeFlow === 'drugClass' && (
+            <motion.div
+              key="drugClass"
+              role="tabpanel"
+              id="drugClass-panel"
+              aria-labelledby="drugClass-tab"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <InsuranceSearch2 />
             </motion.div>
           )}
         </AnimatePresence>

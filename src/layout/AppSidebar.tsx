@@ -80,6 +80,12 @@ const navItems: NavItem[] = [
         icon: <SearchCode />,
       },
       {
+        name: "Search by Drug CLass",
+        path: "/search/4",
+        pro: false,
+        icon: <SearchCode />,
+      },
+      {
         name: "Search by Rx Group",
         path: "/search/3",
         pro: false,
@@ -127,12 +133,12 @@ const othersItems: NavItem[] = [
     pro: false,
     icon: <WandSparkles />,
   },
-  // {
-  //   name: "Sync New Data",
-  //   path: "/SyncData",
-  //   pro: false,
-  //   icon: <FaSync />,
-  // },
+  {
+    name: "Sync New Data",
+    path: "/SyncData",
+    pro: false,
+    icon: <FaSync />,
+  },
   {
     name: "Help & Support",
     path: "/help",
