@@ -151,6 +151,9 @@ export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
 
   return (
     <div className="mt-6">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        Selected drug and alternatives Medical Coverage Policy Information
+      </h3>
       {/* Search Inputs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
         <div className="flex flex-col">
@@ -310,9 +313,30 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
   const bestNet = bestDrugNet?.net ?? 0;
   const { addToCart } = useCart();
   const cartItems = useCart().cartItems;
+  // ...inside DrugInformation component...
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupContent, setPopupContent] = useState<string | null>(null);
   return (
     <div className="relative mx-auto border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800 p-6 shadow-lg">
       {/* Recommendation Badge */}
+      {popupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[260px] max-w-xs max-h-[80vh] flex flex-col">
+            <div
+              className="mb-4 text-gray-900 dark:text-gray-100 break-words overflow-y-auto"
+              style={{ maxHeight: "50vh" }}
+            >
+              {popupContent}
+            </div>
+            <button
+              onClick={() => setPopupOpen(false)}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       {bestNet !== 0 && (
         <div
           className={`absolute bottom-4 left-4 flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium text-white shadow-md
@@ -422,14 +446,14 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
             {[
               {
                 icon: (
-                  <Fingerprint className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                  <Fingerprint className="h-4 w-1 text-blue-500 dark:text-blue-300" />
                 ),
                 label: "RxCUI",
                 value: drug?.rxcui ?? "NA",
               },
               {
                 icon: (
-                  <Droplet className="h-4 w-4 text-blue-500 dark:text-blue-300" />
+                  <Droplet className="h-4 w-8 text-blue-500 dark:text-blue-300" />
                 ),
                 label: "Ingredient",
                 value: drug?.ingrdient ?? "NA",
@@ -466,18 +490,24 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
                     {item.label}
                   </dt>
                   <dd
-                    className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[120px] cursor-pointer"
+                    className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[180px] cursor-pointer"
                     title={
                       item.value !== undefined ? String(item.value) : undefined
                     }
                     tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation();
-                      alert(item.value);
+                      setPopupContent(
+                        item.value !== undefined ? String(item.value) : "N/A"
+                      );
+                      setPopupOpen(true);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
-                        alert(item.value);
+                        setPopupContent(
+                          item.value !== undefined ? String(item.value) : "N/A"
+                        );
+                        setPopupOpen(true);
                       }
                     }}
                   >
@@ -539,11 +569,17 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
                     tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation();
-                      alert(item.value);
+                      setPopupContent(
+                        item.value !== undefined ? String(item.value) : "N/A"
+                      );
+                      setPopupOpen(true);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
-                        alert(item.value);
+                        setPopupContent(
+                          item.value !== undefined ? String(item.value) : "N/A"
+                        );
+                        setPopupOpen(true);
                       }
                     }}
                   >
@@ -618,11 +654,21 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
                         tabIndex={0}
                         onClick={(e) => {
                           e.stopPropagation();
-                          alert(item.value);
+                          setPopupContent(
+                            item.value !== undefined
+                              ? String(item.value)
+                              : "N/A"
+                          );
+                          setPopupOpen(true);
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
-                            alert(item.value);
+                            setPopupContent(
+                              item.value !== undefined
+                                ? String(item.value)
+                                : "N/A"
+                            );
+                            setPopupOpen(true);
                           }
                         }}
                       >
@@ -683,11 +729,17 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
                     tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation();
-                      alert(item.value);
+                      setPopupContent(
+                        item.value !== undefined ? String(item.value) : "N/A"
+                      );
+                      setPopupOpen(true);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
-                        alert(item.value);
+                        setPopupContent(
+                          item.value !== undefined ? String(item.value) : "N/A"
+                        );
+                        setPopupOpen(true);
                       }
                     }}
                   >
@@ -1193,7 +1245,8 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
 
       <header className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-          Insurance Alternatives
+          drug alternatives with reimbursement and copay details for a selected
+          insurance plan
         </h2>
       </header>
 
@@ -1809,7 +1862,9 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   const [searchName, setSearchName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
+  // ...inside DrugInformation component...
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupContent, setPopupContent] = useState<string | null>(null);
   // Filter alternatives based on search inputs and selected filters
   const filteredAlternatives = useMemo(() => {
     return alternatives.filter(
@@ -1841,8 +1896,26 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
 
   return (
     <section className="mt-8">
+      {popupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[260px] max-w-xs max-h-[80vh] flex flex-col">
+            <div
+              className="mb-4 text-gray-900 dark:text-gray-100 break-words overflow-y-auto"
+              style={{ maxHeight: "50vh" }}
+            >
+              {popupContent}
+            </div>
+            <button
+              onClick={() => setPopupOpen(false)}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-        Suggested Alternative Drugs Without Available Insurance Price Data
+        drug alternatives without available selected insurance plan data
       </h3>
 
       {/* Search Inputs */}
@@ -1891,14 +1964,14 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
             <tr>
               {[
                 "Name",
+                "Class",
+                "NDC Codes",
                 "Form",
                 "Strength",
                 "Ingredient",
                 "Route",
                 "TE Code",
                 "Market Status",
-                "Strength Unit",
-                "NDC Codes",
               ].map((header) => (
                 <th
                   key={header}
@@ -1920,15 +1993,21 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate cursor-pointer"
                     title={alt.drugName || "N/A"}
                     tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alert(alt.drugName || "N/A");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        alert(alt.drugName || "N/A");
-                      }
-                    }}
+                    // onClick={(e) => {
+                    //   e.stopPropagation();
+                    //   setPopupContent(
+                    //     alt.drugName !== undefined ? String(alt.drugName) : "N/A"
+                    //   );
+                    //   setPopupOpen(true);
+                    // }}
+                    // onKeyDown={(e) => {
+                    //   if (e.key === "Enter" || e.key === " ") {
+                    //     setPopupContent(
+                    //       alt.drugName !== undefined ? String(alt.drugName) : "N/A"
+                    //     );
+                    //     setPopupOpen(true);
+                    //   }
+                    // }}
                   >
                     <a
                       href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}`}
@@ -1936,6 +2015,62 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                       tabIndex={-1}
                     >
                       {alt.drugName ? alt.drugName : "N/A"}
+                    </a>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap max-w-[120px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={alt.drugClass || "N/A"}
+                    tabIndex={0}
+                    // onClick={(e) => {
+                    //   e.stopPropagation();
+                    //   setPopupContent(
+                    //     alt.drugName !== undefined ? String(alt.drugClass) : "N/A"
+                    //   );
+                    //   setPopupOpen(true);
+                    // }}
+                    // onKeyDown={(e) => {
+                    //   if (e.key === "Enter" || e.key === " ") {
+                    //     setPopupContent(
+                    //       alt.drugClass !== undefined ? String(alt.drugClass) : "N/A"
+                    //     );
+                    //     setPopupOpen(true);
+                    //   }
+                    // }}
+                  >
+                    {alt.drugClass ? alt.drugClass : "N/A"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap max-w-[120px]">
+                  <div
+                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
+                    title={padCode(alt.ndcCode)}
+                    tabIndex={0}
+                    // onClick={(e) => {
+                    //   e.stopPropagation();
+                    //   setPopupContent(
+                    //     alt.ndcCode !== undefined ? String(alt.ndcCode) : "N/A"
+                    //   );
+                    //   setPopupOpen(true);
+                    // }}
+                    // onKeyDown={(e) => {
+                    //   if (e.key === "Enter" || e.key === " ") {
+                    //     setPopupContent(
+                    //       alt.ndcCode !== undefined ? String(alt.ndcCode) : "N/A"
+                    //     );
+                    //     setPopupOpen(true);
+                    //   }
+                    // }}
+                  >
+                    <a
+                      href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
+                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      tabIndex={-1}
+                    >
+                      {padCode(alt.ndcCode)}
                     </a>
                   </div>
                 </td>
@@ -1972,7 +2107,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                       }
                     }}
                   >
-                    {alt.strength ? alt.strength : "N/A"}
+                    {alt.strength ? alt.strength + alt.strengthUnit : "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap max-w-[120px]">
@@ -2045,52 +2180,6 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     }}
                   >
                     {alt.type !== "" ? alt.type : "N/A"}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap max-w-[100px]">
-                  <div
-                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
-                    title={alt.strengthUnit !== "" ? alt.strengthUnit : "N/A"}
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alert(alt.strengthUnit !== "" ? alt.strengthUnit : "N/A");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        alert(
-                          alt.strengthUnit !== "" ? alt.strengthUnit : "N/A"
-                        );
-                      }
-                    }}
-                  >
-                    {alt.strengthUnit !== "" ? alt.strengthUnit : "N/A"}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap max-w-[120px]">
-                  <div
-                    className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
-                    title={padCode(alt.ndcCode)}
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alert(padCode(alt.ndcCode));
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        alert(padCode(alt.ndcCode));
-                      }
-                    }}
-                  >
-                    <a
-                      href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
-                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition duration-200"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      tabIndex={-1}
-                    >
-                      {padCode(alt.ndcCode)}
-                    </a>
                   </div>
                 </td>
               </tr>
