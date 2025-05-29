@@ -29,6 +29,7 @@ import {
   Fingerprint,
   Eye,
   Clock,
+  CopyPlus,
 } from "lucide-react";
 import {
   Tag,
@@ -75,23 +76,40 @@ interface DrugHeaderProps {
   drug: Drug;
   padCode: (code: string) => string;
   temp: string;
+  drugClass: string;
 }
 /* newwwwww comp */
 // Removed duplicate declaration of DrugInformation to resolve the error.
 
-export const DrugHeader: React.FC<DrugHeaderProps> = ({ drug, padCode }) => (
-  <header className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-t-lg text-white flex items-center space-x-4">
-    <Pill className="h-8 w-8" />
-    <div>
-      <h1 className="text-2xl font-bold">{drug.name}</h1>
-      <a
-        href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-100 hover:underline"
-      >
-        NDC: {padCode(drug.ndc)}
-      </a>
+export const DrugHeader: React.FC<DrugHeaderProps> = ({
+  drug,
+  padCode,
+  drugClass,
+}) => (
+  <header className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-t-lg text-white flex flex-col md:flex-row md:items-center md:space-x-8 space-y-4 md:space-y-0">
+    <div className="flex-shrink-0 flex items-center justify-center bg-white/20 rounded-full h-14 w-14 shadow-lg">
+      <Pill className="h-8 w-8 text-white" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <h1 className="text-3xl font-extrabold tracking-tight truncate">
+        {drug.name}
+      </h1>
+      <div className="flex items-center space-x-3 mt-2">
+        <a
+          href={`https://ndclist.com/ndc/${padCode(drug.ndc)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center px-3 py-1 bg-blue-700/40 rounded-full text-blue-100 hover:underline text-sm font-mono"
+          title="View on NDC List"
+        >
+          <Barcode className="h-4 w-4 mr-1" />
+          NDC: {padCode(drug.ndc)}
+        </a>
+        <span className="inline-flex items-center px-3 py-1 bg-indigo-700/40 rounded-full text-indigo-100 text-sm ml-2">
+          <CopyPlus className="h-4 w-4 mr-1" />
+          Drug Class : {drugClass}
+        </span>
+      </div>
     </div>
   </header>
 );
@@ -1294,19 +1312,25 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
               {[
-                "Date",
                 "Name",
                 "Class",
-                "Branch",
                 "NDC",
-                "Rx Group",
-                "BIN",
-                "Insurance",
-                "PCN",
+                "Form",
+                "Strength",
+                "Ingredient",
+                "Route",
+                "TE Code",
+                "Market Status",
                 "Net Price",
                 "Coverage",
                 "Patient Pay",
                 "ACQ",
+                "Branch Name",
+                "Rx Group",
+                "BIN",
+                "Insurance",
+                "PCN",
+                "Date",
                 "Details",
               ].map((col) => (
                 <th
@@ -1340,9 +1364,6 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   key={idx}
                   className={`hover:bg-gray-200 dark:hover:bg-gray-600 ${rowBgClass}`}
                 >
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {new Date(rec.date).toISOString().split("T")[0]}
-                  </td>
                   <td className="px-4 py-2">
                     <a
                       href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
@@ -1354,9 +1375,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
                     {rec.drugClass}
                   </td>
-                  <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
-                    {rec.branchName}
-                  </td>
+
                   <td className="px-4 py-2 font-mono">
                     <a
                       href={`https://ndclist.com/ndc/${padCode(rec.ndcCode)}`}
@@ -1366,6 +1385,42 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     >
                       {padCode(rec.ndcCode)}
                     </a>
+                  </td>
+
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    {rec.form || "NA"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    {rec.strength
+                      ? `${rec.strength} ${rec.strengthUnit || ""}`
+                      : "NA"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    {rec.ingrdient || "NA"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    {rec.route || "NA"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    {rec.teCode || "NA"}
+                  </td>
+                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                    {rec.type || "NA"}
+                  </td>
+                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                    ${rec.net.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                    ${rec.insurancePayment.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                    ${rec.patientPayment.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-red-500 dark:text-red-400">
+                    ${rec.acquisitionCost.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
+                    {rec.branchName}
                   </td>
                   <td className="px-4 py-2">
                     <a
@@ -1399,19 +1454,9 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                       {rec.pcn}
                     </a>
                   </td>
-                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                    ${rec.net.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                    ${rec.insurancePayment.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                    ${rec.patientPayment.toFixed(2)}
-                  </td>
                   <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    ${rec.acquisitionCost.toFixed(2)}
+                    {new Date(rec.date).toISOString().split("T")[0]}
                   </td>
-
                   {/* Add to Cart Button */}
 
                   {/* ...other td cells... */}
@@ -2408,6 +2453,7 @@ export const DrugDetails: React.FC = () => {
             `/drug/SearchByNdc?ndc=${ndcCode}`
           );
           const drugData = response.data;
+          console.log(drugData);
           setDrug(drugData);
           response2 = await axiosInstance.get(
             `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
@@ -2446,8 +2492,14 @@ export const DrugDetails: React.FC = () => {
               );
               setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
               const sortedData = response4.data
-                .sort((a: Prescription, b: Prescription) => b.net - a.net)
+                .sort((a: Prescription, b: Prescription) => {
+                  if (b.net !== a.net) {
+                    return b.net - a.net;
+                  }
+                  return b.insurancePayment - a.insurancePayment;
+                })
                 .filter((alt: Prescription) => alt.type !== "DISCN");
+              setSortedAlternatives(sortedData);
               setSortedAlternatives(sortedData);
               console.log("sortedData", sortedData);
             } else if (classV2 === true) {
@@ -2463,8 +2515,14 @@ export const DrugDetails: React.FC = () => {
 
               setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
               const sortedData = response4.data
-                .sort((a: Prescription, b: Prescription) => b.net - a.net)
+                .sort((a: Prescription, b: Prescription) => {
+                  if (b.net !== a.net) {
+                    return b.net - a.net;
+                  }
+                  return b.insurancePayment - a.insurancePayment;
+                })
                 .filter((alt: Prescription) => alt.type !== "DISCN");
+              setSortedAlternatives(sortedData);
               setSortedAlternatives(sortedData);
               console.log("sortedData", sortedData);
             } else if (classV3 === true) {
@@ -2480,8 +2538,14 @@ export const DrugDetails: React.FC = () => {
 
               setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
               const sortedData = response4.data
-                .sort((a: Prescription, b: Prescription) => b.net - a.net)
+                .sort((a: Prescription, b: Prescription) => {
+                  if (b.net !== a.net) {
+                    return b.net - a.net;
+                  }
+                  return b.insurancePayment - a.insurancePayment;
+                })
                 .filter((alt: Prescription) => alt.type !== "DISCN");
+              setSortedAlternatives(sortedData);
               setSortedAlternatives(sortedData);
               console.log("sortedData", sortedData);
             } else {
@@ -2647,7 +2711,12 @@ export const DrugDetails: React.FC = () => {
         >
           {/* Header landmark */}
           <header>
-            <DrugHeader drug={drug} padCode={padCode} temp={temp} />
+            <DrugHeader
+              drug={drug}
+              padCode={padCode}
+              temp={temp}
+              drugClass={classNameStr}
+            />
           </header>
 
           {/* Main content section */}
@@ -2722,30 +2791,31 @@ export const DrugDetails: React.FC = () => {
                           ? "Hide Medicale Section"
                           : "Show Medicale Section"}
                       </button>
-                      <div className="flex items-center gap-3">
-                        <label
-                          htmlFor="classVersionSelect"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
-                          Class Version
-                        </label>
-                        <select
-                          id="classVersionSelect"
-                          value={classVersion}
-                          // Remove onClick, show loader only after selection
-                          onChange={(e) => {
-                            setShowClassLoader(true);
-                            setClassVersion(
-                              Number(e.target.value) as 1 | 2 | 3
-                            );
-                          }}
-                          className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value={1}>Class V1</option>
-                          <option value={2}>Class V2</option>
-                          <option value={3}>Class V3</option>
-                        </select>
-                      </div>
+                      {insuranceId !== "615" && (
+                        <div className="flex items-center gap-3">
+                          <label
+                            htmlFor="classVersionSelect"
+                            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            Class Version
+                          </label>
+                          <select
+                            id="classVersionSelect"
+                            value={classVersion}
+                            onChange={(e) => {
+                              setShowClassLoader(true);
+                              setClassVersion(
+                                Number(e.target.value) as 1 | 2 | 3
+                              );
+                            }}
+                            className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value={1}>Class V1</option>
+                            <option value={2}>Class V2</option>
+                            <option value={3}>Class V3</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
                     {/* Insurance Alternatives Table */}
                     {showAlternativesTable && (

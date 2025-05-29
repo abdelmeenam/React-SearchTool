@@ -715,7 +715,7 @@ export const InsuranceSearch: React.FC = () => {
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto drug-suggestions-box"
                       >
                         {/* Show loading skeletons if drugs are not loaded yet */}
-                        {drugs.length === 0 && !isLoadingMore && (
+                        {/* {drugs.length === 0 && !isLoadingMore && (
                           <div className="p-4">
                             {[...Array(5)].map((_, i) => (
                               <div
@@ -724,7 +724,7 @@ export const InsuranceSearch: React.FC = () => {
                               />
                             ))}
                           </div>
-                        )}
+                        )} */}
                         {uniqueFilteredDrugs.map((drug) => (
                           <button
                             key={drug.id}

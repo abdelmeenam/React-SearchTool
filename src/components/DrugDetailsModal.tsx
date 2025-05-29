@@ -28,20 +28,20 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
   const { cartItems, addToCart } = useCart();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       {/* Enhanced backdrop with subtle gradient */}
       <div
         className="absolute inset-0 bg-gradient-to-br from-gray-900/30 to-blue-900/10 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Refined modal container */}
+      {/* Responsive modal container */}
       <div
-        className="relative bg-white w-122 dark:bg-gray-800 rounded-xl shadow-2xl 
-       overflow-hidden border border-white/20 dark:border-gray-700/50"
+        className="relative bg-white w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl dark:bg-gray-800 rounded-xl shadow-2xl 
+        overflow-hidden border border-white/20 dark:border-gray-700/50"
       >
         {/* Glossy header with improved gradient */}
-        <div className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 flex justify-between items-center relative">
+        <div className="px-4 sm:px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 flex justify-between items-center relative">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmZmZmZmYwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybikiIG9wYWNpdHk9IjAuMiIvPjwvc3ZnPg==')] opacity-20" />
           <div className="min-w-0 relative">
             <h3 className="text-lg font-bold text-white truncate pr-6">
@@ -57,9 +57,9 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
           </button>
         </div>
         {/* Enhanced body with subtle animations */}
-        <div className="px-5 py-4 space-y-4">
-          {/* Metrics grid with hover effects */}
-          <div className="grid grid-cols-2 gap-3">
+        <div className="px-4 sm:px-5 py-4 space-y-4">
+          {/* Responsive metrics grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               {
                 label: "Acquisition",
@@ -148,7 +148,7 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
               <div
                 key={item.label}
                 className={`flex justify-between items-center py-2 ${
-                  item.border && "border-b border-gray-100 dark:border-gray-700"
+                  item.border ? "border-b border-gray-100 dark:border-gray-700" : ""
                 }`}
               >
                 <span className="text-gray-500 dark:text-gray-400 flex items-center font-medium">
@@ -179,8 +179,8 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
             ))}
           </div>
         </div>
-        {/* Premium footer with better button styling */}
-        <div className="px-5 py-3 bg-gray-50/80 dark:bg-gray-700/30 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end space-x-3">
+        {/* Responsive footer with better button styling */}
+        <div className="px-4 sm:px-5 py-3 bg-gray-50/80 dark:bg-gray-700/30 border-t border-gray-200/50 dark:border-gray-700/50 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 dark:focus:ring-offset-gray-700"

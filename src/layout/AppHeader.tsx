@@ -5,7 +5,7 @@ import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
-import { ShoppingCart } from "lucide-react";
+import { Pill, ShoppingCart } from "lucide-react";
 import { CartItem } from "../types";
 import { Cart } from "../old/Cart";
 import { useCart } from "../context/CartContext";
@@ -141,17 +141,19 @@ const AppHeader: React.FC = () => {
             </button>
 
             {/* Logo Link */}
-            <Link to="/" className="lg:hidden" aria-label="Home">
-              <img
-                className="dark:hidden"
-                src="./images/logo/logo.svg"
-                alt="Company Logo"
-              />
-              <img
-                className="hidden dark:block"
-                src="./images/logo/logo-dark.svg"
-                alt="Company Logo"
-              />
+            <Link to="/">
+              <span className="block lg:hidden">
+                <span
+                  className="flex items-center text-2xl font-extrabold tracking-wide text-blue-600 dark:text-blue-400"
+                  style={{ minWidth: "44px", minHeight: "44px" }}
+                >
+                  Medsearch
+                  <Pill
+                    className="ml-2 w-6 h-6 text-blue-600 dark:text-blue-400"
+                    style={{ minWidth: "44px", minHeight: "44px" }}
+                  />
+                </span>
+              </span>
             </Link>
 
             {/* Application Menu Toggle Button */}

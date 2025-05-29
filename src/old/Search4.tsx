@@ -219,7 +219,7 @@ export const InsuranceSearch2: React.FC = () => {
         `/drug/GetInsurancesPcnByBinId?binId=${bin.id}`
       );
       setPcnList(data);
-      if (bin.name === "Medicare") {
+      if (bin.name === "Medi-Cal") {
         setSelectedPcn(data[0]);
         setPcnSearchQuery(data[0]?.pcn || "");
         handlePcnSelect(data[0]);
@@ -288,7 +288,7 @@ export const InsuranceSearch2: React.FC = () => {
         `/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`
       );
       setRxGroups(data);
-      if (pcn.pcn === "Medicare") {
+      if (pcn.pcn === "Medi-Cal") {
         setRxGroupSearchQuery(data[0]?.rxGroup || "");
         setSelectedRxGroup(data[0]);
       }
@@ -726,7 +726,7 @@ export const InsuranceSearch2: React.FC = () => {
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto drug-suggestions-box"
                       >
                         {/* Show loading skeletons if drugs are not loaded yet */}
-                        {drugs.length === 0 && !isLoadingMore && (
+                        {/* {drugs.length === 0 && !isLoadingMore && (
                           <div className="p-4">
                             {[...Array(5)].map((_, i) => (
                               <div
@@ -735,7 +735,7 @@ export const InsuranceSearch2: React.FC = () => {
                               />
                             ))}
                           </div>
-                        )}
+                        )} */}
                         {uniqueFilteredDrugs.map((drug) => (
                           <button
                             key={drug.id}
@@ -814,7 +814,7 @@ export const InsuranceSearch2: React.FC = () => {
                       pcnId: selectedPcn?.id || 0,
                       drugId: selectedDrug?.id || 0,
                       date: new Date().toISOString(),
-                      searchType: "Search By Full Insurance",
+                      searchType: "Search for Drug Class By Full Insurance Data",
                     });
                     localStorage.setItem(
                       "selectedRx",

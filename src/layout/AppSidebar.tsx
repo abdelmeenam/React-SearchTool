@@ -80,7 +80,7 @@ const navItems: NavItem[] = [
         icon: <SearchCode />,
       },
       {
-        name: "Search by Drug CLass",
+        name: "Search by Drug Class",
         path: "/search/4",
         pro: false,
         icon: <SearchCode />,
