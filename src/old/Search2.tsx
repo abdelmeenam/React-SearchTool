@@ -203,7 +203,7 @@ export const InsuranceSearch: React.FC = () => {
         `/drug/GetInsurancesPcnByBinId?binId=${bin.id}`
       );
       setPcnList(data);
-      if (bin.name === "Medicare") {
+      if (bin.name === "Medi-Cal") {
         setSelectedPcn(data[0]);
         setPcnSearchQuery(data[0]?.pcn || "");
         handlePcnSelect(data[0]);
@@ -272,7 +272,7 @@ export const InsuranceSearch: React.FC = () => {
         `/drug/GetInsurancesRxByPcnId?pcnId=${pcn.id}`
       );
       setRxGroups(data);
-      if (pcn.pcn === "Medicare") {
+      if (pcn.pcn === "Medi-Cal") {
         setRxGroupSearchQuery(data[0]?.rxGroup || "");
         setSelectedRxGroup(data[0]);
       }
