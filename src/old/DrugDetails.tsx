@@ -2893,8 +2893,8 @@ export const DrugDetails: React.FC = () => {
                       `}
                       >
                         {mediToggle
-                          ? "Hide Medicale Section"
-                          : "Show Medicale Section"}
+                          ? "Hide Medi-Cal Section"
+                          : "Show Medi-Cal Section"}
                       </button>
                       {insuranceId !== "615" && (
                         <div className="flex items-center gap-3">
