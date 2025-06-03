@@ -298,12 +298,14 @@ interface DrugInformationProps {
   classNameStr: string;
   bestDrugNet: Prescription | null;
   drugMedi: DrugMedi | null;
+  drugClass: string;
 }
 export const DrugInformation: React.FC<DrugInformationProps> = ({
   drug,
   drugDetail,
   bestDrugNet,
   drugMedi,
+  drugClass,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [showDrugDetails, setShowDrugDetails] = useState(false);
@@ -381,6 +383,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
           drugDetail={drugDetail ?? null}
           onClose={() => setShowDetails(false)}
           formatCurrency={formatCurrency}
+          drugClass={drugClass}
         />
       )}
 
@@ -1187,8 +1190,13 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                           id:
                             modalDrug.ndcCode || `${modalDrug.drugId}-uniqueId`,
                           name: modalDrug.drugName || "Unnamed Drug",
+                          ndc: padCode(modalDrug.ndcCode),
+                          acq: modalDrug.acquisitionCost,
+                          insurancePayment: modalDrug.insurancePayment,
+                          patientPayment: modalDrug.patientPayment,
                           price: modalDrug.net,
                           quantity: 1,
+                          insurance: modalDrug.rxgroup || "Unknown",
                         });
                         const storedSearchLog =
                           localStorage.getItem("searchLogDetails");
@@ -2486,6 +2494,13 @@ export const DrugDetails: React.FC = () => {
             );
           }
           setDrug(response.data);
+          // const mediResponse = await axiosInstance.get(
+          //   `/drug/GetAllMediDrugs?classId=${response.data?.drugClassId}`
+          // );
+          // setDrugmedi(mediResponse.data);
+          // setDrugDeatilsMedi(
+          //   mediResponse.data.find((item: DrugMedi) => item.drugNDC === ndcCode)
+          // );
           // Get all alternatives and sort descending by net price:
           if (classV1 === true) {
             response2 = await axiosInstance.get(
@@ -2823,6 +2838,7 @@ export const DrugDetails: React.FC = () => {
               classNameStr={classNameStr}
               bestDrugNet={bestNetDrug}
               drugMedi={drugDeatilsMedi ?? null}
+              drugClass={classNameStr}
             />
 
             {activeTable === "insurance" ? (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Drug, OrderItem, Prescription, SearchLog } from "../types";
 import { useCart } from "../context/CartContext";
 import {
@@ -17,6 +17,7 @@ interface DrugDetailsModalProps {
   drugDetail: Prescription | null;
   onClose: () => void;
   formatCurrency: (value: number) => string;
+  drugClass: string | null;
 }
 
 const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
@@ -24,12 +25,33 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
   drugDetail,
   onClose,
   formatCurrency,
+  drugClass,
 }) => {
   const { cartItems, addToCart } = useCart();
-
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupContent, setPopupContent] = useState<string | null>(null);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       {/* Enhanced backdrop with subtle gradient */}
+      {/* Recommendation Badge */}
+      {popupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[260px] max-w-xs max-h-[80vh] flex flex-col">
+            <div
+              className="mb-4 text-gray-900 dark:text-gray-100 break-words overflow-y-auto"
+              style={{ maxHeight: "50vh" }}
+            >
+              {popupContent}
+            </div>
+            <button
+              onClick={() => setPopupOpen(false)}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       <div
         className="absolute inset-0 bg-gradient-to-br from-gray-900/30 to-blue-900/10 backdrop-blur-sm"
         onClick={onClose}
@@ -67,7 +89,7 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                 color: "blue",
               },
               {
-                label: "Insurance",
+                label: "Insurance Coverage",
                 value: formatCurrency(drugDetail?.insurancePayment ?? 0),
                 color: "purple",
               },
@@ -105,6 +127,12 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                 icon: <CalendarDays className="w-4 h-4 mr-2 opacity-70" />,
                 label: "NDC",
                 value: drug.ndc,
+                border: true,
+              },
+              {
+                icon: <CalendarDays className="w-4 h-4 mr-2 opacity-70" />,
+                label: "Class ",
+                value: drugClass,
                 border: true,
               },
               {
@@ -148,7 +176,9 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
               <div
                 key={item.label}
                 className={`flex justify-between items-center py-2 ${
-                  item.border ? "border-b border-gray-100 dark:border-gray-700" : ""
+                  item.border
+                    ? "border-b border-gray-100 dark:border-gray-700"
+                    : ""
                 }`}
               >
                 <span className="text-gray-500 dark:text-gray-400 flex items-center font-medium">
@@ -159,17 +189,23 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                   className={`font-semibold text-gray-900 dark:text-gray-100 ${
                     item.truncate
                       ? "truncate max-w-[160px]"
-                      : "truncate max-w-[120px]"
+                      : "truncate max-w-[330px]"
                   } cursor-pointer`}
                   title={item.value}
                   tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
-                    alert(item.value || "N/A");
+                    setPopupContent(
+                      item.value !== undefined ? String(item.value) : "N/A"
+                    );
+                    setPopupOpen(true);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
-                      alert(item.value || "N/A");
+                      setPopupContent(
+                        item.value !== undefined ? String(item.value) : "N/A"
+                      );
+                      setPopupOpen(true);
                     }
                   }}
                 >
@@ -212,9 +248,14 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                 if (drug.acq !== undefined && drug.acq !== null) {
                   addToCart({
                     id: drug.ndc || Date.now().toString(),
-                    name: drug.name || "Unnamed Drug",
+                    ndc: drug.ndc || "N/A",
+                    name: drug.name || "NA",
+                    insurancePayment: drugDetail?.insurancePayment ?? 0,
+                    patientPayment: drugDetail?.patientPayment ?? 0,
+                    acq: drugDetail?.acquisitionCost??drug.acq,
                     price: drugDetail?.net ?? 0,
                     quantity: 1,
+                    insurance : drugDetail?.rxgroup || "N/A",
                   });
 
                   const storedSearchLog =

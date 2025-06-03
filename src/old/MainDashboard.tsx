@@ -24,13 +24,12 @@ await loadConfig();
 export const MainDashboard: React.FC = () => {
   // Destructure the parameter from the URL (e.g., /dashboard/:dashboardId)
   const { dashboardId } = useParams<{ dashboardId: string }>();
-  console.log(dashboardId);
-
   // Initialize activeDashboard state with the URL parameter or default to "1"
   const [activeDashboard, setActiveDashboard] = useState(dashboardId || "1");
   const [data, setData] = useState<DrugTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [classVersion, setClassVersion] = useState<number>(1);
 
   // Update activeDashboard if the dashboardId URL parameter changes
   useEffect(() => {
@@ -48,44 +47,20 @@ export const MainDashboard: React.FC = () => {
         localStorage.removeItem("selectedBin");
 
         const pageSize = 3000;
-        // Fetch the first page (initial data set)
-        const firstResponse = await axiosInstance.get(
-          "/drug/GetAllLatestScriptsPaginated",
-          {
-            params: { pageNumber: 1, pageSize },
-          }
-        );
-        console.log(firstResponse.data);
-        const initialData: DrugTransaction[] = firstResponse.data;
-        setData(initialData);
-        // Set loading to false after initial data is ready for render
-        setLoading(false);
-
-        // Asynchronously load remaining pages after the initial render
-        let page = 2;
+        let allData: DrugTransaction[] = [];
+        let page = 1;
         let continueFetching = true;
+
         while (continueFetching) {
           const response = await axiosInstance.get(
             "/drug/GetAllLatestScriptsPaginated",
             {
-              params: { pageNumber: page, pageSize },
+              params: { pageNumber: page, pageSize, classVersion },
             }
           );
-          console.log("page:", page);
           const pageData: DrugTransaction[] = response.data;
-          // Append additional data and filter out duplicates (by ndcCode and scriptCode)
-          setData((prevData) => {
-            const combined = [...prevData, ...pageData];
-            const distinctItems = Array.from(
-              new Map(
-                combined.map((item) => [
-                  `${item.ndcCode}_${item.scriptCode}`,
-                  item,
-                ])
-              ).values()
-            );
-            return distinctItems;
-          });
+          console.log(pageData);
+          allData = [...allData, ...pageData];
 
           if (pageData.length < pageSize) {
             continueFetching = false;
@@ -93,6 +68,18 @@ export const MainDashboard: React.FC = () => {
             page++;
           }
         }
+
+        // Remove duplicates by ndcCode and scriptCode
+        const distinctItems = Array.from(
+          new Map(
+            allData.map((item) => [
+              `${item.ndcCode}_${item.scriptCode}`,
+              item,
+            ])
+          ).values()
+        );
+        setData(distinctItems);
+        setLoading(false);
       } catch (err) {
         setError(
           "Access Denied. Sorry, you don’t have permission to view this page.\nPlease contact the system administrator if you believe this is an error."
@@ -101,8 +88,29 @@ export const MainDashboard: React.FC = () => {
       }
     };
 
+    setLoading(true);
+    setError(null);
     fetchData();
-  }, []);
+  }, [classVersion, activeDashboard]);
+
+  // Class Version Selector
+  const ClassVersionSelector = () => (
+    <div className="flex justify-center mb-4 gap-2">
+      {[1, 2, 3].map((v) => (
+        <button
+          key={v}
+          onClick={() => setClassVersion(v)}
+          className={`px-4 py-2 rounded ${
+            classVersion === v
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          Class Version {v}
+        </button>
+      ))}
+    </div>
+  );
 
   // Enhanced Responsive Button Component
   const ResponsiveButton = ({
@@ -132,6 +140,9 @@ export const MainDashboard: React.FC = () => {
           <h1 className="text-4xl font-bold text-blue-700">Pharmacy Dashboard</h1>
         </header>
 
+        {/* Class Version Selector */}
+        <ClassVersionSelector />
+
         {/* Loading/Error States */}
         {loading && (
           <section>
@@ -159,7 +170,6 @@ export const MainDashboard: React.FC = () => {
         {/* Render the appropriate dashboard when data is ready */}
         {!loading && !error && (
           <section>
-            {/* <h2 className="sr-only">Dashboard Content</h2> */}
             <div>
               {activeDashboard === "1" && <Dashboard data={data} />}
               {activeDashboard === "2" && <SecondDashBoard data={data} />}

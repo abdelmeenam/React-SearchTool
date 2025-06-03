@@ -52,8 +52,13 @@ export interface BestAlternative {
 export interface CartItem {
   id: string;
   name: string;
+  ndc: string;
+  acq: number;
+  insurancePayment: number;
+  patientPayment: number;
   price: number;
   quantity: number;
+  insurance: string;
 }
 
 export interface OrderRequestBody {

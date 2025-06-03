@@ -194,6 +194,9 @@ const OrderHistory = () => {
                                   Drug Name: {item.drugName}
                                 </p>
                                 <p className="font-medium text-gray-900 dark:text-white">
+                                  Drug NDC: {item.ndc}
+                                </p>
+                                <p className="font-medium text-gray-900 dark:text-white">
                                   Insurance Name: {item.insuranceRxName}
                                 </p>
                                 <p className="text-sm text-gray-500 dark:text-gray-300">
