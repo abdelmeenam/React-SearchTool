@@ -810,6 +810,9 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   // State for modal
   const [showModal, setShowModal] = useState(false);
   const [modalDrug, setModalDrug] = useState<Prescription | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "Drug Info" | "Pricing Info" | "Insurance Info"
+  >("Drug Info");
 
   // Filter and pagination logic
   const filtered = useMemo(() => {
@@ -1368,167 +1371,241 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
         )}
       </div>
       {/* Table */}
+      {/* Tab Controls */}
+      <div className="mb-4 flex gap-4 border-b">
+        {["Drug Info", "Pricing Info", "Insurance Info"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab as any)}
+            className={`px-4 py-2 font-medium border-b-2 ${
+              activeTab === tab
+                ? "text-indigo-600 border-indigo-600"
+                : "text-gray-500 border-transparent"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>
-              {[
-                "Name",
-                "Class",
-                "NDC",
-                "Form",
-                "Strength",
-                "Ingredient",
-                "Route",
-                "TE Code",
-                "Market Status",
-                "Net Price",
-                "Coverage",
-                "Patient Pay",
-                "ACQ",
-                "Branch Name",
-                "Rx Group",
-                "BIN",
-                "Insurance",
-                "PCN",
-                "Date",
-                "Details",
-              ].map((col) => (
-                <th
-                  key={col}
-                  className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase"
-                >
-                  {col}
-                </th>
-              ))}
+              {activeTab === "Drug Info" &&
+                [
+                  "Name",
+                  "NDC",
+                  "Class",
+                  "Form",
+                  "Strength",
+                  "Ingredient",
+                  "Route",
+                  "TE Code",
+                  "Market Status",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase"
+                  >
+                    {col}
+                  </th>
+                ))}
+              {activeTab === "Pricing Info" &&
+                [
+                  "Name",
+                  "NDC",
+                  "Net Price",
+                  "Coverage",
+                  "Patient Pay",
+                  "ACQ",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase"
+                  >
+                    {col}
+                  </th>
+                ))}
+              {activeTab === "Insurance Info" &&
+                [
+                  "Name",
+                  "NDC",
+                  "Branch Name",
+                  "Rx Group",
+                  "BIN",
+                  "Insurance",
+                  "PCN",
+                  "Date",
+                  "Details",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase"
+                  >
+                    {col}
+                  </th>
+                ))}
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {pageItems.map((rec, idx) => {
-              // Determine row background color based on rank
               let rowBgClass = "";
-              if (sortOrder === "desc") {
-                if (idx === 0) {
-                  rowBgClass = "bg-green-100 dark:bg-green-800"; // Most recommended
-                } else if (idx === 1) {
-                  rowBgClass = "bg-yellow-100 dark:bg-yellow-800"; // Semi-recommended
-                }
-              } else if (sortOrder === "asc") {
-                if (idx === 0) {
-                  rowBgClass = "bg-red-100 dark:bg-red-800"; // Least recommended
-                } else if (idx === 1) {
-                  rowBgClass = "bg-orange-100 dark:bg-orange-800"; // Second least recommended
-                }
-              }
+              if (sortOrder === "desc")
+                rowBgClass =
+                  idx === 0
+                    ? "bg-green-100 dark:bg-green-800"
+                    : idx === 1
+                    ? "bg-yellow-100 dark:bg-yellow-800"
+                    : "";
+              if (sortOrder === "asc")
+                rowBgClass =
+                  idx === 0
+                    ? "bg-red-100 dark:bg-red-800"
+                    : idx === 1
+                    ? "bg-orange-100 dark:bg-orange-800"
+                    : "";
+
               return (
                 <tr
                   key={idx}
                   className={`hover:bg-gray-200 dark:hover:bg-gray-600 ${rowBgClass}`}
                 >
-                  <td className="px-4 py-2">
-                    <a
-                      href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
-                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                    >
-                      {rec.drugName}
-                    </a>
-                  </td>
-                  <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
-                    {rec.drugClass}
-                  </td>
+                  {activeTab === "Drug Info" && (
+                    <>
+                      <td className="px-4 py-2">
+                        <a
+                          href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {rec.drugName}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2 font-mono">
+                        <a
+                          href={`https://ndclist.com/ndc/${padCode(
+                            rec.ndcCode
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {padCode(rec.ndcCode)}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2">{rec.drugClass}</td>
 
-                  <td className="px-4 py-2 font-mono">
-                    <a
-                      href={`https://ndclist.com/ndc/${padCode(rec.ndcCode)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                    >
-                      {padCode(rec.ndcCode)}
-                    </a>
-                  </td>
+                      <td className="px-4 py-2">{rec.form || "NA"}</td>
+                      <td className="px-4 py-2">
+                        {rec.strength
+                          ? `${rec.strength} ${rec.strengthUnit || ""}`
+                          : "NA"}
+                      </td>
+                      <td className="px-4 py-2">{rec.ingrdient || "NA"}</td>
+                      <td className="px-4 py-2">{rec.route || "NA"}</td>
+                      <td className="px-4 py-2">{rec.teCode || "NA"}</td>
+                      <td className="px-4 py-2">{rec.type || "NA"}</td>
+                    </>
+                  )}
 
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {rec.form || "NA"}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {rec.strength
-                      ? `${rec.strength} ${rec.strengthUnit || ""}`
-                      : "NA"}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {rec.ingrdient || "NA"}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {rec.route || "NA"}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {rec.teCode || "NA"}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {rec.type || "NA"}
-                  </td>
-                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                    ${rec.net.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                    ${rec.insurancePayment.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                    ${rec.patientPayment.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-red-500 dark:text-red-400">
-                    ${rec.acquisitionCost.toFixed(2)}
-                  </td>
-                  <td className="px-4 py-2 text-gray-800 dark:text-gray-100">
-                    {rec.branchName}
-                  </td>
-                  <td className="px-4 py-2">
-                    <a
-                      href={`/InsuranceDetails/${rec.rxgroupId}`}
-                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                    >
-                      {rec.insuranceName}
-                    </a>
-                  </td>
-                  <td className="px-4 py-2">
-                    <a
-                      href={`/InsuranceBINDetails/${rec.binId}`}
-                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                    >
-                      {rec.bin}
-                    </a>
-                  </td>
-                  <td className="px-4 py-2">
-                    <a
-                      href={`/InsuranceBINDetails/${rec.binId}`}
-                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                    >
-                      {rec.binFullName}
-                    </a>
-                  </td>
-                  <td className="px-4 py-2">
-                    <a
-                      href={`/InsurancePCNDetails/${rec.pcnId}`}
-                      className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
-                    >
-                      {rec.pcn}
-                    </a>
-                  </td>
-                  <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                    {new Date(rec.date).toISOString().split("T")[0]}
-                  </td>
-                  {/* Add to Cart Button */}
+                  {activeTab === "Pricing Info" && (
+                    <>
+                      <td className="px-4 py-2">
+                        <a
+                          href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {rec.drugName}
+                        </a>
+                      </td>{" "}
+                      <td className="px-4 py-2 font-mono">
+                        <a
+                          href={`https://ndclist.com/ndc/${padCode(
+                            rec.ndcCode
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {padCode(rec.ndcCode)}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                        ${rec.net.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                        ${rec.insurancePayment.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                        ${rec.patientPayment.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-red-500 dark:text-red-400">
+                        ${rec.acquisitionCost.toFixed(2)}
+                      </td>
+                    </>
+                  )}
 
-                  {/* ...other td cells... */}
-                  <td key={idx} className="px-4 py-2 text-right space-x-2">
-                    <button
-                      onClick={() => openModal(rec)}
-                      className="px-3 py-1 bg-indigo-600 text-white text-sm font-semibold rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      Details
-                    </button>
-                  </td>
+                  {activeTab === "Insurance Info" && (
+                    <>
+                      <td className="px-4 py-2">
+                        <a
+                          href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {rec.drugName}
+                        </a>
+                      </td>{" "}
+                      <td className="px-4 py-2 font-mono">
+                        <a
+                          href={`https://ndclist.com/ndc/${padCode(
+                            rec.ndcCode
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {padCode(rec.ndcCode)}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2">{rec.branchName}</td>
+                      <td className="px-4 py-2">
+                        <a
+                          href={`/InsuranceDetails/${rec.rxgroupId}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {rec.insuranceName}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2">
+                        <a
+                          href={`/InsuranceBINDetails/${rec.binId}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {rec.bin}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2">{rec.binFullName}</td>
+                      <td className="px-4 py-2">
+                        <a
+                          href={`/InsurancePCNDetails/${rec.pcnId}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {rec.pcn}
+                        </a>
+                      </td>
+                      <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                        {new Date(rec.date).toISOString().split("T")[0]}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          onClick={() => openModal(rec)}
+                          className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          Details
+                        </button>
+                      </td>
+                    </>
+                  )}
                 </tr>
               );
             })}
