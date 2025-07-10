@@ -678,7 +678,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {item.highstScriptCode}
+                    {item.highstScriptCode??"NA"}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     {new Date(item.highstScriptDate).toLocaleDateString(

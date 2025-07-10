@@ -117,9 +117,7 @@ export const Search3: React.FC = () => {
       suggestionBox?.removeEventListener("scroll", handleScroll);
     };
   }, [drugSearchQuery, currentPage, isLoadingMore]);
-  useEffect(() => {
-    localStorage.removeItem("searchLogDetails");
-  }, []);
+
   useEffect(() => {
     if (Details) {
       localStorage.setItem("searchLogDetails", JSON.stringify(Details));
