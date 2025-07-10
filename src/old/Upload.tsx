@@ -17,12 +17,12 @@ export const Upload: React.FC = () => {
       setUploadStatus('Processing file...');
       
       const data = await file.arrayBuffer();
-      const workbook = read(data);
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = utils.sheet_to_json(worksheet);
+      // const workbook = read(data);
+      // const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      // const jsonData = utils.sheet_to_json(worksheet);
 
       setUploadStatus('Uploading data...');
-      await api.uploadDrugsExcel(file);
+      // await api.uploadDrugsExcel(file);
       
       setUploadStatus('File uploaded successfully!');
       if (fileInputRef.current) {
