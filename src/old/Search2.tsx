@@ -115,9 +115,7 @@ export const InsuranceSearch: React.FC = () => {
   // --- Dropdown state for Selected Details panel ---
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  useEffect(() => {
-    localStorage.removeItem("searchLogDetails");
-  }, []);
+
   useEffect(() => {
     if (Details) {
       localStorage.setItem("searchLogDetails", JSON.stringify(Details));

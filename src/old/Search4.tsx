@@ -30,7 +30,7 @@ interface RxGroupModel {
   insurancePCNId: number;
 }
 
-interface DrugClass {
+interface ClassInfo {
   id: number;
   name: string;
 }
@@ -41,12 +41,8 @@ interface DrugModel {
   ndc: string;
   form: string;
   strength: string;
-  drugClassId: number;
-  drugClass?: DrugClass | null;
-  drugClassV2Id: number;
-  drugClassV2?: any; // Replace 'any' with the correct type if available
-  drugClassV3Id: number;
-  drugClassV3?: any; // Replace 'any' with the correct type if available
+  classId: number;
+  classType: string;
   acq: number;
   awp: number;
   rxcui: number;
@@ -83,6 +79,7 @@ const dropdownVariant = {
 };
 
 export const InsuranceSearch2: React.FC = () => {
+  const classType = localStorage.getItem("classType") || "ClassV1";
   const navigate = useNavigate();
   const [drugNetDetails, setDrugNetDetails] = useState<Prescription | null>(
     null
@@ -115,6 +112,7 @@ export const InsuranceSearch2: React.FC = () => {
 
   // --- Drug Flow States ---
   const [drugs, setDrugs] = useState<DrugModel[]>([]);
+  const [classInfos, setClassInfos] = useState<ClassInfo[]>([]);
   const [drugSearchQuery, setDrugSearchQuery] = useState("");
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState<DrugModel | null>(null);
@@ -131,9 +129,6 @@ export const InsuranceSearch2: React.FC = () => {
   // --- Dropdown state for Selected Details panel ---
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  useEffect(() => {
-    localStorage.removeItem("searchLogDetails");
-  }, []);
   useEffect(() => {
     if (Details) {
       localStorage.setItem("searchLogDetails", JSON.stringify(Details));
@@ -361,7 +356,7 @@ export const InsuranceSearch2: React.FC = () => {
         const url = `/drug/GetClassesByName?name=${query}&pageNumber=1&pageSize=20`;
         const { data } = await axiosInstance.get(url);
         console.log(data);
-        setDrugs(data);
+        setClassInfos(data);
       } catch (error) {
         console.error("Error fetching drugs:", error);
       }
@@ -378,7 +373,7 @@ export const InsuranceSearch2: React.FC = () => {
         console.log("URL: ", url);
         const { data } = await axiosInstance.get(url);
         console.log("Data: ", data);
-        setDrugs(data);
+        setClassInfos(data);
       } catch (error) {
         console.error("Error fetching drugs:", error);
       }
@@ -415,7 +410,7 @@ export const InsuranceSearch2: React.FC = () => {
       }
       try {
         const { data } = await axiosInstance.get(url);
-        setDrugs((prev) => [...prev, ...data]);
+        setClassInfos((prev) => [...prev, ...data]);
         setCurrentPage((prev) => prev + 1);
       } catch (error) {
         console.error("Error loading more drugs:", error);
@@ -428,7 +423,7 @@ export const InsuranceSearch2: React.FC = () => {
         const url = `/drug/GetClassesByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`;
         const { data } = await axiosInstance.get(url);
 
-        setDrugs((prev) => [...prev, ...data]);
+        setClassInfos((prev) => [...prev, ...data]);
         setCurrentPage(nextPage);
       } catch (error) {
         console.error("Error loading more drugs:", error);
@@ -457,16 +452,22 @@ export const InsuranceSearch2: React.FC = () => {
     };
   }, [showDrugSuggestions, drugSearchQuery, currentPage, isLoadingMore]);
 
-  const filteredDrugs = drugs;
+  const filteredclassInfos = classInfos;
 
-  const uniqueFilteredDrugs = filteredDrugs
+  const uniqueFilteredclassInfos = filteredclassInfos;
 
-  const handleDrugSelect = (drug: DrugModel) => {
+  const handleDrugSelect = async (classInfo: ClassInfo) => {
+    const response = await axiosInstance.get(
+      `/drug/GetDrugsByClassId?classId=${classInfo.id}&classType=${classType}`
+    );
+    console.log("Drugs fetched for class:", classInfo.name, response.data);
+    setDrugs(response.data);
+    const drug = response.data[0];
     // Combine unique NDCs from drugs with the same name.
     const selectedDrugs = drugs.filter((d) => d.name === drug.name);
     const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
     setSelectedDrug(drug);
-    setDrugSearchQuery(drug.drugClass?.name || drug.name);
+    setDrugSearchQuery(classInfo.name);
     setShowDrugSuggestions(false);
     setNdcList(combinedNdcs);
     if (combinedNdcs.length > 0) {
@@ -736,13 +737,13 @@ export const InsuranceSearch2: React.FC = () => {
                             ))}
                           </div>
                         )} */}
-                        {uniqueFilteredDrugs.map((drug) => (
+                        {uniqueFilteredclassInfos.map((classInfo) => (
                           <button
-                            key={drug.id}
-                            onClick={() => handleDrugSelect(drug)}
+                            key={classInfo.id}
+                            onClick={() => handleDrugSelect(classInfo )}
                             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
                           >
-                            {drug.drugClass?.name}
+                            {classInfo.name}
                           </button>
                         ))}
                         {isLoadingMore && (
@@ -814,7 +815,8 @@ export const InsuranceSearch2: React.FC = () => {
                       pcnId: selectedPcn?.id || 0,
                       drugNDC: selectedDrug?.ndc || "",
                       date: new Date().toISOString(),
-                      searchType: "Search for Drug Class By Full Insurance Data",
+                      searchType:
+                        "Search for Drug Class By Full Insurance Data",
                     });
                     localStorage.setItem(
                       "selectedRx",

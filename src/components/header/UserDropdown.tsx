@@ -90,6 +90,15 @@ const UserInfoCard: React.FC = () => {
       await axiosInstance.get(`/user/Logout`);
       localStorage.removeItem("role");
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("email");
+      localStorage.removeItem("branchId");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("classType");
+      localStorage.removeItem("cart");
+      localStorage.removeItem("lastOrderSubmitted");
+      localStorage.removeItem("orderRequestBody");
+      localStorage.removeItem("searchLogDetails");
+
       // Optionally remove any other user-related data here
       navigate("/signin");
     } catch (error) {

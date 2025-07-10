@@ -17,6 +17,17 @@ export interface Drug {
   type: string;
   strengthUnit: string;
 }
+export interface EPCMOAClass {
+  id: number;
+  name: string;
+  type: string;
+}
+export interface ClassInfo {
+  id: number;
+  classTypeName: string;
+  classTypeId: number;
+  name: string;
+}
 export interface DrugMedi {
   drugName: string;
   drugId: number;
@@ -47,7 +58,7 @@ export interface BestAlternative {
   binFullName: string;
   bin: string;
   pcn: string;
-  rxgroup: string; 
+  rxgroup: string;
 }
 export interface CartItem {
   id: string;
@@ -184,6 +195,9 @@ export interface DrugTransaction {
   highstNet: number;
   highstScriptCode: string;
   highstScriptDate: string;
+
+  /** 👇 Added field */
+  remainingStock: number;
 }
 
 export interface ScriptData {
