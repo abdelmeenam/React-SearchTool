@@ -70,18 +70,18 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Filter where ndcCode is not equal to highstDrugNDC
+        // Filter where ndcCode is not equal to highestDrugNDC
         const filters = data.filter(
-          (item) => item.ndcCode !== item.highstDrugNDC
+          (item) => item.ndcCode !== item.highestDrugNDC
         );
         setLatestScripts(filters);
 
         const belowNetCount = filters.filter(
-          (item) => item.netProfit < item.highstNet
+          (item) => item.netProfit < item.highestNet
         ).length;
         const totalRev = filters.reduce((sum, item) => sum + item.netProfit, 0);
         const totalNetProfit = filters.reduce(
-          (sum, item) => sum + item.highstNet,
+          (sum, item) => sum + item.highestNet,
           0
         );
 
@@ -164,11 +164,11 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
     setFilteredData(filtered);
 
     const belowNetCount = filtered.filter(
-      (item) => item.netProfit < item.highstNet
+      (item) => item.netProfit < item.highestNet
     ).length;
     const totalRev = filtered.reduce((sum, item) => sum + item.netProfit, 0);
     const totalNetProfit = filtered.reduce(
-      (sum, item) => sum + item.highstNet,
+      (sum, item) => sum + item.highestNet,
       0
     );
 
@@ -264,10 +264,10 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
       item.ndcCode,
       normalizeName(item.prescriber),
       item.netProfit.toFixed(2),
-      item.highstNet,
-      (item.highstNet - item.netProfit).toFixed(2),
-      item.highstDrugNDC,
-      item.highstDrugName,
+      item.highestNet,
+      (item.highestNet - item.netProfit).toFixed(2),
+      item.highestDrugNDC,
+      item.highestDrugName,
     ]);
 
     const csvContent = [
@@ -679,35 +679,35 @@ export const ThirdDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {item.netProfit}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                    {item.highstNet}
+                    {item.highestNet}
                   </td>
                   <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
-                    {(item.highstNet - item.netProfit).toFixed(2)}
+                    {(item.highestNet - item.netProfit).toFixed(2)}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
-                      href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
+                      href={`https://ndclist.com/ndc/${item.highestDrugNDC}`}
                       className="hover:underline transition-colors duration-150"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {item.highstDrugNDC}
+                      {item.highestDrugNDC}
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
-                      href={`/drug/${item.highstDrugId}?ndc=${item.highstDrugNDC}&insuranceId=${item.insuranceId}`}
+                      href={`/drug/${item.highestDrugId}?ndc=${item.highestDrugNDC}&insuranceId=${item.insuranceId}`}
                       className="text-blue-700 hover:underline hover:text-blue-900 transition duration-200 dark:text-blue-300 dark:hover:text-blue-400"
                       target="_blank"
                     >
-                      {item.highstDrugName}
+                      {item.highestDrugName}
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {item.highstScriptCode}
+                    {item.highestScriptCode}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {new Date(item.highstScriptDate).toLocaleDateString(
+                    {new Date(item.highestScriptDate).toLocaleDateString(
                       "en-US"
                     )}
                   </td>
