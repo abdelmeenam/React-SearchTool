@@ -44,7 +44,8 @@ export const SignInForm: React.FC = () => {
         localStorage.setItem("email", email);
         localStorage.setItem("branchId", branchId);
         localStorage.setItem("userId", userId);
-        
+        console.log("Login successful:", response.data);
+        localStorage.setItem("classType", response.data.classType);
         navigate("/");
       } else {
         setError("Invalid credentials");

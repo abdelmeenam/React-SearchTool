@@ -51,7 +51,7 @@ const formatCurrency = (value: number): string =>
     style: "currency",
     currency: "USD",
   }).format(value);
-import { Drug, DrugMedi, OrderItem, Prescription, SearchLog } from "../types";
+import { ClassInfo, Drug, DrugMedi, OrderItem, Prescription, SearchLog } from "../types";
 import axiosInstance from "../api/axiosInstance";
 import { useCart } from "../context/CartContext"; // adjust path
 import DrugDetailsModal from "../components/DrugDetailsModal";
@@ -76,7 +76,7 @@ interface DrugHeaderProps {
   drug: Drug;
   padCode: (code: string) => string;
   temp: string;
-  drugClass: string;
+  drugClass: ClassInfo | null;
 }
 /* newwwwww comp */
 // Removed duplicate declaration of DrugInformation to resolve the error.
@@ -107,7 +107,7 @@ export const DrugHeader: React.FC<DrugHeaderProps> = ({
         </a>
         <span className="inline-flex items-center px-3 py-1 bg-indigo-700/40 rounded-full text-indigo-100 text-sm ml-2">
           <CopyPlus className="h-4 w-4 mr-1" />
-          Drug Class : {drugClass}
+          Drug Class : {drugClass?.name || "N/A"}
         </span>
       </div>
     </div>
@@ -295,10 +295,10 @@ export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
 interface DrugInformationProps {
   drug: Drug;
   drugDetail?: Prescription | null;
-  classNameStr: string;
+  classNameStr: ClassInfo | null;
   bestDrugNet: Prescription | null;
   drugMedi: DrugMedi | null;
-  drugClass: string;
+  drugClass: ClassInfo | null;
 }
 export const DrugInformation: React.FC<DrugInformationProps> = ({
   drug,
@@ -383,7 +383,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
           drugDetail={drugDetail ?? null}
           onClose={() => setShowDetails(false)}
           formatCurrency={formatCurrency}
-          drugClass={drugClass}
+          drugClass={drugClass?.name || "N/A"}
         />
       )}
 
@@ -772,7 +772,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
 
 interface AlternativesTableProps {
   alternatives: Prescription[];
-  classNameStr?: string;
+  classNameStr?: ClassInfo | null;
   padCode: (code: string) => string;
   selectedInsurance: string;
   handleInsuranceFilterChange: (
@@ -1923,7 +1923,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
 
 interface OtherAlternativesTableProps {
   alternatives: Prescription[];
-  classNameStr: string;
+  classNameStr: ClassInfo | null;
   padCode: (code: string) => string;
   selectedBin: string;
   handleBinFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -2517,6 +2517,7 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
 export const DrugDetails: React.FC = () => {
   const { drugId } = useParams();
   const [searchParams] = useSearchParams();
+  const userClassVersion = localStorage.getItem("classType") || "ClassV1";
   const ndcCode = searchParams.get("ndc");
   const insuranceId = searchParams.get("insuranceId");
 
@@ -2527,7 +2528,7 @@ export const DrugDetails: React.FC = () => {
   const [sortedAlternativesV2, setSortedAlternativesV2] = useState<Drug[]>([]);
   const [drugDetail, setDrugDetail] = useState<Prescription | null>(null);
   const [branchDrugs, setBranchDrugs] = useState<Prescription[]>([]);
-  const [classNameStr, setClassName] = useState("");
+  const [classNameStr, setClassName] = useState<ClassInfo | null>(null);
   const [showOtherAlternatives, setShowOtherAlternatives] = useState(false);
   const [selectedInsurance, setSelectedInsurance] = useState<string>("");
   const [selectedBin, setSelectedBin] = useState<string>("");
@@ -2552,13 +2553,7 @@ export const DrugDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   // With a single state:
-  const [classVersion, setClassVersion] = useState<1 | 2 | 3 | 4>(1);
-
-  // Helper booleans for compatibility with existing logic:
-  const classV1 = classVersion === 1;
-  const classV2 = classVersion === 2;
-  const classV3 = classVersion === 3;
-  const classV4 = classVersion === 4;
+  const [classVersion, setClassVersion] = useState<string>(userClassVersion);
 
   const [drugmedi, setDrugmedi] = useState<DrugMedi[]>([]);
   const [drugDeatilsMedi, setDrugDeatilsMedi] = useState<DrugMedi>();
@@ -2571,222 +2566,50 @@ export const DrugDetails: React.FC = () => {
     const fetchDrugDetails = async () => {
       try {
         let response2;
-        if (!insuranceId) {
-          let response;
-          if (ndcCode) {
-            response = await axiosInstance.get(
-              `/drug/SearchByNdc?ndc=${ndcCode}`
-            );
-          } else {
-            response = await axiosInstance.get(
-              `/drug/GetDrugById?id=${drugId}`
-            );
-          }
-          setDrug(response.data);
-          // const mediResponse = await axiosInstance.get(
-          //   `/drug/GetAllMediDrugs?classId=${response.data?.drugClassId}`
-          // );
-          // setDrugmedi(mediResponse.data);
-          // setDrugDeatilsMedi(
-          //   mediResponse.data.find((item: DrugMedi) => item.drugNDC === ndcCode)
-          // );
-          // Get all alternatives and sort descending by net price:
-          if (classV1 === true) {
-            response2 = await axiosInstance.get(
-              `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
-            );
-            console.log("response2: ", response2.data);
-
-            const sortedData = response2.data
-              .sort((a: Prescription, b: Prescription) => b.net - a.net)
-              .filter((alt: Prescription) => alt.type !== "DISCN");
-
-            setSortedAlternatives(sortedData);
-          } else if (classV2 === true) {
-            response2 = await axiosInstance.get(
-              `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
-            );
-            console.log("response2z2: ", response2.data);
-
-            const sortedData = response2.data
-              .sort((a: Prescription, b: Prescription) => b.net - a.net)
-              .filter((alt: Prescription) => alt.type !== "DISCN");
-
-            setSortedAlternatives(sortedData);
-          } else if (classV3 === true) {
-            response2 = await axiosInstance.get(
-              `/drug/GetAllDrugsV3?classId=${response.data.drugClassV3Id}`
-            );
-            console.log("response2zzz: ", response2.data);
-
-            const sortedData = response2.data
-              .sort((a: Prescription, b: Prescription) => b.net - a.net)
-              .filter((alt: Prescription) => alt.type !== "DISCN");
-
-            setSortedAlternatives(sortedData);
-          } else if (classV4 === true) {
-            response2 = await axiosInstance.get(
-              `/drug/GetAllDrugsV4?classId=${response.data.drugClassV4Id}`
-            );
-            console.log("response2zzz: ", response2.data);
-
-            const sortedData = response2.data
-              .sort((a: Prescription, b: Prescription) => b.net - a.net)
-              .filter((alt: Prescription) => alt.type !== "DISCN");
-
-            setSortedAlternatives(sortedData);
-          } else {
-            response2 = await axiosInstance.get(
-              `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
-            );
-            console.log("response2V2: ", response2.data);
-            const sortedData = response2.data;
-            setSortedAlternativesV2(sortedData);
-          }
-          const response10 = await axiosInstance.get(
-            `/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`
-          );
-          setBranchDrugs(response10.data);
-          const response3 = await axiosInstance.get(
-            `/drug/GetClassById?id=${response.data.drugClassId}`
-          );
-          setClassName(response3.data.name);
-        } else {
-          // If an insuranceId is provided:
-          const response = await axiosInstance.get(
-            `/drug/SearchByNdc?ndc=${ndcCode}`
-          );
-          const drugData = response.data;
-          console.log(drugData);
-          setDrug(drugData);
+        let response = await axiosInstance.get(
+          `/drug/GetDrugById?id=${drugId}`
+        );
+        setDrug(response.data);
+        const response3 = await axiosInstance.get(
+          `/drug/GetClassesByDrugId?drugId=${response.data.id}`
+        );
+        console.log("classVersion", classVersion);
+        console.log("classes ", response3.data);
+        const wantedClassVersion = response3.data.filter(
+          (cls: ClassInfo) => cls.classTypeName === classVersion
+        );
+        setClassName(wantedClassVersion[0] || response3.data[0]);
+        const classInfoId = wantedClassVersion[0]?.id || response3.data[0]?.id;
+        console.log("classNameStr ", classNameStr);
+        console.log("classes2 ", wantedClassVersion);
+        if (insuranceId) {
           response2 = await axiosInstance.get(
             `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
           );
-
-          const mediResponse = await axiosInstance.get(
-            `/drug/GetAllMediDrugs?classId=${response.data?.drugClassId}`
-          );
-          setDrugmedi(mediResponse.data);
-          setDrugDeatilsMedi(
-            mediResponse.data.find((item: DrugMedi) => item.drugNDC === ndcCode)
-          );
-
-          console.log("sadasd:  ", response2.data);
-          const response3 = await axiosInstance.get(
-            `/drug/GetClassById?id=${response.data.drugClassId}`
-          );
-          setClassName(response3.data.name);
-          const response10 = await axiosInstance.get(
-            `/drug/GetAlternativesByClassIdBranchId?classId=${response.data.drugClassId}`
-          );
           setDrugDetail(response2.data);
-          setBranchDrugs(response10.data);
-          if (response3.data.name !== "other") {
-            console.log("state : ", classV1, " : ", classV2, " : ", classV3);
-            let response4;
-            if (classV1 === true) {
-              response4 = await axiosInstance.get(
-                `/drug/GetAllDrugs?classId=${response.data.drugClassId}`
-              );
-              console.log("response4: ", response4.data);
-
-              const matchingAlt = response4.data.find(
-                (alt: Prescription) =>
-                  alt.insuranceId.toString() === insuranceId
-              );
-              setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-              const sortedData = response4.data
-                .sort((a: Prescription, b: Prescription) => {
-                  if (b.net !== a.net) {
-                    return b.net - a.net;
-                  }
-                  return b.insurancePayment - a.insurancePayment;
-                })
-                .filter((alt: Prescription) => alt.type !== "DISCN");
-              setSortedAlternatives(sortedData);
-              setSortedAlternatives(sortedData);
-              console.log("sortedData", sortedData);
-            } else if (classV2 === true) {
-              response4 = await axiosInstance.get(
-                `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
-              );
-              console.log("response4z22: ", response4.data);
-
-              const matchingAlt = response4.data.find(
-                (alt: Prescription) =>
-                  alt.insuranceId.toString() === insuranceId
-              );
-
-              setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-              const sortedData = response4.data
-                .sort((a: Prescription, b: Prescription) => {
-                  if (b.net !== a.net) {
-                    return b.net - a.net;
-                  }
-                  return b.insurancePayment - a.insurancePayment;
-                })
-                .filter((alt: Prescription) => alt.type !== "DISCN");
-              setSortedAlternatives(sortedData);
-              setSortedAlternatives(sortedData);
-              console.log("sortedData", sortedData);
-            } else if (classV3 === true) {
-              response4 = await axiosInstance.get(
-                `/drug/GetAllDrugsV3?classId=${response.data.drugClassV3Id}`
-              );
-              console.log("response4zzzz: ", response4.data);
-
-              const matchingAlt = response4.data.find(
-                (alt: Prescription) =>
-                  alt.insuranceId.toString() === insuranceId
-              );
-
-              setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-              const sortedData = response4.data
-                .sort((a: Prescription, b: Prescription) => {
-                  if (b.net !== a.net) {
-                    return b.net - a.net;
-                  }
-                  return b.insurancePayment - a.insurancePayment;
-                })
-                .filter((alt: Prescription) => alt.type !== "DISCN");
-              setSortedAlternatives(sortedData);
-              setSortedAlternatives(sortedData);
-              console.log("sortedData", sortedData);
-            } else if (classV4 === true) {
-              response4 = await axiosInstance.get(
-                `/drug/GetAllDrugsV4?classId=${response.data.drugClassV4Id}`
-              );
-              console.log("response4zzzz: ", response4.data);
-
-              const matchingAlt = response4.data.find(
-                (alt: Prescription) =>
-                  alt.insuranceId.toString() === insuranceId
-              );
-
-              setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-              const sortedData = response4.data
-                .sort((a: Prescription, b: Prescription) => {
-                  if (b.net !== a.net) {
-                    return b.net - a.net;
-                  }
-                  return b.insurancePayment - a.insurancePayment;
-                })
-                .filter((alt: Prescription) => alt.type !== "DISCN");
-              setSortedAlternatives(sortedData);
-              setSortedAlternatives(sortedData);
-              console.log("sortedData", sortedData);
-            } else {
-              response4 = await axiosInstance.get(
-                `/drug/GetAllDrugsV2?classId=${response.data.drugClassV2Id}`
-              );
-              console.log("response2V2: ", response4.data);
-              const sortedData = response4.data;
-              setSortedAlternativesV2(sortedData);
-            }
-          } else {
-            setSortedAlternatives([]);
-          }
         }
+        const response4 = await axiosInstance.get(
+          `/drug/GetAllDrugs?classId=${classInfoId}`
+        );
+        console.log("response4: ", response4.data);
+
+        const matchingAlt = response4.data.find(
+          (alt: Prescription) => alt.insuranceId.toString() === insuranceId
+        );
+        setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
+        const sortedData = response4.data
+          .sort((a: Prescription, b: Prescription) => {
+            if (b.net !== a.net) {
+              return b.net - a.net;
+            }
+            return b.insurancePayment - a.insurancePayment;
+          })
+          .filter((alt: Prescription) => alt.type !== "DISCN");
+        setSortedAlternatives(sortedData);
+        console.log("sortedData", sortedData);
+
+           
+        
       } catch (err) {
         setError("Failed to load drug details");
       } finally {
@@ -2884,8 +2707,9 @@ export const DrugDetails: React.FC = () => {
     (alt) => alt.rxgroup
   );
   const alternativesWithoutInsurance = sortedAlternatives.filter(
-    (alt) => !alt.bin
+    (alt) => alt.binId === 0
   );
+
   const alternativesWithoutInsuranceV2 = sortedAlternativesV2;
   const uniqueInsuranceNames: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
@@ -2969,7 +2793,7 @@ export const DrugDetails: React.FC = () => {
                 aria-label="Alternative Medications with Insurance"
                 className="mt-6"
               >
-                {sortedAlternatives.length > 0 && (
+                {
                   <div className="space-y-6">
                     {/* Button Group */}
                     <div className="flex flex-wrap gap-3 mb-2">
@@ -3032,9 +2856,7 @@ export const DrugDetails: React.FC = () => {
                             value={classVersion}
                             onChange={(e) => {
                               setShowClassLoader(true);
-                              setClassVersion(
-                                Number(e.target.value) as 1 | 2 | 3 | 4
-                              );
+                             
                             }}
                             className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
@@ -3042,6 +2864,7 @@ export const DrugDetails: React.FC = () => {
                             <option value={2}>Class V2</option>
                             <option value={3}>Class V3</option>
                             <option value={4}>Class V4</option>
+                            <option value={5}>EPCMOA</option>
                           </select>
                         </div>
                       )}
@@ -3085,7 +2908,7 @@ export const DrugDetails: React.FC = () => {
                     {showOtherAlternatives && (
                       <div className="space-y-4">
                         <section aria-label="Other Alternatives Without Insurance">
-                          {(classV1 || classV2 || classV3) && (
+                          {
                             <OtherAlternativesTable
                               alternatives={alternativesWithoutInsurance}
                               classNameStr={classNameStr}
@@ -3097,7 +2920,7 @@ export const DrugDetails: React.FC = () => {
                               handlePcnFilterChange={handleOtherPcnFilterChange}
                               uniquePcnValues={uniqueOtherPcnValues}
                             />
-                          )}
+                          }
                         </section>
                       </div>
                     )}
@@ -3108,33 +2931,12 @@ export const DrugDetails: React.FC = () => {
                       </div>
                     )}
                   </div>
-                )}
+                }
               </section>
             ) : (
-              <section aria-label="Branch Drugs">
-                {branchDrugs.length > 0 ? (
-                  <BranchDrugsTable
-                    branchDrugs={branchDrugs}
-                    classNameStr={classNameStr}
-                    padCode={padCode}
-                    selectedInsurance={branchSelectedInsurance}
-                    handleInsuranceFilterChange={
-                      handleBranchInsuranceFilterChange
-                    }
-                    uniqueInsuranceNames={branchUniqueInsuranceNames}
-                    selectedBin={branchSelectedBin}
-                    handleBinFilterChange={handleBranchBinFilterChange}
-                    uniqueBinValues={branchUniqueBinValues}
-                    selectedPcn={branchSelectedPcn}
-                    handlePcnFilterChange={handleBranchPcnFilterChange}
-                    uniquePcnValues={branchUniquePcnValues}
-                  />
-                ) : (
-                  <p className="text-center text-gray-500 dark:text-gray-400">
-                    No branch drugs found
-                  </p>
-                )}
-              </section>
+              <p className="text-center text-gray-500 dark:text-gray-400">
+                No branch drugs found
+              </p>
             )}
           </motion.section>
         </main>

@@ -54,9 +54,7 @@ export const Search: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false); // Track loading state
   const [hasMore, setHasMore] = useState(true); // Track if more data is available
 
-  useEffect(() => {
-    localStorage.removeItem("searchLogDetails");
-  }, []);
+
 
   useEffect(() => {
     if (Details) {

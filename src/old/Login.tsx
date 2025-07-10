@@ -32,8 +32,13 @@ export const Login: React.FC = () => {
 
       if (response.status === 200) {
         const { accessToken, role } = response.data;
+        console.log("Login successful:", response.data);
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("role", role);
+        localStorage.setItem("branchId", response.data.branchId);
+
+        localStorage.setItem("classType", response.data.classType);
+
         navigate("/dashboard");
       } else {
         setError("Invalid credentials. Please try again.");
@@ -62,7 +67,11 @@ export const Login: React.FC = () => {
         Skip to login form
       </a>
 
-      <main id="main-content" role="main" className="min-h-screen flex flex-col md:flex-row">
+      <main
+        id="main-content"
+        role="main"
+        className="min-h-screen flex flex-col md:flex-row"
+      >
         {/* Left Column: Form */}
         <section className="w-full md:w-1/2 bg-white dark:bg-gray-800 flex items-center justify-center p-8">
           <div className="max-w-sm w-full">
@@ -167,11 +176,17 @@ export const Login: React.FC = () => {
                   />
                   <button
                     type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                     className="absolute right-3 top-2.5 text-gray-400 dark:text-gray-500 focus:outline-none"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
                 <p id="password-desc" className="sr-only">

@@ -4,7 +4,7 @@ import { generateReceiptText } from "../../utils/receipt";
 import axiosInstance from "../api/axiosInstance";
 import { Link } from "react-router";
 import { CheckCircle, XCircle } from "react-feather";
-import { Pill } from "lucide-react";
+import { Minus, Pill, Plus, ShoppingCart } from "lucide-react";
 
 interface CartProps {
   cartItems: CartItem[];
@@ -27,10 +27,29 @@ export const Cart: React.FC<CartProps> = ({
     const isMediCal =
       item.insurance && item.insurance.toLowerCase().includes("medi-cal");
     const mediCalFee = isMediCal ? 10 * 1 : 0;
-    return acc + (net * item.quantity )+ mediCalFee;
+    return acc + net * item.quantity + mediCalFee;
   }, 0);
 
   const total = subtotal;
+
+  // Totals for summary
+  const totalPatientPayment = cartItems.reduce(
+    (acc, item) => acc + (item.patientPayment ?? 0) * item.quantity,
+    0
+  );
+  const totalInsurancePayment = cartItems.reduce(
+    (acc, item) => acc + (item.insurancePayment ?? 0) * item.quantity,
+    0
+  );
+  const totalRevenue = cartItems.reduce(
+    (acc, item) => totalInsurancePayment + totalPatientPayment,
+    0
+  );
+  const totalAcquisitionCost = cartItems.reduce(
+    (acc, item) => acc + (item.acq ?? 0) * item.quantity,
+    0
+  );
+  const totalNet = totalRevenue - totalAcquisitionCost;
 
   const cartRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -134,22 +153,10 @@ export const Cart: React.FC<CartProps> = ({
         {/* Cart Header with Close Button */}
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200/50 dark:border-gray-700/50">
           <div className="flex items-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-              <svg
-                className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              Shopping Cart
-            </h2>
+            <h1 className="text-xl font-semibold flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-blue-600" />
+              Pharmacist Order Cart
+            </h1>
             <span className="ml-4 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-sm font-medium rounded-full">
               {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
             </span>
@@ -195,10 +202,10 @@ export const Cart: React.FC<CartProps> = ({
             {/* Cart Items */}
             <ul className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
               {cartItems.map((item) => {
-                const acquisitionCost = item.acq ?? item.acq ?? 0;
+                const acquisitionCost = item.acq ?? 0;
                 const insurancePayment = item.insurancePayment ?? 0;
                 const patientPayment = item.patientPayment ?? 0;
-                const net = item.price ?? item.price ?? 0;
+                const net = item.price ?? 0;
                 const isMediCal =
                   item.insurance &&
                   item.insurance.toLowerCase().includes("medi-cal");
@@ -224,56 +231,49 @@ export const Cart: React.FC<CartProps> = ({
                             </p>
                           )}
                           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            ACQ: ${acquisitionCost.toFixed(2)}<br />
-                            Insurance Payment: ${insurancePayment * item.quantity + 10}<br />
-                            Patient Payment: ${patientPayment.toFixed(2)}
+                            ACQ: ${acquisitionCost.toFixed(2)}
+                            <br />
+                            Insurance Payment: $
+                            {(insurancePayment * item.quantity).toFixed(2)}
+                            <br />
+                            Patient Payment: $
+                            {(patientPayment * item.quantity).toFixed(2)}
                           </div>
-                          <div className="mt-2 flex items-center">
+                          <div className="mt-2 flex items-center gap-2">
                             <button
                               onClick={() =>
                                 onUpdateQuantity(item.id, item.quantity - 1)
                               }
                               disabled={item.quantity <= 1}
-                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30"
+                              className="p-2 rounded border border-gray-300 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30"
                               aria-label="Decrease quantity"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 12H4"
-                                />
-                              </svg>
+                              <Minus className="w-4 h-4" />
                             </button>
-                            <span className="mx-2 text-sm font-medium w-6 text-center">
-                              {item.quantity}
-                            </span>
+
+                            <input
+                              type="number"
+                              min={1}
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const val = Math.max(
+                                  1,
+                                  parseInt(e.target.value) || 1
+                                );
+                                onUpdateQuantity(item.id, val);
+                              }}
+                              className="w-14 text-center text-sm font-medium px-2 py-1 border rounded dark:bg-gray-800 dark:text-white"
+                              aria-label="Set quantity"
+                            />
+
                             <button
                               onClick={() =>
                                 onUpdateQuantity(item.id, item.quantity + 1)
                               }
-                              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                              className="p-2 rounded border border-gray-300 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                               aria-label="Increase quantity"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                />
-                              </svg>
+                              <Plus className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -299,7 +299,7 @@ export const Cart: React.FC<CartProps> = ({
                           </svg>
                         </button>
                         <span className="text-base font-semibold text-gray-900 dark:text-white">
-                          ${net.toFixed(2)}
+                          ${itemTotal.toFixed(2)}
                           {isMediCal && (
                             <span className="block text-xs text-blue-600 dark:text-blue-300">
                               (+${mediCalFee} Medi-Cal)
@@ -324,9 +324,26 @@ export const Cart: React.FC<CartProps> = ({
                   <span>Tax (estimated)</span>
                   <span>$0.00</span>
                 </div>
-                <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                {/* Custom Totals */}
+                <div className="flex justify-between text-gray-600 dark:text-gray-300 pt-2">
+                  <span>Total Patient Payment</span>
+                  <span>${totalPatientPayment.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-300">
+                  <span>Total Insurance Payment</span>
+                  <span>${totalInsurancePayment.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-300">
+                  <span>Total Revenue</span>
+                  <span>${totalRevenue.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-300">
+                  <span>Total Acquisition Cost</span>
+                  <span>${totalAcquisitionCost.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-300">
+                  <span>Total NET</span>
+                  <span>${totalNet.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -379,7 +396,10 @@ export const Cart: React.FC<CartProps> = ({
                   item.insurance.toLowerCase().includes("medi-cal")
               ) && (
                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 text-blue-800 dark:text-blue-200 rounded">
-                  <strong>Note:</strong> Each <span className="font-semibold">Medi-Cal</span> insurance drug in your cart adds <span className="font-semibold">$10</span> per unit to the total.
+                  <strong>Note:</strong> Each{" "}
+                  <span className="font-semibold">Medi-Cal</span> insurance drug
+                  in your cart adds <span className="font-semibold">$10</span>{" "}
+                  per unit to the total.
                 </div>
               )}
             </div>
