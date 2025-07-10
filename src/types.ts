@@ -170,6 +170,7 @@ export interface Bin {
   helpDeskNumber: string;
 }
 export interface DrugTransaction {
+  highestRemainingStock: number;
   date: string;
   scriptCode: string;
   rxNumber: string;
@@ -189,12 +190,12 @@ export interface DrugTransaction {
   ndcCode: string;
   netProfit: number;
   drugClass: string;
-  highstDrugNDC: string;
-  highstDrugName: string;
-  highstDrugId: number;
-  highstNet: number;
-  highstScriptCode: string;
-  highstScriptDate: string;
+  highestDrugNDC: string;
+  highestDrugName: string;
+  highestDrugId: number;
+  highestNet: number;
+  highestScriptCode: string;
+  highestScriptDate: string;
 
   /** 👇 Added field */
   remainingStock: number;

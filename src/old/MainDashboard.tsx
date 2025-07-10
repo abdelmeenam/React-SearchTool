@@ -22,6 +22,7 @@ await loadConfig();
 // so there's no need to refer to it again here.
 
 export const MainDashboard: React.FC = () => {
+  const classVersion = localStorage.getItem("classType") || "ClassVersion1";
   // Destructure the parameter from the URL (e.g., /dashboard/:dashboardId)
   const { dashboardId } = useParams<{ dashboardId: string }>();
   // Initialize activeDashboard state with the URL parameter or default to "1"
@@ -29,7 +30,6 @@ export const MainDashboard: React.FC = () => {
   const [data, setData] = useState<DrugTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [classVersion, setClassVersion] = useState<number>(1);
 
   // Update activeDashboard if the dashboardId URL parameter changes
   useEffect(() => {
@@ -72,12 +72,11 @@ export const MainDashboard: React.FC = () => {
         // Remove duplicates by ndcCode and scriptCode
         const distinctItems = Array.from(
           new Map(
-            allData.map((item) => [
-              `${item.ndcCode}_${item.scriptCode}`,
-              item,
-            ])
+            allData
+              .map((item) => [`${item.ndcCode}_${item.scriptCode}`, item])
           ).values()
         );
+
         setData(distinctItems);
         setLoading(false);
       } catch (err) {
@@ -94,23 +93,7 @@ export const MainDashboard: React.FC = () => {
   }, [classVersion, activeDashboard]);
 
   // Class Version Selector
-  const ClassVersionSelector = () => (
-    <div className="flex justify-center mb-4 gap-2">
-      {[1, 2, 3].map((v) => (
-        <button
-          key={v}
-          onClick={() => setClassVersion(v)}
-          className={`px-4 py-2 rounded ${
-            classVersion === v
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          Class Version {v}
-        </button>
-      ))}
-    </div>
-  );
+
 
   // Enhanced Responsive Button Component
   const ResponsiveButton = ({
@@ -137,11 +120,13 @@ export const MainDashboard: React.FC = () => {
     <motion.div>
       <main className="  sm:px-6 lg: py-8" role="main">
         <header className="mb-6 text-center">
-          <h1 className="text-4xl font-bold text-blue-700">Pharmacy Dashboard</h1>
+          <h1 className="text-4xl font-bold text-blue-700">
+            Pharmacy Dashboard
+          </h1>
         </header>
 
         {/* Class Version Selector */}
-        <ClassVersionSelector />
+        {/* <ClassVersionSelector /> */}
 
         {/* Loading/Error States */}
         {loading && (
@@ -162,7 +147,8 @@ export const MainDashboard: React.FC = () => {
             </span>
             <br />
             <span className="block sm:inline">
-              Please contact the system administrator if you believe this is an error.
+              Please contact the system administrator if you believe this is an
+              error.
             </span>
           </section>
         )}

@@ -100,11 +100,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         setLatestScripts(result);
 
         const belowNetCount = result.filter(
-          (item) => item.netProfit < item.highstNet
+          (item) => item.netProfit < item.highestNet
         ).length;
         const totalRev = result.reduce((sum, item) => sum + item.netProfit, 0);
         const totalNetProfit = result.reduce(
-          (sum, item) => sum + item.highstNet,
+          (sum, item) => sum + item.highestNet,
           0
         );
 
@@ -150,18 +150,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     setFilteredData(filtered);
 
     const belowNetCount = filtered.filter(
-      (item) => item.netProfit < item.highstNet
+      (item) => item.netProfit < item.highestNet
     ).length;
     const totalRev = filtered.reduce((sum, item) => sum + item.netProfit, 0);
     const totalNetProfit = filtered.reduce(
-      (sum, item) => sum + item.highstNet,
+      (sum, item) => sum + item.highestNet,
       0
     );
     const difference = filtered.reduce(
       (sum, item) =>
         sum +
-        (item.highstDrugNDC === item.ndcCode
-          ? item.highstNet - item.netProfit
+        (item.highestDrugNDC === item.ndcCode
+          ? item.highestNet - item.netProfit
           : 0),
       0
     );
@@ -236,10 +236,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       item.insurancePayment,
       normalizeName(item.prescriber),
       item.netProfit.toFixed(2),
-      item.highstNet,
-      (item.highstNet - item.netProfit).toFixed(2),
-      item.highstDrugNDC,
-      item.highstDrugName,
+      item.highestNet,
+      (item.highestNet - item.netProfit).toFixed(2),
+      item.highestDrugNDC,
+      item.highestDrugName,
     ]);
 
     const csvContent = [
@@ -527,6 +527,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   },
                   { label: "User", key: "user" as keyof DrugTransaction },
                   {
+                    label: "Remaining stock",
+                    key: "remainingStock" as keyof DrugTransaction,
+                  },
+                  {
                     label: "Patient Payment",
                     key: "patientPayment" as keyof DrugTransaction,
                   },
@@ -548,7 +552,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   },
                   {
                     label: "Highest Net",
-                    key: "highstNet" as keyof DrugTransaction,
+                    key: "HighestNet" as keyof DrugTransaction,
                   },
                   {
                     label: "Difference",
@@ -556,19 +560,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   },
                   {
                     label: "Highest Drug NDC",
-                    key: "highstDrugNDC" as keyof DrugTransaction,
+                    key: "HighestDrugNDC" as keyof DrugTransaction,
                   },
                   {
                     label: "Highest Drug Name",
-                    key: "highstDrugName" as keyof DrugTransaction,
+                    key: "HighestDrugName" as keyof DrugTransaction,
                   },
                   {
                     label: "Highest Script Code",
-                    key: "highstScriptCode" as keyof DrugTransaction,
+                    key: "HighestScriptCode" as keyof DrugTransaction,
                   },
                   {
                     label: "Highest Script Date",
-                    key: "highstScriptDate" as keyof DrugTransaction,
+                    key: "HighestScriptDate" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Remaining Stock",
+                    key: "highestRemainingStock" as keyof DrugTransaction,
                   },
                 ].map(({ label, key }) => (
                   <th
@@ -637,6 +645,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.user}
                   </td>
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
+                    {item.remainingStock ?? "NA"}
+                  </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.patientPayment}
                   </td>
@@ -653,44 +664,47 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     {item.netProfit}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                    {item.highstNet}
+                    {item.highestNet}
                   </td>
                   <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
-                    {(item.highstNet - item.netProfit).toFixed(2)}
+                    {(item.highestNet - item.netProfit).toFixed(2)}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
-                      href={`https://ndclist.com/ndc/${item.highstDrugNDC}`}
+                      href={`https://ndclist.com/ndc/${item.highestDrugNDC}`}
                       className="hover:underline transition-colors duration-150"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {item.highstDrugNDC}
+                      {item.highestDrugNDC}
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
-                      href={`/drug/${item.highstDrugId}?ndc=${item.highstDrugNDC}&insuranceId=${item.insuranceId}`}
+                      href={`/drug/${item.highestDrugId}?ndc=${item.highestDrugNDC}&insuranceId=${item.insuranceId}`}
                       className="text-blue-700 hover:underline hover:text-blue-900 transition duration-200 dark:text-blue-300 dark:hover:text-blue-400"
                       target="_blank"
                     >
-                      {item.highstDrugName}
+                      {item.highestDrugName}
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {item.highstScriptCode??"NA"}
+                    {item.highestScriptCode ?? "NA"}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {new Date(item.highstScriptDate).toLocaleDateString(
+                    {new Date(item.highestScriptDate).toLocaleDateString(
                       "en-US"
                     )}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
+                    {item.highestRemainingStock ?? "NA"}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
- {/* Pagination Controls */}
+        {/* Pagination Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-center mt-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

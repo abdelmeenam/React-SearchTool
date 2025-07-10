@@ -43,6 +43,7 @@ interface DrugModel {
   strength: string;
   classId: number;
   classType: string;
+  className: string;
   acq: number;
   awp: number;
   rxcui: number;
@@ -112,7 +113,7 @@ export const InsuranceSearch2: React.FC = () => {
 
   // --- Drug Flow States ---
   const [drugs, setDrugs] = useState<DrugModel[]>([]);
-  const [classInfos, setClassInfos] = useState<ClassInfo[]>([]);
+  const [classInfos, setClassInfos] = useState<DrugModel[]>([]);
   const [drugSearchQuery, setDrugSearchQuery] = useState("");
   const [showDrugSuggestions, setShowDrugSuggestions] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState<DrugModel | null>(null);
@@ -348,12 +349,13 @@ export const InsuranceSearch2: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const query = e.target.value;
+    setCurrentPage(1);
     setDrugSearchQuery(query);
     if (!limitSearch) {
       setCurrentPage(1);
 
       try {
-        const url = `/drug/GetClassesByName?name=${query}&pageNumber=1&pageSize=20`;
+        const url = `/drug/GetClassesByName?name=${query}&pageNumber=1&pageSize=20&classVersion=${classType}`;
         const { data } = await axiosInstance.get(url);
         console.log(data);
         setClassInfos(data);
@@ -363,17 +365,18 @@ export const InsuranceSearch2: React.FC = () => {
     } else {
       var url = "";
       if (selectedRxGroup) {
-        url = `/drug/GetDrugClassesByInsuranceNamePagintated?insurance=${selectedRxGroup.rxGroup}&drugClassName=${query}&pageNumber=1&pageSize=20`;
+        url = `/drug/GetDrugClassesByInsuranceNamePagintated?insurance=${selectedRxGroup.rxGroup}&drugClassName=${query}&pageNumber=1&pageSize=20&classVersion=${classType}`;
       } else if (selectedPcn) {
-        url = `/drug/GetDrugClassesByPCNPagintated?insurance=${selectedPcn.pcn}&drugClassName=${query}&pageNumber=1&pageSize=20`;
+        url = `/drug/GetDrugClassesByPCNPagintated?insurance=${selectedPcn.pcn}&drugClassName=${query}&pageNumber=1&pageSize=20&classVersion=${classType}`;
       } else if (selectedBin) {
-        url = `/drug/GetDrugClassesByBINPagintated?insurance=${selectedBin.bin}&drugClassName=${query}&pageNumber=1&pageSize=20`;
+        url = `/drug/GetDrugClassesByBINPagintated?insurance=${selectedBin.bin}&drugClassName=${query}&pageNumber=1&pageSize=20&classVersion=${classType}`;
       }
       try {
         console.log("URL: ", url);
         const { data } = await axiosInstance.get(url);
         console.log("Data: ", data);
         setClassInfos(data);
+        console.log(classInfos);
       } catch (error) {
         console.error("Error fetching drugs:", error);
       }
@@ -394,21 +397,22 @@ export const InsuranceSearch2: React.FC = () => {
           selectedRxGroup.rxGroup
         }&drugClassName=${drugSearchQuery}&pageNumber=${
           currentPage + 1
-        }&pageSize=20`;
+        }&pageSize=20&classVersion=${classType}`;
       } else if (selectedPcn) {
         url = `/drug/GetDrugClassesByPCNPagintated?insurance=${
           selectedPcn.pcn
         }&drugClassName=${drugSearchQuery}&pageNumber=${
           currentPage + 1
-        }&pageSize=20`;
+        }&pageSize=20&classVersion=${classType}`;
       } else if (selectedBin) {
         url = `/drug/GetDrugClassesByBINPagintated?insurance=${
           selectedBin.bin
         }&drugClassName=${drugSearchQuery}&pageNumber=${
           currentPage + 1
-        }&pageSize=20`;
+        }&pageSize=20&classVersion=${classType}`;
       }
       try {
+        console.log(url);
         const { data } = await axiosInstance.get(url);
         setClassInfos((prev) => [...prev, ...data]);
         setCurrentPage((prev) => prev + 1);
@@ -420,7 +424,7 @@ export const InsuranceSearch2: React.FC = () => {
     } else {
       try {
         const nextPage = currentPage + 1;
-        const url = `/drug/GetClassesByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20`;
+        const url = `/drug/GetClassesByName?name=${drugSearchQuery}&pageNumber=${nextPage}&pageSize=20&classVersion=${classType}`;
         const { data } = await axiosInstance.get(url);
 
         setClassInfos((prev) => [...prev, ...data]);
@@ -456,26 +460,19 @@ export const InsuranceSearch2: React.FC = () => {
 
   const uniqueFilteredclassInfos = filteredclassInfos;
 
-  const handleDrugSelect = async (classInfo: ClassInfo) => {
+  const handleDrugSelect = async (classInfo: DrugModel) => {
     const response = await axiosInstance.get(
-      `/drug/GetDrugsByClassId?classId=${classInfo.id}&classType=${classType}`
+      `/drug/GetDrugsByClassId?classId=${classInfo.classId}&classType=${classType}`
     );
     console.log("Drugs fetched for class:", classInfo.name, response.data);
     setDrugs(response.data);
     const drug = response.data[0];
-    // Combine unique NDCs from drugs with the same name.
-    const selectedDrugs = drugs.filter((d) => d.name === drug.name);
-    const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
+    setSelectedNdc(drug.ndc)
+    console.log("selected drugs ", drug);
+
     setSelectedDrug(drug);
-    setDrugSearchQuery(classInfo.name);
+    setDrugSearchQuery(classInfo.className);
     setShowDrugSuggestions(false);
-    setNdcList(combinedNdcs);
-    if (combinedNdcs.length > 0) {
-      setSelectedNdc(combinedNdcs[0]);
-      setNdcSearchQuery(combinedNdcs[0]);
-    } else {
-      console.error("No NDC found for the selected drug");
-    }
   };
 
   // --- Reset All / Clear Selections ---
@@ -498,6 +495,8 @@ export const InsuranceSearch2: React.FC = () => {
     setNdcSearchQuery("");
     setInsurances([]);
     setSelectedInsurance(null);
+    setClassInfos([]);
+    
   };
 
   return (
@@ -739,11 +738,11 @@ export const InsuranceSearch2: React.FC = () => {
                         )} */}
                         {uniqueFilteredclassInfos.map((classInfo) => (
                           <button
-                            key={classInfo.id}
-                            onClick={() => handleDrugSelect(classInfo )}
+                            key={classInfo.classId}
+                            onClick={() => handleDrugSelect(classInfo)}
                             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-800"
                           >
-                            {classInfo.name}
+                            {classInfo.className}
                           </button>
                         ))}
                         {isLoadingMore && (
@@ -801,7 +800,7 @@ export const InsuranceSearch2: React.FC = () => {
 
             {/* Action Button */}
             <AnimatePresence>
-              {selectedDrug && selectedNdc && (
+              {selectedDrug && (
                 <motion.button
                   layout
                   variants={fadeVariant}

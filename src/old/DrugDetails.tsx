@@ -51,7 +51,14 @@ const formatCurrency = (value: number): string =>
     style: "currency",
     currency: "USD",
   }).format(value);
-import { ClassInfo, Drug, DrugMedi, OrderItem, Prescription, SearchLog } from "../types";
+import {
+  ClassInfo,
+  Drug,
+  DrugMedi,
+  OrderItem,
+  Prescription,
+  SearchLog,
+} from "../types";
 import axiosInstance from "../api/axiosInstance";
 import { useCart } from "../context/CartContext"; // adjust path
 import DrugDetailsModal from "../components/DrugDetailsModal";
@@ -1518,7 +1525,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                         >
                           {rec.drugName}
                         </a>
-                      </td>{" "}
+                      </td>
                       <td className="px-4 py-2 font-mono">
                         <a
                           href={`https://ndclist.com/ndc/${padCode(
@@ -1544,7 +1551,6 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                         ${rec.acquisitionCost.toFixed(2)}
                       </td>
                       <td className="px-4 py-2">
-                        {" "}
                         <a
                           href={`/scriptitems/${rec.scriptCode}`}
                           className="text-blue-700 dark:text-blue-300 hover:underline hover:text-blue-900 dark:hover:text-blue-400 transition-colors duration-150"
@@ -1565,7 +1571,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                         >
                           {rec.drugName}
                         </a>
-                      </td>{" "}
+                      </td>
                       <td className="px-4 py-2 font-mono">
                         <a
                           href={`https://ndclist.com/ndc/${padCode(
@@ -2520,7 +2526,7 @@ export const DrugDetails: React.FC = () => {
   const userClassVersion = localStorage.getItem("classType") || "ClassV1";
   const ndcCode = searchParams.get("ndc");
   const insuranceId = searchParams.get("insuranceId");
-
+  const userRole = localStorage.getItem("role") || "Pharmacist";
   const [drug, setDrug] = useState<Drug | null>(null);
   const [sortedAlternatives, setSortedAlternatives] = useState<Prescription[]>(
     []
@@ -2554,7 +2560,9 @@ export const DrugDetails: React.FC = () => {
   const [error, setError] = useState("");
   // With a single state:
   const [classVersion, setClassVersion] = useState<string>(userClassVersion);
-
+  const [availableClassVersions, setAvailableClassVersions] = useState<
+    ClassInfo[]
+  >([]);
   const [drugmedi, setDrugmedi] = useState<DrugMedi[]>([]);
   const [drugDeatilsMedi, setDrugDeatilsMedi] = useState<DrugMedi>();
   const [mediToggle, setMediToggle] = useState(false);
@@ -2575,6 +2583,7 @@ export const DrugDetails: React.FC = () => {
         );
         console.log("classVersion", classVersion);
         console.log("classes ", response3.data);
+        setAvailableClassVersions(response3.data);
         const wantedClassVersion = response3.data.filter(
           (cls: ClassInfo) => cls.classTypeName === classVersion
         );
@@ -2592,7 +2601,13 @@ export const DrugDetails: React.FC = () => {
           `/drug/GetAllDrugs?classId=${classInfoId}`
         );
         console.log("response4: ", response4.data);
-
+        const mediResponse = await axiosInstance.get(
+          `/drug/GetAllMediDrugs?classId=${classInfoId}`
+        );
+        setDrugmedi(mediResponse.data);
+        setDrugDeatilsMedi(
+          mediResponse.data.find((item: DrugMedi) => item.drugNDC === ndcCode)
+        );
         const matchingAlt = response4.data.find(
           (alt: Prescription) => alt.insuranceId.toString() === insuranceId
         );
@@ -2607,9 +2622,6 @@ export const DrugDetails: React.FC = () => {
           .filter((alt: Prescription) => alt.type !== "DISCN");
         setSortedAlternatives(sortedData);
         console.log("sortedData", sortedData);
-
-           
-        
       } catch (err) {
         setError("Failed to load drug details");
       } finally {
@@ -2843,7 +2855,7 @@ export const DrugDetails: React.FC = () => {
                           ? "Hide Medi-Cal Section"
                           : "Show Medi-Cal Section"}
                       </button>
-                      {insuranceId !== "615" && (
+                      {userRole != "Pharmacist" && (
                         <div className="flex items-center gap-3">
                           <label
                             htmlFor="classVersionSelect"
@@ -2856,15 +2868,27 @@ export const DrugDetails: React.FC = () => {
                             value={classVersion}
                             onChange={(e) => {
                               setShowClassLoader(true);
-                             
+                              setClassVersion(e.target.value);
+                              setClassName(
+                                availableClassVersions.find(
+                                  (cls) => cls.classTypeName === e.target.value
+                                ) || null
+                              );
                             }}
                             className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
-                            <option value={1}>Class V1</option>
-                            <option value={2}>Class V2</option>
-                            <option value={3}>Class V3</option>
-                            <option value={4}>Class V4</option>
-                            <option value={5}>EPCMOA</option>
+                            {availableClassVersions.length > 0 ? (
+                              availableClassVersions.map((cls) => (
+                                <option
+                                  key={cls.classTypeName}
+                                  value={cls.classTypeName}
+                                >
+                                  {cls.classTypeName}
+                                </option>
+                              ))
+                            ) : (
+                              <option value="ClassV1">ClassV1</option>
+                            )}
                           </select>
                         </div>
                       )}
