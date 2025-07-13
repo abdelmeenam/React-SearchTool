@@ -3,10 +3,11 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
+import ChatWidget from "../components/ChatWidget";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-
+  const user = localStorage.getItem("accessToken");
   return (
     <div className="min-h-screen ">
       <div>
@@ -22,6 +23,7 @@ const LayoutContent: React.FC = () => {
         <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
           <Outlet />
         </div>
+        {user && <ChatWidget />}
       </div>
     </div>
   );
