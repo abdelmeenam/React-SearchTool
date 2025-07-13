@@ -467,7 +467,7 @@ export const InsuranceSearch2: React.FC = () => {
     console.log("Drugs fetched for class:", classInfo.name, response.data);
     setDrugs(response.data);
     const drug = response.data[0];
-    setSelectedNdc(drug.ndc)
+    setSelectedNdc(drug.ndc);
     console.log("selected drugs ", drug);
 
     setSelectedDrug(drug);
@@ -496,7 +496,6 @@ export const InsuranceSearch2: React.FC = () => {
     setInsurances([]);
     setSelectedInsurance(null);
     setClassInfos([]);
-    
   };
 
   return (
@@ -807,7 +806,7 @@ export const InsuranceSearch2: React.FC = () => {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  onClick={() => {
+                  onClick={async () => {
                     setDetails({
                       rxgroupId: selectedInsurance?.insuranceId || 0,
                       binId: selectedBin?.id || 0, // Assign a default number value
@@ -817,9 +816,22 @@ export const InsuranceSearch2: React.FC = () => {
                       searchType:
                         "Search for Drug Class By Full Insurance Data",
                     });
-                    localStorage.setItem(
-                      "selectedRx",
-                      selectedInsurance?.insurance || ""
+                    const action = `User Search for that NDC: ${
+                      selectedDrug?.ndc || ""
+                    } 
+                    using search Type: Search By Full Insurance 
+                    with the following insurance Data: 
+                    BinId: ${selectedInsurance?.insuranceId || 0}, 
+                    PCN: ${selectedPcn?.id || 0}, 
+                    RxGroup: ${selectedInsurance?.insuranceId || 0}`;
+                    const response = await axiosInstance.post(
+                      "/order/ViewDrugDetailsLog",
+                      JSON.stringify(action), // make it a JSON string
+                      {
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                      }
                     );
                     localStorage.setItem("selectedPcn", selectedPcn?.pcn || "");
                     localStorage.setItem("selectedBin", selectedPcn?.pcn || "");

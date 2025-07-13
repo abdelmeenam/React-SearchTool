@@ -2583,7 +2583,20 @@ export const DrugDetails: React.FC = () => {
         );
         console.log("classVersion", classVersion);
         console.log("classes ", response3.data);
-        setAvailableClassVersions(response3.data);
+
+        const seen = new Set<string>();
+        const uniqueClasses: ClassInfo[] = response3.data.filter(
+          (item: ClassInfo) => {
+            if (seen.has(item.classTypeName)) {
+              return false;
+            }
+            seen.add(item.classTypeName);
+            return true;
+          }
+        );
+
+        console.log(uniqueClasses);
+        setAvailableClassVersions(uniqueClasses);
         const wantedClassVersion = response3.data.filter(
           (cls: ClassInfo) => cls.classTypeName === classVersion
         );

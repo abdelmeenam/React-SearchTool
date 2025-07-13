@@ -31,6 +31,7 @@ interface Log {
   userName: string;
   date: string;
   action: string;
+  parsedDetails?: Record<string, string>; // Optional parsed details
 }
 
 const getAuthHeader = () => ({
@@ -68,6 +69,20 @@ const actionNameMap: Record<string, string> = {
   Login: "User Sign in",
   Logout: "User Sign out",
 };
+const parseViewDrugDetails = (action: string): Record<string, string> => {
+  const result: Record<string, string> = {};
+
+  const regex = /([A-Za-z\s\?\.]+):\s*([^\n,]+)/g;
+  let match;
+
+  while ((match = regex.exec(action)) !== null) {
+    const key = match[1].trim();
+    const value = match[2].trim();
+    result[key] = value;
+  }
+
+  return result;
+};
 
 const LogsPage: React.FC = () => {
   const [logs, setLogs] = useState<Log[]>([]);
@@ -79,6 +94,7 @@ const LogsPage: React.FC = () => {
   const [filterAction, setFilterAction] = useState<string>("");
   const [filterFromDate, setFilterFromDate] = useState<string>("");
   const [filterToDate, setFilterToDate] = useState<string>("");
+  const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
   const [showUserSuggestions, setShowUserSuggestions] =
     useState<boolean>(false);
@@ -100,18 +116,27 @@ const LogsPage: React.FC = () => {
           headers: getAuthHeader(),
         });
         const processedLogs = response.data
-          // Exclude logs with "token-test" in the action
           .filter(
             (log: Log) => !log.action.toLowerCase().includes("token-test")
           )
-          // Remove "User requested" prefix (case-insensitive)
-          .map((log: Log) => ({
-            ...log,
-            action: log.action.replace(/^User requested\s*/i, ""),
-          }))
-          // Only keep logs whose action exists as a key in actionNameMap
-          .filter((log: Log) =>
-            Object.keys(actionNameMap).includes(log.action)
+          .map((log: Log) => {
+            const cleanAction = log.action.replace(/^User requested\s*/i, "");
+            const parsedDetails = cleanAction
+              .toLowerCase()
+              .startsWith("viewdrugdetails")
+              ? parseViewDrugDetails(cleanAction)
+              : undefined;
+
+            return {
+              ...log,
+              action: cleanAction,
+              parsedDetails,
+            };
+          })
+          .filter(
+            (log: Log) =>
+              Object.keys(actionNameMap).includes(log.action) ||
+              log.action.toLowerCase().startsWith("viewdrugdetails")
           );
 
         console.log("Processed logs:", processedLogs);
@@ -145,8 +170,7 @@ const LogsPage: React.FC = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Compute unique users for suggestions
@@ -399,7 +423,12 @@ const LogsPage: React.FC = () => {
       // Use the mapped action name if available
       const actionText = actionNameMap[log.action] || log.action;
       const dateFormatted = new Date(log.date).toLocaleString();
-      const row = [log.id, log.userName, `"${actionText}"`, `"${dateFormatted}"`];
+      const row = [
+        log.id,
+        log.userName,
+        `"${actionText}"`,
+        `"${dateFormatted}"`,
+      ];
       csvRows.push(row.join(","));
     });
 
@@ -434,7 +463,8 @@ const LogsPage: React.FC = () => {
         </span>
         <br />
         <span className="block sm:inline">
-          Please contact the system administrator if you believe this is an error.
+          Please contact the system administrator if you believe this is an
+          error.
         </span>
       </div>
     );
@@ -596,7 +626,10 @@ const LogsPage: React.FC = () => {
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {workingHoursData.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                         {item.day}
                       </td>
@@ -625,8 +658,13 @@ const LogsPage: React.FC = () => {
 
           {/* Working Hours Bar Chart */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mt-6">
-            <h2 className="text-2xl font-semibold mb-4">Working Hours Overview</h2>
-            <Bar data={workingHoursChartData} options={workingHoursChartOptions} />
+            <h2 className="text-2xl font-semibold mb-4">
+              Working Hours Overview
+            </h2>
+            <Bar
+              data={workingHoursChartData}
+              options={workingHoursChartOptions}
+            />
           </div>
 
           {/* Download CSV Button */}
@@ -656,22 +694,47 @@ const LogsPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
                     Date
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                    Search Log
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {currentLogs.map((log, index) => (
-                  <tr key={`${log.id}-${index}`} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <tr
+                    key={`${log.id}-${index}`}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {log.id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {log.userName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-xs overflow-hidden text-ellipsis"
+                      title={actionNameMap[log.action] || log.action} // show full on hover
+                    >
                       {actionNameMap[log.action] || log.action}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {new Date(log.date).toLocaleString()}
+                    </td>
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 cursor-pointer"
+                      onClick={() => setSelectedLog(log)}
+                      title="Click to view full details"
+                    >
+                      <div className="max-w-xs truncate">
+                        {actionNameMap[log.action] || log.action}
+                      </div>
+                      {log.parsedDetails && (
+                        <div className="ml-2 text-xs text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                          {Object.entries(log.parsedDetails)
+                            .map(([key, value]) => `${key}: ${value}`)
+                            .join(", ")}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -708,6 +771,45 @@ const LogsPage: React.FC = () => {
       ) : (
         <div className="p-4 text-center text-gray-500 dark:text-gray-300">
           Please select a user to view their activity and logs.
+        </div>
+      )}
+      {selectedLog && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full relative">
+            <button
+              onClick={() => setSelectedLog(null)}
+              className="absolute top-2 right-2 text-gray-500 dark:text-gray-300 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">Log Details</h2>
+            <p>
+              <strong>Action:</strong>{" "}
+              {actionNameMap[selectedLog.action] || selectedLog.action}
+            </p>
+            <p>
+              <strong>User:</strong> {selectedLog.userName}
+            </p>
+            <p>
+              <strong>Date:</strong>{" "}
+              {new Date(selectedLog.date).toLocaleString()}
+            </p>
+
+            {selectedLog.parsedDetails && (
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">Parsed Details:</h3>
+                <ul className="text-sm text-gray-700 dark:text-gray-300">
+                  {Object.entries(selectedLog.parsedDetails).map(
+                    ([key, value]) => (
+                      <li key={key}>
+                        <strong>{key}:</strong> {value}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

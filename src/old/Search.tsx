@@ -54,8 +54,6 @@ export const Search: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false); // Track loading state
   const [hasMore, setHasMore] = useState(true); // Track if more data is available
 
-
-
   useEffect(() => {
     if (Details) {
       localStorage.setItem("searchLogDetails", JSON.stringify(Details));
@@ -198,7 +196,7 @@ export const Search: React.FC = () => {
       });
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     console.log("selected insurance ", selectedInsurance);
     setDetails({
       rxgroupId: selectedInsurance?.insuranceId || 0,
@@ -208,7 +206,23 @@ export const Search: React.FC = () => {
       date: new Date().toISOString(),
       searchType: "Search By Drug",
     });
+    const action = `User Search for that NDC: ${Details?.drugNDC} 
+                    using search Type: ${Details?.searchType} 
+                    with the following insurance Data: 
+                    BinId: ${Details?.binId}, 
+                    PCN: ${Details?.pcnId}, 
+                    RxGroup: ${Details?.rxgroupId}`;
+    const response = await axiosInstance.post(
+      "/order/ViewDrugDetailsLog",
+      JSON.stringify(action), // make it a JSON string
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
+    console.log(response);
     if (selectedDrug) {
       localStorage.setItem("selectedRx", selectedInsurance?.insurance || "");
       navigate(

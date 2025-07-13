@@ -70,7 +70,7 @@ export const Search3: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
+
   const loadMoreDrugs = async () => {
     if (isLoadingMore) return;
 
@@ -447,7 +447,6 @@ export const Search3: React.FC = () => {
                           }
                         }}
                       >
-                 
                         {uniqueFilteredDrugs.map((drug) => (
                           <li
                             key={drug.id}
@@ -473,7 +472,7 @@ export const Search3: React.FC = () => {
                   </div>
                 </div>
               )}
-             
+
               {/* NDC Combobox */}
               {ndcList.length > 0 && (
                 <div>
@@ -542,6 +541,21 @@ export const Search3: React.FC = () => {
                       date: new Date().toISOString(),
                       searchType: "Search By RXGroup",
                     });
+                    const action = `User Search for that NDC: ${selectedDrug?.ndc} 
+                    using search Type: Search By RXGroup
+                    with the following insurance Data: 
+                    BinId: 0, 
+                    PCN: 0, 
+                    RxGroup: ${selectedRxGroup?.id}`;
+                    const response = await axiosInstance.post(
+                      "/order/ViewDrugDetailsLog",
+                      JSON.stringify(action), // make it a JSON string
+                      {
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    );
                     if (selectedRxGroup) {
                       localStorage.setItem(
                         "selectedRx",
