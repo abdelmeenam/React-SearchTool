@@ -144,7 +144,7 @@ export const Search3: React.FC = () => {
       if (selectedRxGroup && limitSearch && drugSearchQuery) {
         try {
           const { data } = await axiosInstance.get(
-            `/drug/GetDrugsByInsuranceNameDrugName?insurance=${selectedRxGroup.rxGroup}&drugName=${drugSearchQuery}&pageNumber=1&pageSize=20`
+            `/drug/GetDrugsByInsuranceNamePagintated?insurance=${selectedRxGroup.rxGroup}&drugName=${drugSearchQuery}&pageNumber=1&pageSize=20`
           );
           console.log("Fetched drugs by insurance:", data);
           setDrugs(data);
@@ -156,6 +156,7 @@ export const Search3: React.FC = () => {
           const { data } = await axiosInstance.get(
             `/drug/searchByName?name=${drugSearchQuery}&pageNumber=1&pageSize=20`
           );
+          console.log("Fetched drugs by name:", data);
           setDrugs(data);
         } catch (error) {
           console.error("Error fetching drugs by name:", error);
@@ -201,16 +202,7 @@ export const Search3: React.FC = () => {
     setShowDrugSuggestions(true);
   };
 
-  const filteredDrugs = drugSearchQuery
-    ? drugs.filter((drug) =>
-        drug.name.toLowerCase().includes(drugSearchQuery.toLowerCase())
-      )
-    : drugs;
-
   // Create a unique list of drugs based on their name
-  const uniqueFilteredDrugs = Array.from(
-    new Map(filteredDrugs.map((drug) => [drug.name, drug])).values()
-  );
 
   // --- When a drug is selected, combine NDCs from all drugs with the same name ---
   const handleDrugSelect = (drug: DrugModel) => {
@@ -431,6 +423,7 @@ export const Search3: React.FC = () => {
                       aria-controls="drug-listbox"
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-xs placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                     />
+
                     {showDrugSuggestions && drugSearchQuery.length > 0 && (
                       <ul
                         id="drug-listbox"
@@ -447,21 +440,58 @@ export const Search3: React.FC = () => {
                           }
                         }}
                       >
-                        {uniqueFilteredDrugs.map((drug) => (
-                          <li
-                            key={drug.id}
-                            id={`drug-option-${drug.id}`}
-                            role="option"
-                            tabIndex={0}
-                            onClick={() => handleDrugSelect(drug)}
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && handleDrugSelect(drug)
-                            }
-                            className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                          >
-                            {drug.name}
-                          </li>
-                        ))}
+                        {[...drugs]
+                          .sort((a, b) => {
+                            const aMatch = a.name
+                              .toLowerCase()
+                              .includes(drugSearchQuery.toLowerCase());
+                            const bMatch = b.name
+                              .toLowerCase()
+                              .includes(drugSearchQuery.toLowerCase());
+                            if (aMatch && !bMatch) return -1;
+                            if (!aMatch && bMatch) return 1;
+                            return 0;
+                          })
+                          .map((drug, index) => {
+                            const matchesQuery = drug.name
+                              .toLowerCase()
+                              .includes(drugSearchQuery.toLowerCase());
+                            return (
+                              <li
+                                key={drug.id}
+                                id={`drug-option-${drug.id}`}
+                                role="option"
+                                tabIndex={0}
+                                onClick={() => handleDrugSelect(drug)}
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" && handleDrugSelect(drug)
+                                }
+                                className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                              >
+                                {drug.name}{" "}
+                                {!matchesQuery && (
+                                  <span className="text-xs text-yellow-600 italic ml-2">
+                                    (Did you mean:{" "}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDrugSearchQuery(
+                                          drugs[0]?.name || ""
+                                        );
+                                        handleDrugSelect(drugs[0] || drug);
+                                      }}
+                                      className="font-semibold text-blue-700 underline hover:text-blue-900"
+                                    >
+                                      {drugs[0]?.name || ""}
+                                    </button>
+                                    ?)
+                                  </span>
+                                )}
+                              </li>
+                            );
+                          })}
+
                         {isLoadingMore && (
                           <li className="px-4 py-2 text-sm text-gray-500 text-center">
                             Loading more...
