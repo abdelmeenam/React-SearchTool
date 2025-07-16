@@ -68,6 +68,8 @@ const actionNameMap: Record<string, string> = {
   GetDrugsByPCN: "Get Drugs by PCN",
   Login: "User Sign in",
   Logout: "User Sign out",
+  ViewDrugDetails: "View Drug Search Log", // ✅ added
+  ViewDrugDetailsLog: "View Drug Search Log",
 };
 const parseViewDrugDetails = (action: string): Record<string, string> => {
   const result: Record<string, string> = {};
@@ -141,6 +143,11 @@ const LogsPage: React.FC = () => {
 
         console.log("Processed logs:", processedLogs);
         setLogs(processedLogs);
+        const uniqueActions = Array.from(
+          new Set(processedLogs.map((log: Log) => log.action))
+        );
+
+        console.log("🔍 Unique actions from API:", uniqueActions);
       } catch (err: any) {
         setError(
           "Sorry, you don’t have access. Please contact your system administrator."
@@ -783,10 +790,7 @@ const LogsPage: React.FC = () => {
               &times;
             </button>
             <h2 className="text-xl font-bold mb-4">Log Details</h2>
-            <p>
-              <strong>Action:</strong>{" "}
-              {actionNameMap[selectedLog.action] || selectedLog.action}
-            </p>
+
             <p>
               <strong>User:</strong> {selectedLog.userName}
             </p>
@@ -797,7 +801,7 @@ const LogsPage: React.FC = () => {
 
             {selectedLog.parsedDetails && (
               <div className="mt-4">
-                <h3 className="font-semibold mb-2">Parsed Details:</h3>
+                <h3 className="font-semibold mb-2">Search Details:</h3>
                 <ul className="text-sm text-gray-700 dark:text-gray-300">
                   {Object.entries(selectedLog.parsedDetails).map(
                     ([key, value]) => (

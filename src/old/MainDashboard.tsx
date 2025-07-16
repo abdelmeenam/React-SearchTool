@@ -41,7 +41,6 @@ export const MainDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Clear any previous selections
         localStorage.removeItem("selectedRx");
         localStorage.removeItem("selectedPcn");
         localStorage.removeItem("selectedBin");
@@ -51,6 +50,9 @@ export const MainDashboard: React.FC = () => {
         let page = 1;
         let continueFetching = true;
 
+        setLoading(true);
+        setError(null);
+
         while (continueFetching) {
           const response = await axiosInstance.get(
             "/drug/GetAllLatestScriptsPaginated",
@@ -59,8 +61,13 @@ export const MainDashboard: React.FC = () => {
             }
           );
           const pageData: DrugTransaction[] = response.data;
-          console.log(pageData);
+          console.log(`Page ${page} loaded`, pageData);
+
           allData = [...allData, ...pageData];
+
+          // 👇 Immediately update state after fetching each page
+          setData([...allData]);
+          setLoading(false);
 
           if (pageData.length < pageSize) {
             continueFetching = false;
@@ -69,15 +76,6 @@ export const MainDashboard: React.FC = () => {
           }
         }
 
-        // Remove duplicates by ndcCode and scriptCode
-        const distinctItems = Array.from(
-          new Map(
-            allData
-              .map((item) => [`${item.ndcCode}_${item.scriptCode}`, item])
-          ).values()
-        );
-
-        setData(distinctItems);
         setLoading(false);
       } catch (err) {
         setError(
@@ -87,13 +85,10 @@ export const MainDashboard: React.FC = () => {
       }
     };
 
-    setLoading(true);
-    setError(null);
     fetchData();
   }, [classVersion, activeDashboard]);
 
   // Class Version Selector
-
 
   // Enhanced Responsive Button Component
   const ResponsiveButton = ({

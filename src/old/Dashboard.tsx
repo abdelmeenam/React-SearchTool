@@ -689,7 +689,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {item.highestScriptCode ?? "NA"}
+                    <a
+                      href={`/scriptitems/${item.highestScriptCode}`}
+                      className="text-blue-700 dark:text-blue-300 hover:underline hover:text-blue-900 dark:hover:text-blue-400 transition-colors duration-150"
+                    >
+                      {item.highestScriptCode ?? "NA"}
+                    </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     {new Date(item.highestScriptDate).toLocaleDateString(

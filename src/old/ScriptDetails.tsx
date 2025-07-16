@@ -80,7 +80,6 @@ const ScriptDetails: React.FC = () => {
                 "Branch Name": script.branchName,
                 "Drug Name": script.drugName,
                 "Insurance Name": script.insuranceName,
-                "Drug Class Name": script.drugClassName,
                 "Prescriber Name": script.prescriberName,
                 "User Name": script.userName,
                 PF: script.pf,

@@ -118,31 +118,23 @@ export const Search: React.FC = () => {
     setSearchQuery(query);
     setPageNumber(1); // Reset to the first page
     debouncedSearch(query, 1);
+    setSuggestions([]);
   };
+  const pageRef = useRef(pageNumber);
+  useEffect(() => {
+    pageRef.current = pageNumber;
+  }, [pageNumber]);
   const loadMoreSuggestions = () => {
     if (!isLoading && hasMore) {
-      setPageNumber((prev) => {
-        const nextPage = prev + 1;
-        debouncedSearch(searchQuery, nextPage);
-        return nextPage;
-      });
+      const nextPage = pageRef.current + 1;
+      pageRef.current = nextPage;
+      setPageNumber(nextPage);
+      debouncedSearch(searchQuery, nextPage);
     }
   };
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-          document.documentElement.offsetHeight - 100 &&
-        showSuggestions &&
-        hasMore
-      ) {
-        loadMoreSuggestions();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [showSuggestions, hasMore, isLoading]);
+  const hasExactOrPartialMatch = suggestions.some((drug) =>
+    drug.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const clearSearch = () => {
     setSearchQuery("");
@@ -376,25 +368,68 @@ export const Search: React.FC = () => {
                       id="suggestion-list"
                       role="listbox"
                       aria-label="Drug search suggestions"
-                      ref={dropdownRef} // Attach the ref to the dropdown container
+                      ref={dropdownRef}
                       className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto"
                     >
-                      {suggestions.map((drug: Drug, index) => (
-                        <button
-                          key={drug.id}
-                          id={`suggestion-${index}`}
-                          role="option"
-                          aria-selected={activeSuggestionIndex === index}
-                          onClick={() => handleDrugSelect(drug)}
-                          className={`w-full text-left px-4 py-2 text-sm ${
-                            activeSuggestionIndex === index
-                              ? "bg-blue-100 text-blue-800"
-                              : "hover:bg-gray-100 text-gray-800"
-                          } focus:outline-none`}
-                        >
-                          {drug.name}
-                        </button>
-                      ))}
+                      {[...suggestions]
+                        .sort((a, b) => {
+                          const aMatch = a.name
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase());
+                          const bMatch = b.name
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase());
+                          if (aMatch && !bMatch) return -1;
+                          if (!aMatch && bMatch) return 1;
+                          return 0;
+                        })
+                        .map((drug: Drug, index) => {
+                          const matchesQuery = drug.name
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase());
+
+                          // Find the first good match to display in "Did you mean"
+
+                          return (
+                            <button
+                              key={drug.id}
+                              id={`suggestion-${index}`}
+                              role="option"
+                              aria-selected={activeSuggestionIndex === index}
+                              onClick={() => handleDrugSelect(drug)}
+                              className={`w-full text-left px-4 py-2 text-sm ${
+                                activeSuggestionIndex === index
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "hover:bg-gray-100 text-gray-800"
+                              } focus:outline-none`}
+                            >
+                              {drug.name}{" "}
+                              {!matchesQuery && (
+                                <span className="text-xs text-yellow-600 italic ml-2">
+                                  (Did you mean:{" "}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // so it doesn’t trigger handleDrugSelect of the outer button
+                                      setSearchQuery(
+                                        suggestions[0]?.name || ""
+                                      );
+                                      setShowSuggestions(true); // optional: reopen suggestions dropdown
+                                      handleDrugSelect(
+                                        suggestions[0] || drug
+                                      );
+                                    }}
+                                    className="font-semibold text-blue-700 underline hover:text-blue-900"
+                                  >
+                                    {suggestions[0]?.name || ""}
+                                  </button>
+                                  ?)
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+
                       {isLoading && (
                         <div className="text-center py-2 text-sm text-gray-500">
                           Loading more...
