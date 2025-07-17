@@ -526,6 +526,7 @@ export const InsuranceSearch: React.FC = () => {
                   onClick={() => {
                     clearAll();
                     setLimitSearch(!limitSearch);
+                    setDrugs([]);
                   }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     limitSearch ? "bg-blue-600" : "bg-gray-300"
@@ -711,56 +712,82 @@ export const InsuranceSearch: React.FC = () => {
                         aria-label="Drug search suggestions"
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto drug-suggestions-box"
                       >
-                        {[...drugs]
-                          .sort((a, b) => {
-                            const aMatch = a.name
+                        {(() => {
+                          const matched = drugs.filter((drug) =>
+                            drug.name
                               .toLowerCase()
-                              .includes(drugSearchQuery.toLowerCase());
-                            const bMatch = b.name
-                              .toLowerCase()
-                              .includes(drugSearchQuery.toLowerCase());
-                            if (aMatch && !bMatch) return -1;
-                            if (!aMatch && bMatch) return 1;
-                            return 0;
-                          })
-                          .map((drug, index) => {
-                            const matchesQuery = drug.name
-                              .toLowerCase()
-                              .includes(drugSearchQuery.toLowerCase());
-                            return (
-                              <button
-                                key={drug.id}
-                                id={`suggestion-${index}`}
-                                role="option"
-                                aria-selected={activeSuggestionIndex === index}
-                                onClick={() => handleDrugSelect(drug)}
-                                className={`w-full text-left px-4 py-2 text-sm ${
-                                  activeSuggestionIndex === index
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "hover:bg-gray-100 text-gray-800"
-                                } focus:outline-none`}
-                              >
-                                {drug.name}{" "}
-                                {!matchesQuery && (
-                                  <span className="text-xs text-yellow-600 italic ml-2">
-                                    (Did you mean:{" "}
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDrugSearchQuery(drugs[0]?.name || "");
-                                        handleDrugSelect(drugs[0] || drug);
-                                      }}
-                                      className="font-semibold text-blue-700 underline hover:text-blue-900"
-                                    >
-                                      {drugs[0]?.name || ""}
-                                    </button>
-                                    ?)
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
+                              .includes(drugSearchQuery.toLowerCase())
+                          );
+                          const unmatched = drugs.filter(
+                            (drug) =>
+                              !drug.name
+                                .toLowerCase()
+                                .includes(drugSearchQuery.toLowerCase())
+                          );
+
+                          return (
+                            <>
+                              {/* 🟢 Matched */}
+                              {matched.map((drug, index) => (
+                                <button
+                                  key={drug.id}
+                                  id={`suggestion-matched-${index}`}
+                                  role="option"
+                                  aria-selected={
+                                    activeSuggestionIndex === index
+                                  }
+                                  onClick={() => handleDrugSelect(drug)}
+                                  className={`w-full text-left px-4 py-2 text-sm ${
+                                    activeSuggestionIndex === index
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "hover:bg-gray-100 text-gray-800"
+                                  } focus:outline-none`}
+                                >
+                                  {drug.name}
+                                </button>
+                              ))}
+
+                        
+
+                              {/* 🔵 Remaining Unmatched */}
+                              {unmatched.slice(1).map((drug, index) => (
+                                <button
+                                  key={drug.id}
+                                  id={`suggestion-unmatched-${index}`}
+                                  role="option"
+                                  aria-selected={
+                                    activeSuggestionIndex === index
+                                  }
+                                  onClick={() => handleDrugSelect(drug)}
+                                  className={`w-full text-left px-4 py-2 text-sm ${
+                                    activeSuggestionIndex === index
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "hover:bg-gray-100 text-gray-800"
+                                  } focus:outline-none`}
+                                >
+                                  {drug.name}
+                                </button>
+                              ))}
+                                    {/* 🟡 Did you mean */}
+                              {unmatched.length > 0 && (
+                                <div className="px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
+                                  Did you mean:{" "}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setDrugSearchQuery(unmatched[0].name);
+                                      handleDrugSelect(unmatched[0]);
+                                    }}
+                                    className="font-semibold text-blue-700 underline hover:text-blue-900"
+                                  >
+                                    {unmatched[0].name}
+                                  </button>
+                                  ?
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
 
                         {isLoadingMore && (
                           <div className="text-center py-2 text-sm text-gray-500">

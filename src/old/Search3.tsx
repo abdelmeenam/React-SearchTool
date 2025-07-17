@@ -404,6 +404,7 @@ export const Search3: React.FC = () => {
                   >
                     Search for Drug
                   </label>
+
                   <div
                     className="relative"
                     role="combobox"
@@ -440,57 +441,75 @@ export const Search3: React.FC = () => {
                           }
                         }}
                       >
-                        {[...drugs]
-                          .sort((a, b) => {
-                            const aMatch = a.name
+                        {(() => {
+                          const matched = drugs.filter((drug) =>
+                            drug.name
                               .toLowerCase()
-                              .includes(drugSearchQuery.toLowerCase());
-                            const bMatch = b.name
-                              .toLowerCase()
-                              .includes(drugSearchQuery.toLowerCase());
-                            if (aMatch && !bMatch) return -1;
-                            if (!aMatch && bMatch) return 1;
-                            return 0;
-                          })
-                          .map((drug, index) => {
-                            const matchesQuery = drug.name
-                              .toLowerCase()
-                              .includes(drugSearchQuery.toLowerCase());
-                            return (
-                              <li
-                                key={drug.id}
-                                id={`drug-option-${drug.id}`}
-                                role="option"
-                                tabIndex={0}
-                                onClick={() => handleDrugSelect(drug)}
-                                onKeyDown={(e) =>
-                                  e.key === "Enter" && handleDrugSelect(drug)
-                                }
-                                className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                              >
-                                {drug.name}{" "}
-                                {!matchesQuery && (
-                                  <span className="text-xs text-yellow-600 italic ml-2">
-                                    (Did you mean:{" "}
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDrugSearchQuery(
-                                          drugs[0]?.name || ""
-                                        );
-                                        handleDrugSelect(drugs[0] || drug);
-                                      }}
-                                      className="font-semibold text-blue-700 underline hover:text-blue-900"
-                                    >
-                                      {drugs[0]?.name || ""}
-                                    </button>
-                                    ?)
-                                  </span>
-                                )}
-                              </li>
-                            );
-                          })}
+                              .includes(drugSearchQuery.toLowerCase())
+                          );
+                          const unmatched = drugs.filter(
+                            (drug) =>
+                              !drug.name
+                                .toLowerCase()
+                                .includes(drugSearchQuery.toLowerCase())
+                          );
+
+                          return (
+                            <>
+                              {/* 🟢 Matched */}
+                              {matched.map((drug) => (
+                                <li
+                                  key={drug.id}
+                                  id={`drug-option-${drug.id}`}
+                                  role="option"
+                                  tabIndex={0}
+                                  onClick={() => handleDrugSelect(drug)}
+                                  onKeyDown={(e) =>
+                                    e.key === "Enter" && handleDrugSelect(drug)
+                                  }
+                                  className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                >
+                                  {drug.name}
+                                </li>
+                              ))}
+
+                              {/* 🔵 Remaining unmatched */}
+                              {unmatched.slice(1).map((drug) => (
+                                <li
+                                  key={drug.id}
+                                  id={`drug-option-${drug.id}`}
+                                  role="option"
+                                  tabIndex={0}
+                                  onClick={() => handleDrugSelect(drug)}
+                                  onKeyDown={(e) =>
+                                    e.key === "Enter" && handleDrugSelect(drug)
+                                  }
+                                  className="px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                >
+                                  {drug.name}
+                                </li>
+                              ))}
+                              {/* 🟡 Did you mean */}
+                              {unmatched.length > 0 && (
+                                <li className="px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
+                                  Did you mean:{" "}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDrugSearchQuery(unmatched[0].name);
+                                      handleDrugSelect(unmatched[0]);
+                                    }}
+                                    className="font-semibold text-blue-700 underline hover:text-blue-900"
+                                  >
+                                    {unmatched[0].name}
+                                  </button>
+                                  ?
+                                </li>
+                              )}
+                            </>
+                          );
+                        })()}
 
                         {isLoadingMore && (
                           <li className="px-4 py-2 text-sm text-gray-500 text-center">

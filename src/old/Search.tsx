@@ -371,64 +371,79 @@ export const Search: React.FC = () => {
                       ref={dropdownRef}
                       className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto"
                     >
-                      {[...suggestions]
-                        .sort((a, b) => {
-                          const aMatch = a.name
+                      {/** split suggestions into matched & unmatched */}
+                      {(() => {
+                        const matched = suggestions.filter((drug) =>
+                          drug.name
                             .toLowerCase()
-                            .includes(searchQuery.toLowerCase());
-                          const bMatch = b.name
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase());
-                          if (aMatch && !bMatch) return -1;
-                          if (!aMatch && bMatch) return 1;
-                          return 0;
-                        })
-                        .map((drug: Drug, index) => {
-                          const matchesQuery = drug.name
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase());
+                            .includes(searchQuery.toLowerCase())
+                        );
+                        const unmatched = suggestions.filter(
+                          (drug) =>
+                            !drug.name
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase())
+                        );
+                        console.log("Matched : ", matched.length);
+                        console.log("unmatched : ", unmatched.length);
+                        return (
+                          <>
+                            {/* 🟢 Matched */}
+                            {matched.map((drug, index) => (
+                              <button
+                                key={drug.id}
+                                id={`suggestion-matched-${index}`}
+                                role="option"
+                                aria-selected={activeSuggestionIndex === index}
+                                onClick={() => handleDrugSelect(drug)}
+                                className={`w-full text-left px-4 py-2 text-sm ${
+                                  activeSuggestionIndex === index
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "hover:bg-gray-100 text-gray-800"
+                                } focus:outline-none`}
+                              >
+                                {drug.name}
+                              </button>
+                            ))}
 
-                          // Find the first good match to display in "Did you mean"
-
-                          return (
-                            <button
-                              key={drug.id}
-                              id={`suggestion-${index}`}
-                              role="option"
-                              aria-selected={activeSuggestionIndex === index}
-                              onClick={() => handleDrugSelect(drug)}
-                              className={`w-full text-left px-4 py-2 text-sm ${
-                                activeSuggestionIndex === index
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "hover:bg-gray-100 text-gray-800"
-                              } focus:outline-none`}
-                            >
-                              {drug.name}{" "}
-                              {!matchesQuery && (
-                                <span className="text-xs text-yellow-600 italic ml-2">
-                                  (Did you mean:{" "}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation(); // so it doesn’t trigger handleDrugSelect of the outer button
-                                      setSearchQuery(
-                                        suggestions[0]?.name || ""
-                                      );
-                                      setShowSuggestions(true); // optional: reopen suggestions dropdown
-                                      handleDrugSelect(
-                                        suggestions[0] || drug
-                                      );
-                                    }}
-                                    className="font-semibold text-blue-700 underline hover:text-blue-900"
-                                  >
-                                    {suggestions[0]?.name || ""}
-                                  </button>
-                                  ?)
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
+                            {/* 🔵 Unmatched */}
+                            {unmatched.slice(1).map((drug, index) => (
+                              <button
+                                key={drug.id}
+                                id={`suggestion-unmatched-${index}`}
+                                role="option"
+                                aria-selected={activeSuggestionIndex === index}
+                                onClick={() => handleDrugSelect(drug)}
+                                className={`w-full text-left px-4 py-2 text-sm ${
+                                  activeSuggestionIndex === index
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "hover:bg-gray-100 text-gray-800"
+                                } focus:outline-none`}
+                              >
+                                {drug.name}
+                              </button>
+                            ))}
+                            {/* 🟡 Did you mean */}
+                            {unmatched.length > 0 && (
+                              <div className="px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
+                                Did you mean:{" "}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSearchQuery(unmatched[0].name);
+                                    setShowSuggestions(true);
+                                    handleDrugSelect(unmatched[0]);
+                                  }}
+                                  className="font-semibold text-blue-700 underline hover:text-blue-900"
+                                >
+                                  {unmatched[0].name}
+                                </button>
+                                ?
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
 
                       {isLoading && (
                         <div className="text-center py-2 text-sm text-gray-500">
