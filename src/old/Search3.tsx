@@ -472,9 +472,13 @@ export const Search3: React.FC = () => {
                                   {drug.name}
                                 </li>
                               ))}
-
+                              {unmatched.length > 0 && (
+                                <div className="px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
+                                  Did You Mean?{" "}
+                                </div>
+                              )}
                               {/* 🔵 Remaining unmatched */}
-                              {unmatched.slice(1).map((drug) => (
+                              {unmatched.map((drug) => (
                                 <li
                                   key={drug.id}
                                   id={`drug-option-${drug.id}`}
@@ -489,24 +493,6 @@ export const Search3: React.FC = () => {
                                   {drug.name}
                                 </li>
                               ))}
-                              {/* 🟡 Did you mean */}
-                              {unmatched.length > 0 && (
-                                <li className="px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
-                                  Did you mean:{" "}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setDrugSearchQuery(unmatched[0].name);
-                                      handleDrugSelect(unmatched[0]);
-                                    }}
-                                    className="font-semibold text-blue-700 underline hover:text-blue-900"
-                                  >
-                                    {unmatched[0].name}
-                                  </button>
-                                  ?
-                                </li>
-                              )}
                             </>
                           );
                         })()}
