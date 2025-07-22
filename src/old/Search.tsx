@@ -407,8 +407,8 @@ export const Search: React.FC = () => {
                             ))}
                             {unmatched.length > 0 && (
                               <div className="px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
-                                Did you mean:{" "}
-                                                             </div>
+                                Did You Mean?{" "}
+                              </div>
                             )}
                             {/* 🔵 Unmatched */}
                             {unmatched.map((drug, index) => (
