@@ -795,6 +795,7 @@ interface AlternativesTableProps {
   handleSort: () => void;
   sortOrder: "asc" | "desc";
   setBestNetDrug: (drug: Prescription) => void;
+  selectedDrug: Prescription | null;
 }
 
 export const AlternativesTable: React.FC<AlternativesTableProps> = ({
@@ -813,6 +814,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   handleSort,
   sortOrder,
   setBestNetDrug,
+  selectedDrug,
 }) => {
   // State for modal
   const [showModal, setShowModal] = useState(false);
@@ -1070,17 +1072,24 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     {pageItems.map((alt, index) => {
                       // Determine row background color based on rank
                       let rowBgClass = "";
-                      if (sortOrder === "desc") {
-                        if (index === 0) {
-                          rowBgClass = "bg-green-100 dark:bg-green-800"; // Most recommended
-                        } else if (index === 1) {
-                          rowBgClass = "bg-yellow-100 dark:bg-yellow-800"; // Semi-recommended
-                        }
-                      } else if (sortOrder === "asc") {
-                        if (index === 0) {
-                          rowBgClass = "bg-red-100 dark:bg-red-800"; // Least recommended
-                        } else if (index === 1) {
-                          rowBgClass = "bg-orange-100 dark:bg-orange-800"; // Second least recommended
+
+                      // highlight if selected
+                      if (alt.ndcCode === selectedDrug?.ndcCode) {
+                        rowBgClass = "bg-blue-200 dark:bg-blue-700"; // Highlight selected row
+                      } else {
+                        // otherwise color based on rank and sort order
+                        if (sortOrder === "desc") {
+                          if (index === 0) {
+                            rowBgClass = "bg-green-100 dark:bg-green-800"; // Most recommended
+                          } else if (index === 1) {
+                            rowBgClass = "bg-yellow-100 dark:bg-yellow-800"; // Semi-recommended
+                          }
+                        } else if (sortOrder === "asc") {
+                          if (index === 0) {
+                            rowBgClass = "bg-red-100 dark:bg-red-800"; // Least recommended
+                          } else if (index === 1) {
+                            rowBgClass = "bg-orange-100 dark:bg-orange-800"; // Second least recommended
+                          }
                         }
                       }
 
@@ -1459,20 +1468,26 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {pageItems.map((rec, idx) => {
               let rowBgClass = "";
-              if (sortOrder === "desc")
-                rowBgClass =
-                  idx === 0
-                    ? "bg-green-100 dark:bg-green-800"
-                    : idx === 1
-                    ? "bg-yellow-100 dark:bg-yellow-800"
-                    : "";
-              if (sortOrder === "asc")
-                rowBgClass =
-                  idx === 0
-                    ? "bg-red-100 dark:bg-red-800"
-                    : idx === 1
-                    ? "bg-orange-100 dark:bg-orange-800"
-                    : "";
+
+              // highlight if selected
+              if (rec.ndcCode === selectedDrug?.ndcCode) {
+                rowBgClass = "bg-blue-100 dark:bg-blue-700"; // Highlight selected row
+              } else {
+                // otherwise color based on rank and sort order
+                if (sortOrder === "desc") {
+                  if (idx === 0) {
+                    rowBgClass = "bg-green-100 dark:bg-green-800"; // Most recommended
+                  } else if (idx === 1) {
+                    rowBgClass = "bg-yellow-100 dark:bg-yellow-800"; // Semi-recommended
+                  }
+                } else if (sortOrder === "asc") {
+                  if (idx === 0) {
+                    rowBgClass = "bg-red-100 dark:bg-red-800"; // Least recommended
+                  } else if (idx === 1) {
+                    rowBgClass = "bg-orange-100 dark:bg-orange-800"; // Second least recommended
+                  }
+                }
+              }
 
               return (
                 <tr
@@ -2593,7 +2608,11 @@ export const DrugDetails: React.FC = () => {
             seen.add(item.classTypeName);
             return true;
           }
-        );
+        ).sort((a:any, b:any) => {
+          if (a.classTypeName < b.classTypeName) return -1;
+          if (a.classTypeName > b.classTypeName) return 1;
+          return 0;
+        });
 
         console.log(uniqueClasses);
         setAvailableClassVersions(uniqueClasses);
@@ -2926,6 +2945,7 @@ export const DrugDetails: React.FC = () => {
                         handleSort={handleSort}
                         sortOrder={alternativesSortOrder}
                         setBestNetDrug={setBestNetDrug}
+                        selectedDrug={drugDetail}
                       />
                     )}
                     {/* Other Alternatives Table */}
