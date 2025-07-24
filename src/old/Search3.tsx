@@ -207,6 +207,7 @@ export const Search3: React.FC = () => {
   // --- When a drug is selected, combine NDCs from all drugs with the same name ---
   const handleDrugSelect = (drug: DrugModel) => {
     const selectedDrugs = drugs.filter((d) => d.name === drug.name);
+    
     const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
     setSelectedDrug(drug);
     
