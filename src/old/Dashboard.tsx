@@ -526,10 +526,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     key: "ndcCode" as keyof DrugTransaction,
                   },
                   { label: "User", key: "user" as keyof DrugTransaction },
-                  {
-                    label: "Remaining stock",
-                    key: "remainingStock" as keyof DrugTransaction,
-                  },
+             
                   {
                     label: "Patient Payment",
                     key: "patientPayment" as keyof DrugTransaction,
@@ -547,16 +544,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     key: "prescriber" as keyof DrugTransaction,
                   },
                   {
-                    label: "Net Profit",
-                    key: "netProfit" as keyof DrugTransaction,
+                    label: "Net Profit Per Item",
+                    key: "highestNetPerItem" as keyof DrugTransaction,
                   },
                   {
-                    label: "Highest Net",
-                    key: "HighestNet" as keyof DrugTransaction,
+                    label: "Total Net Profit",
+                    key: "totalNetProfit" as keyof DrugTransaction,
+                  },
+
+                  {
+                    label: "Total Highest Net",
+                    key: "totalHighestNet" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Net Per Item",
+                    key: "highestNetPerItem" as keyof DrugTransaction,
                   },
                   {
                     label: "Difference",
                     key: "difference" as keyof DrugTransaction,
+                  },
+                   {
+                    label: "Difference Per Item",
+                    key: "DifferencePerItem" as keyof DrugTransaction,
                   },
                   {
                     label: "Highest Drug NDC",
@@ -574,10 +584,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     label: "Highest Script Date",
                     key: "HighestScriptDate" as keyof DrugTransaction,
                   },
-                  {
-                    label: "Highest Remaining Stock",
-                    key: "highestRemainingStock" as keyof DrugTransaction,
-                  },
+               
                 ].map(({ label, key }) => (
                   <th
                     key={key}
@@ -645,9 +652,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.user}
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {item.remainingStock ?? "NA"}
-                  </td>
+               
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.patientPayment}
                   </td>
@@ -661,13 +666,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                     {normalizeName(item.prescriber)}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                    {item.netProfitPerItem}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.netProfit}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.highestNet}
                   </td>
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
+                    {item.highestNetProfitPerItem ?? "NA"}
+                  </td>
                   <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
                     {(item.highestNet - item.netProfit).toFixed(2)}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
+                    {(item.highestNetProfitPerItem - item.netProfitPerItem).toFixed(2)}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
@@ -701,9 +715,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ data }) => {
                       "en-US"
                     )}
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {item.highestRemainingStock ?? "NA"}
-                  </td>
+                
                 </tr>
               ))}
             </tbody>

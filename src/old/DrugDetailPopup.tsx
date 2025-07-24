@@ -42,30 +42,41 @@ const DrugDetailPopup: React.FC<DrugDetailPopupProps> = ({
       addToCart({
         id: drug.ndc || Date.now().toString(),
         name: drug.name || "Unnamed Drug",
-        price: drug.acq,
+        price: (drugDetail?.acquisitionCost ?? 0) / (drugDetail?.quantity || 1),
         quantity: 1,
+        ndc: drug.ndc || "N/A",
+        insurance: drugDetail?.rxgroup || "N/A",
+        insurancePayment:
+          (drugDetail?.insurancePayment ?? 0) / (drugDetail?.quantity || 1),
+        patientPayment:
+          (drugDetail?.patientPayment ?? 0) / (drugDetail?.quantity || 1),
+        acq: (drugDetail?.acquisitionCost ?? 0) / (drugDetail?.quantity || 1),
       });
 
       const storedSearchLog = localStorage.getItem("searchLogDetails");
+      console.log("Stored Search Log:", storedSearchLog);
       if (storedSearchLog) {
         const searchLog: SearchLog = JSON.parse(storedSearchLog);
         const newOrderItem: OrderItem = {
-          drugId: drug.id,
-          netPrice: drugDetail?.net ?? 0,
-          patientPay: drugDetail?.patientPayment ?? 0,
-          insurancePay: drugDetail?.insurancePayment ?? 0,
-          acquisitionCost: drug.acq,
+          drugNDC: drug.ndc || "N/A",
+          netPrice: (drugDetail?.net ?? 0) / (drugDetail?.quantity || 1),
+          patientPay:
+            (drugDetail?.patientPayment ?? 0) / (drugDetail?.quantity || 1),
+          insurancePay:
+            (drugDetail?.insurancePayment ?? 0) / (drugDetail?.quantity || 1),
+          acquisitionCost: (drug.acq ?? 0) / (drugDetail?.quantity || 1),
           additionalCost: 0,
           insuranceRxId: drugDetail?.rxgroupId ?? 0,
           amount: 1,
         };
-
+        console.log("Adding to order:", newOrderItem);
         const currentOrder = JSON.parse(
           localStorage.getItem("orderRequestBody") ||
             '{"orderItems":[],"searchLogs":[]}'
         );
         currentOrder.orderItems.push(newOrderItem);
         currentOrder.searchLogs.push(searchLog);
+        console.log("Current Order:", currentOrder);
         localStorage.setItem("orderRequestBody", JSON.stringify(currentOrder));
       }
     }

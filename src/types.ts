@@ -196,7 +196,9 @@ export interface DrugTransaction {
   highestNet: number;
   highestScriptCode: string;
   highestScriptDate: string;
-
+  netProfitPerItem: number;
+  highestNetProfitPerItem: number;
+  highestQuantity: number;
   /** 👇 Added field */
   remainingStock: number;
 }

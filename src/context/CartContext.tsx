@@ -22,6 +22,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   
     useEffect(() => {
       if (isLoaded) {
+        
         localStorage.setItem("cart", JSON.stringify(cartItems));
       }
     }, [cartItems, isLoaded]);

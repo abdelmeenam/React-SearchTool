@@ -1,5 +1,7 @@
 import React, { JSX, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import clsx from "clsx"; // optional: for cleaner class toggling
+
 import {
   Pill,
   AlertCircle,
@@ -123,9 +125,13 @@ export const DrugHeader: React.FC<DrugHeaderProps> = ({
 // Define the DrugMediSection interface
 interface DrugMediSection {
   drugMedi: DrugMedi[]; // Adjust the type of drugMedi based on your data structure
+  selectedDrug: Prescription | null; // Assuming selectedDrug is a Prescription type
 }
 
-export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
+export const DrugMediSection: React.FC<DrugMediSection> = ({
+  drugMedi,
+  selectedDrug,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchNdc, setSearchNdc] = useState("");
   const [searchName, setSearchName] = useState("");
@@ -223,44 +229,50 @@ export const DrugMediSection: React.FC<DrugMediSection> = ({ drugMedi }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {currentItems.map((item, index) => (
-              <tr
-                key={index}
-                className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-              >
-                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {indexOfFirstItem + index + 1}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {item.drugName || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  <a
-                    href={`https://ndclist.com/ndc/${padCode(item.drugNDC)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition"
-                  >
-                    {item.drugNDC || "N/A"}
-                  </a>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                  {item.priorAuthorization || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                  {item.extendedDuration || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                  {item.costCeilingTier || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                  {item.nonCapitatedDrugIndicator || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                  {item.ccsPanelAuthority || "N/A"}
-                </td>
-              </tr>
-            ))}
+            {currentItems.map((item, index) => {
+              const isSelected = item.drugNDC === selectedDrug?.ndcCode;
+
+              return (
+                <tr
+                  key={index}
+                  className={`hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors ${
+                    isSelected ? "bg-blue-100 dark:bg-blue-700" : ""
+                  }`}
+                >
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {indexOfFirstItem + index + 1}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {item.drugName || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <a
+                      href={`https://ndclist.com/ndc/${padCode(item.drugNDC)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition"
+                    >
+                      {item.drugNDC || "N/A"}
+                    </a>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {item.priorAuthorization || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {item.extendedDuration || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {item.costCeilingTier || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {item.nonCapitatedDrugIndicator || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {item.ccsPanelAuthority || "N/A"}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -319,7 +331,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
 
   const net = drugDetail?.net ?? 0;
   const netPositive = net >= 0;
-  const bestNet = bestDrugNet?.net ?? 0;
+  const bestNet = (bestDrugNet?.net ?? 0) / (bestDrugNet?.quantity ?? 1);
   const { addToCart } = useCart();
   const cartItems = useCart().cartItems;
   // ...inside DrugInformation component...
@@ -419,13 +431,16 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
             <div className="flex items-center gap-2 min-w-0">
               <BarChart2 className="h-5 w-5 text-blue-500 dark:text-blue-300 flex-shrink-0" />
               <dl className="min-w-0">
-                <dt className="text-xs text-gray-500 truncate">Net</dt>
+                <dt className="text-xs text-gray-500 truncate">Net Per Item</dt>
                 <dd
                   className={`text-sm font-semibold ${
                     netPositive ? "text-green-600" : "text-red-600"
                   } truncate`}
                 >
-                  {netPositive ? "+" : "-"}${Math.abs(net).toFixed(2)}
+                  {netPositive ? "+" : "-"}$
+                  {Math.abs(
+                    (drugDetail?.net ?? 0) / (drugDetail?.quantity ?? 1)
+                  ).toFixed(2)}
                 </dd>
               </dl>
             </div>
@@ -437,7 +452,13 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
                 style={{
                   width: `${
                     bestDrugNet?.net !== undefined && bestDrugNet.net !== 0
-                      ? Math.min((net / bestNet) * 100, 100)
+                      ? Math.min(
+                          ((drugDetail?.net ?? 0) /
+                            (drugDetail?.quantity ?? 1) /
+                            bestNet) *
+                            100,
+                          100
+                        )
                       : 0
                   }%`,
                 }}
@@ -559,7 +580,7 @@ export const DrugInformation: React.FC<DrugInformationProps> = ({
                   <Package className="h-4 w-4 text-blue-500 dark:text-blue-300" />
                 ),
                 label: "Quantity",
-                value: "NA",
+                value: drugDetail?.quantity ?? 1,
               },
             ].map((item, idx) => (
               <div
@@ -819,6 +840,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   // State for modal
   const [showModal, setShowModal] = useState(false);
   const [modalDrug, setModalDrug] = useState<Prescription | null>(null);
+  const [currentQuantity, setCurrentQuantity] = useState(""); // empty string by default
   const [activeTab, setActiveTab] = useState<
     "Drug Info" | "Pricing Info" | "Insurance Info"
   >("Drug Info");
@@ -841,6 +863,8 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
     }
   }, [filtered, setBestNetDrug]);
   const [page, setPage] = useState(1);
+  const [highlight, setHighlight] = useState(false);
+  const [prevQty, setPrevQty] = useState(currentQuantity);
   const perPage = 10;
   const totalPages = Math.ceil(filtered.length / perPage);
   const pageItems = filtered.slice((page - 1) * perPage, page * perPage);
@@ -860,6 +884,13 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
     setShowModal(false);
     setModalDrug(null);
   };
+  useEffect(() => {
+    if (currentQuantity !== prevQty) {
+      setHighlight(true);
+      setTimeout(() => setHighlight(false), 800); // duration of highlight
+      setPrevQty(currentQuantity);
+    }
+  }, [currentQuantity, prevQty]);
 
   return (
     <section
@@ -957,7 +988,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                         Net Price
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        ${modalDrug.net.toFixed(2)}
+                        ${(modalDrug.net / modalDrug.quantity).toFixed(3)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -965,7 +996,10 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                         Acquisition Cost
                       </p>
                       <p className="text-xl font-semibold text-blue-600 dark:text-blue-400 mt-1">
-                        ${modalDrug.acquisitionCost.toFixed(2)}
+                        $
+                        {(
+                          modalDrug.acquisitionCost / modalDrug.quantity
+                        ).toFixed(3)}
                       </p>
                     </div>
                   </div>
@@ -1128,7 +1162,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                               </div>
                               <div className="text-right">
                                 <p className="text-sm font-semibold text-green-700 dark:text-white ">
-                                  ${alt.net}
+                                  ${(alt.net / alt.quantity).toFixed(3)}
                                 </p>
                               </div>
                             </div>
@@ -1210,10 +1244,12 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                             modalDrug.ndcCode || `${modalDrug.drugId}-uniqueId`,
                           name: modalDrug.drugName || "Unnamed Drug",
                           ndc: padCode(modalDrug.ndcCode),
-                          acq: modalDrug.acquisitionCost,
-                          insurancePayment: modalDrug.insurancePayment,
-                          patientPayment: modalDrug.patientPayment,
-                          price: modalDrug.net,
+                          acq: modalDrug.acquisitionCost / modalDrug.quantity,
+                          insurancePayment:
+                            modalDrug.insurancePayment / modalDrug.quantity,
+                          patientPayment:
+                            modalDrug.patientPayment / modalDrug.quantity,
+                          price: modalDrug.net / modalDrug.quantity,
                           quantity: 1,
                           insurance: modalDrug.rxgroup || "Unknown",
                         });
@@ -1276,6 +1312,26 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           insurance plan
         </h2>
       </header>
+      <div className="flex justify-end mr-5 mb-5">
+        {/* Small input box for quantity, starts empty */}
+        <div>
+          <label
+            htmlFor="quantityInput"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Quantity
+          </label>
+          <input
+            type="number"
+            id="quantityInput"
+            value={currentQuantity}
+            onChange={(e) => setCurrentQuantity(e.target.value)} // keep as string
+            placeholder="Enter quantity"
+            className="w-40 border border-b-blue-600 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Quantity input"
+          />
+        </div>
+      </div>
 
       {/* Filters & Controls omitted for brevity, keep existing JSX here */}
 
@@ -1353,7 +1409,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           className="mb-2 md:mb-0 inline-flex items-center px-4 py-3 border border-gray-300 dark:border-gray-600 rounded text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           style={{ minWidth: "44px", minHeight: "44px" }} // Ensure minimum size
         >
-          Sort by Net Price (
+          Sort by Net Price Per Item (
           {sortOrder === "asc" ? "Low to High" : "High to Low"})
         </button>
         {totalPages > 1 && (
@@ -1431,10 +1487,14 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                 [
                   "Name",
                   "NDC",
+                  "Quantity",
                   "Net Price",
                   "Coverage",
                   "Patient Pay",
                   "ACQ",
+                  "Net Price Per one Item",
+                  "Net Price Per Items",
+
                   "Script Code",
                 ].map((col) => (
                   <th
@@ -1468,6 +1528,10 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {pageItems.map((rec, idx) => {
               let rowBgClass = "";
+              const net = (
+                (rec.net / rec.quantity) *
+                (currentQuantity === "" ? 1 : Number(currentQuantity))
+              ).toFixed(3);
 
               // highlight if selected
               if (rec.ndcCode === selectedDrug?.ndcCode) {
@@ -1516,6 +1580,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                           {padCode(rec.ndcCode)}
                         </a>
                       </td>
+
                       <td className="px-4 py-2">{rec.drugClass}</td>
 
                       <td className="px-4 py-2">{rec.form || "NA"}</td>
@@ -1553,17 +1618,30 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                           {padCode(rec.ndcCode)}
                         </a>
                       </td>
+                      <td className="px-4 py-2">{rec.quantity}</td>
+
                       <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                        ${rec.net.toFixed(2)}
+                        ${rec.net.toFixed(3)}
                       </td>
                       <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                        ${rec.insurancePayment.toFixed(2)}
+                        ${rec.insurancePayment.toFixed(3)}
                       </td>
                       <td className="px-4 py-2 text-green-700 dark:text-green-400">
-                        ${rec.patientPayment.toFixed(2)}
+                        ${rec.patientPayment.toFixed(3)}
                       </td>
                       <td className="px-4 py-2 text-red-500 dark:text-red-400">
-                        ${rec.acquisitionCost.toFixed(2)}
+                        ${rec.acquisitionCost.toFixed(3)}
+                      </td>
+                      <td className="px-4 py-2 text-green-700 dark:text-green-400">
+                        ${(rec.net / rec.quantity).toFixed(3)}
+                      </td>
+                      <td
+                        className={clsx(
+                          "px-4 py-2 text-green-700 dark:text-green-400 transition duration-300",
+                          highlight && "bg-amber-100 dark:bg-yellow-700"
+                        )}
+                      >
+                        ${net}
                       </td>
                       <td className="px-4 py-2">
                         <a
@@ -1898,7 +1976,7 @@ const BranchDrugsTable: React.FC<BranchDrugsTableProps> = ({
                     : "NA"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center text-gray-900 dark:text-gray-100">
-                  NA
+                  {alt.quantity || "NA"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
                   ${alt.acquisitionCost.toFixed(2)}
@@ -1952,6 +2030,7 @@ interface OtherAlternativesTableProps {
   selectedPcn: string;
   handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   uniquePcnValues: string[];
+  selectedDrug: Prescription | null;
 }
 interface OtherAlternativesTablePropsV2 {
   alternatives: Drug[];
@@ -1963,6 +2042,7 @@ interface OtherAlternativesTablePropsV2 {
   selectedPcn: string;
   handlePcnFilterChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   uniquePcnValues: string[];
+  selectedDrug: Prescription | null;
 }
 const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   alternatives,
@@ -1974,6 +2054,7 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
   selectedPcn,
   handlePcnFilterChange,
   uniquePcnValues,
+  selectedDrug,
 }) => {
   const [searchNdc, setSearchNdc] = useState("");
   const [searchName, setSearchName] = useState("");
@@ -2110,21 +2191,6 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate cursor-pointer"
                     title={alt.drugName || "N/A"}
                     tabIndex={0}
-                    // onClick={(e) => {
-                    //   e.stopPropagation();
-                    //   setPopupContent(
-                    //     alt.drugName !== undefined ? String(alt.drugName) : "N/A"
-                    //   );
-                    //   setPopupOpen(true);
-                    // }}
-                    // onKeyDown={(e) => {
-                    //   if (e.key === "Enter" || e.key === " ") {
-                    //     setPopupContent(
-                    //       alt.drugName !== undefined ? String(alt.drugName) : "N/A"
-                    //     );
-                    //     setPopupOpen(true);
-                    //   }
-                    // }}
                   >
                     <a
                       href={`/drug/${alt.drugId}?ndc=${alt.ndcCode}`}
@@ -2140,21 +2206,6 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
                     title={alt.drugClass || "N/A"}
                     tabIndex={0}
-                    // onClick={(e) => {
-                    //   e.stopPropagation();
-                    //   setPopupContent(
-                    //     alt.drugName !== undefined ? String(alt.drugClass) : "N/A"
-                    //   );
-                    //   setPopupOpen(true);
-                    // }}
-                    // onKeyDown={(e) => {
-                    //   if (e.key === "Enter" || e.key === " ") {
-                    //     setPopupContent(
-                    //       alt.drugClass !== undefined ? String(alt.drugClass) : "N/A"
-                    //     );
-                    //     setPopupOpen(true);
-                    //   }
-                    // }}
                   >
                     {alt.drugClass ? alt.drugClass : "N/A"}
                   </div>
@@ -2164,21 +2215,6 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     className="text-sm text-gray-500 dark:text-gray-300 truncate cursor-pointer"
                     title={padCode(alt.ndcCode)}
                     tabIndex={0}
-                    // onClick={(e) => {
-                    //   e.stopPropagation();
-                    //   setPopupContent(
-                    //     alt.ndcCode !== undefined ? String(alt.ndcCode) : "N/A"
-                    //   );
-                    //   setPopupOpen(true);
-                    // }}
-                    // onKeyDown={(e) => {
-                    //   if (e.key === "Enter" || e.key === " ") {
-                    //     setPopupContent(
-                    //       alt.ndcCode !== undefined ? String(alt.ndcCode) : "N/A"
-                    //     );
-                    //     setPopupOpen(true);
-                    //   }
-                    // }}
                   >
                     <a
                       href={`https://ndclist.com/ndc/${padCode(alt.ndcCode)}`}
@@ -2198,7 +2234,10 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation();
-                      alert(alt.form || "N/A");
+                      setPopupContent(
+                        alt.form !== undefined ? String(alt.form) : "N/A"
+                      );
+                      setPopupOpen(true);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -2215,8 +2254,10 @@ const OtherAlternativesTable: React.FC<OtherAlternativesTableProps> = ({
                     title={alt.strength || "N/A"}
                     tabIndex={0}
                     onClick={(e) => {
-                      e.stopPropagation();
-                      alert(alt.strength || "N/A");
+                      setPopupContent(
+                        alt.form !== undefined ? String(alt.form) : "N/A"
+                      );
+                      setPopupOpen(true);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -2352,7 +2393,8 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [searchNdc, setSearchNdc] = useState("");
   const [searchName, setSearchName] = useState("");
-
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupContent, setPopupContent] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   // ✅ Apply search filters
@@ -2383,155 +2425,176 @@ const OtherAlternativesTableV2: React.FC<OtherAlternativesTablePropsV2> = ({
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
-    <section className="mt-8">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Suggested Alternative Drugs Without Available Insurance Price Data
-      </h3>
-
-      {/* Search Inputs */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex flex-col">
-          <label
-            htmlFor="searchNdc"
-            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
-          >
-            Search by NDC
-          </label>
-          <input
-            id="searchNdc"
-            type="text"
-            value={searchNdc}
-            onChange={(e) => setSearchNdc(e.target.value)}
-            placeholder="Enter NDC code"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label
-            htmlFor="searchName"
-            className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
-          >
-            Search by Name
-          </label>
-          <input
-            id="searchName"
-            type="text"
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-            placeholder="Enter drug name"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4 border border-gray-200 dark:border-gray-700">
-        <table className="min-w-full table-auto">
-          <thead className="bg-gray-100 dark:bg-gray-700">
-            <tr>
-              {[
-                "Name",
-                "Form",
-                "Strength",
-                "Ingredient",
-                "Route",
-                "TE Code",
-                "Market Status",
-                "Strength Unit",
-                "NDC Codes",
-              ].map((header) => (
-                <th
-                  key={header}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {currentItems.map((alt, index) => (
-              <tr
-                key={`${alt.ndc}-${index}`}
-                className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <a
-                    href={`/drug/${alt.id}?ndc=${alt.ndc}`}
-                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition"
-                  >
-                    {alt.name || "N/A"}
-                  </a>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  {alt.form || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  {alt.strength || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  {alt.ingrdient || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  {alt.route || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  {alt.teCode || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  {alt.type || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  {alt.strengthUnit || "N/A"}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                  <a
-                    href={`https://ndclist.com/ndc/${padCode(alt.ndc)}`}
-                    className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {padCode(alt.ndc)}
-                  </a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-md transition ${
-              currentPage === 1
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
-                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
-            }`}
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-md transition ${
-              currentPage === totalPages
-                ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
-                : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
-            }`}
-          >
-            Next
-          </button>
+    <>
+      {" "}
+      {popupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 min-w-[260px] max-w-xs max-h-[80vh] flex flex-col">
+            <div
+              className="mb-4 text-gray-900 dark:text-gray-100 break-words overflow-y-auto"
+              style={{ maxHeight: "50vh" }}
+            >
+              {popupContent}
+            </div>
+            <button
+              onClick={() => setPopupOpen(false)}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
-    </section>
+      <section className="mt-8">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Suggested Alternative Drugs Without Available Insurance Price Data
+        </h3>
+
+        {/* Search Inputs */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col">
+            <label
+              htmlFor="searchNdc"
+              className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+            >
+              Search by NDC
+            </label>
+            <input
+              id="searchNdc"
+              type="text"
+              value={searchNdc}
+              onChange={(e) => setSearchNdc(e.target.value)}
+              placeholder="Enter NDC code"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label
+              htmlFor="searchName"
+              className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300"
+            >
+              Search by Name
+            </label>
+            <input
+              id="searchName"
+              type="text"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              placeholder="Enter drug name"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto shadow-lg rounded-lg dark:bg-gray-800 bg-white mt-4 border border-gray-200 dark:border-gray-700">
+          <table className="min-w-full table-auto">
+            <thead className="bg-gray-100 dark:bg-gray-700">
+              <tr>
+                {[
+                  "Name",
+                  "Form",
+                  "Strength",
+                  "Ingredient",
+                  "Route",
+                  "TE Code",
+                  "Market Status",
+                  "Strength Unit",
+                  "NDC Codes",
+                ].map((header) => (
+                  <th
+                    key={header}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {currentItems.map((alt, index) => (
+                <tr
+                  key={`${alt.ndc}-${index}`}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <a
+                      href={`/drug/${alt.id}?ndc=${alt.ndc}`}
+                      className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition"
+                    >
+                      {alt.name || "N/A"}
+                    </a>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    {alt.form || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    {alt.strength || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    {alt.ingrdient || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    {alt.route || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    {alt.teCode || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    {alt.type || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    {alt.strengthUnit || "N/A"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                    <a
+                      href={`https://ndclist.com/ndc/${padCode(alt.ndc)}`}
+                      className="text-blue-500 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300 transition"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {padCode(alt.ndc)}
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-md transition ${
+                currentPage === 1
+                  ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                  : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
+              }`}
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-md transition ${
+                currentPage === totalPages
+                  ? "bg-gray-300 dark:bg-gray-500 cursor-not-allowed text-gray-600 dark:text-gray-200"
+                  : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </section>
+    </>
   );
 };
 
@@ -2600,19 +2663,19 @@ export const DrugDetails: React.FC = () => {
         console.log("classes ", response3.data);
 
         const seen = new Set<string>();
-        const uniqueClasses: ClassInfo[] = response3.data.filter(
-          (item: ClassInfo) => {
+        const uniqueClasses: ClassInfo[] = response3.data
+          .filter((item: ClassInfo) => {
             if (seen.has(item.classTypeName)) {
               return false;
             }
             seen.add(item.classTypeName);
             return true;
-          }
-        ).sort((a:any, b:any) => {
-          if (a.classTypeName < b.classTypeName) return -1;
-          if (a.classTypeName > b.classTypeName) return 1;
-          return 0;
-        });
+          })
+          .sort((a: any, b: any) => {
+            if (a.classTypeName < b.classTypeName) return -1;
+            if (a.classTypeName > b.classTypeName) return 1;
+            return 0;
+          });
 
         console.log(uniqueClasses);
         setAvailableClassVersions(uniqueClasses);
@@ -2646,10 +2709,12 @@ export const DrugDetails: React.FC = () => {
         setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
         const sortedData = response4.data
           .sort((a: Prescription, b: Prescription) => {
-            if (b.net !== a.net) {
-              return b.net - a.net;
+            if (b.net / b.quantity !== a.net / a.quantity) {
+              return b.net / b.quantity - a.net / a.quantity;
             }
-            return b.insurancePayment - a.insurancePayment;
+            return (
+              b.insurancePayment / b.quantity - a.insurancePayment / a.quantity
+            );
           })
           .filter((alt: Prescription) => alt.type !== "DISCN");
         setSortedAlternatives(sortedData);
@@ -2698,7 +2763,9 @@ export const DrugDetails: React.FC = () => {
   const handleSort = () => {
     const newSortOrder = alternativesSortOrder === "desc" ? "asc" : "desc";
     const sorted = [...sortedAlternatives].sort((a, b) =>
-      newSortOrder === "asc" ? a.net - b.net : b.net - a.net
+      newSortOrder === "asc"
+        ? a.net / a.quantity - b.net / b.quantity
+        : b.net / b.quantity - a.net / a.quantity
     );
     setSortedAlternatives(sorted);
     setAlternativesSortOrder(newSortOrder);
@@ -2976,6 +3043,7 @@ export const DrugDetails: React.FC = () => {
                               selectedPcn={otherSelectedPcn}
                               handlePcnFilterChange={handleOtherPcnFilterChange}
                               uniquePcnValues={uniqueOtherPcnValues}
+                              selectedDrug={drugDetail}
                             />
                           }
                         </section>
@@ -2984,7 +3052,10 @@ export const DrugDetails: React.FC = () => {
                     {/* Medi Section */}
                     {mediToggle && (
                       <div className="pt-4">
-                        <DrugMediSection drugMedi={drugmedi} />
+                        <DrugMediSection
+                          drugMedi={drugmedi}
+                          selectedDrug={drugDetail}
+                        />
                       </div>
                     )}
                   </div>

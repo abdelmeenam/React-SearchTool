@@ -51,6 +51,14 @@ const AppHeader: React.FC = () => {
 
       if (index !== -1 && parsed.orderItems[index]) {
         parsed.orderItems[index].amount = Math.max(1, newQty);
+        parsed.orderItems[index].netPrice =
+          parsed.orderItems[index].netPrice * newQty;
+        parsed.orderItems[index].patientPay =
+          parsed.orderItems[index].patientPay * newQty;
+        parsed.orderItems[index].insurancePay =
+          parsed.orderItems[index].insurancePay * newQty;
+        parsed.orderItems[index].acquisitionCost =
+          parsed.orderItems[index].acquisitionCost * newQty;
         localStorage.setItem("orderRequestBody", JSON.stringify(parsed));
       }
     }

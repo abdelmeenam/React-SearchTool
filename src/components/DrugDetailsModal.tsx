@@ -85,22 +85,23 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
             {[
               {
                 label: "Acquisition",
-                value: formatCurrency(drugDetail?.acquisitionCost ?? 0),
+                value: formatCurrency((drugDetail?.acquisitionCost ?? 0) / (drugDetail?.quantity || 1)),
                 color: "blue",
               },
               {
                 label: "Insurance Coverage",
-                value: formatCurrency(drugDetail?.insurancePayment ?? 0),
+                value: formatCurrency((drugDetail?.insurancePayment ?? 0) / (drugDetail?.quantity || 1)),
                 color: "purple",
               },
               {
                 label: "Patient Pay",
-                value: formatCurrency(drugDetail?.patientPayment ?? 0),
+                value: formatCurrency((drugDetail?.patientPayment ?? 0) / (drugDetail?.quantity || 1)),
                 color: "amber",
               },
-              {
-                label: "Net",
-                value: formatCurrency(drugDetail?.net ?? 0),
+
+               {
+                label: "Net Per Item",
+                value: formatCurrency((drugDetail?.net ?? 0) / (drugDetail?.quantity || 1)),
                 color: "green",
               },
             ].map((item, index) => (
@@ -250,10 +251,10 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                     id: drug.ndc || Date.now().toString(),
                     ndc: drug.ndc || "N/A",
                     name: drug.name || "NA",
-                    insurancePayment: drugDetail?.insurancePayment ?? 0,
-                    patientPayment: drugDetail?.patientPayment ?? 0,
-                    acq: drugDetail?.acquisitionCost??drug.acq,
-                    price: drugDetail?.net ?? 0,
+                    insurancePayment: (drugDetail?.insurancePayment ?? 0) / (drugDetail?.quantity || 1),
+                    patientPayment: (drugDetail?.patientPayment ?? 0) / (drugDetail?.quantity || 1),
+                    acq: (drugDetail?.acquisitionCost ?? 0) / (drugDetail?.quantity || 1),
+                    price: (drugDetail?.net ?? 0) / (drugDetail?.quantity || 1),
                     quantity: 1,
                     insurance : drugDetail?.rxgroup || "N/A",
                   });
@@ -264,10 +265,10 @@ const DrugDetailsModal: React.FC<DrugDetailsModalProps> = ({
                     const searchLog: SearchLog = JSON.parse(storedSearchLog);
                     const newOrderItem: OrderItem = {
                       drugNDC: drug.ndc || "N/A",
-                      netPrice: drugDetail?.net ?? 0,
-                      patientPay: drugDetail?.patientPayment ?? 0,
-                      insurancePay: drugDetail?.insurancePayment ?? 0,
-                      acquisitionCost: drug.acq,
+                      netPrice: (drugDetail?.net ?? 0) / (drugDetail?.quantity || 1),
+                      patientPay: (drugDetail?.patientPayment ?? 0) / (drugDetail?.quantity || 1),
+                      insurancePay: (drugDetail?.insurancePayment ?? 0) / (drugDetail?.quantity || 1),
+                      acquisitionCost: (drugDetail?.acquisitionCost ?? 0) / (drugDetail?.quantity || 1),
                       additionalCost: 0,
                       insuranceRxId: drugDetail?.rxgroupId ?? 0,
                       amount: 1,

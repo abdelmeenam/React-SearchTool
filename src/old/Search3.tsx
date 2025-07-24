@@ -209,6 +209,7 @@ export const Search3: React.FC = () => {
     const selectedDrugs = drugs.filter((d) => d.name === drug.name);
     const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
     setSelectedDrug(drug);
+    
     setDrugSearchQuery(drug.name);
     setShowDrugSuggestions(false);
     setNdcList(combinedNdcs);
