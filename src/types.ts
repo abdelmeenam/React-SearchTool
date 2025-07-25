@@ -170,37 +170,53 @@ export interface Bin {
   helpDeskNumber: string;
 }
 export interface DrugTransaction {
-  highestRemainingStock: number;
   date: string;
   scriptCode: string;
   rxNumber: string;
   user: string;
+  prescriber: string;
   drugName: string;
   drugId: number;
-  insurance: string;
   insuranceId: number;
-  pf: string;
-  prescriber: string;
-  quantity: number;
-  acquisitionCost: number;
-  discount: number;
   insurancePayment: number;
   patientPayment: number;
-  branchCode: string;
+  acquisitionCost: number;
+  discount: number;
+  quantity: number;
+  pf: string;
   ndcCode: string;
   netProfit: number;
+  netProfitPerItem: number;
   drugClass: string;
-  highestDrugNDC: string;
-  highestDrugName: string;
+  branchCode: string;
+
+  // 🔹 Current Script Info
+  insuranceRx: string;
+  binCode: string;
+  binName: string;
+  pcnName: string;
+  remainingStock: number;
+
+  // 🔹 Best Alternative Info
   highestDrugId: number;
-  highestNet: number;
+  highestDrugName: string;
+  highestDrugNDC: string;
   highestScriptCode: string;
   highestScriptDate: string;
-  netProfitPerItem: number;
+  highestNet: number;
   highestNetProfitPerItem: number;
   highestQuantity: number;
-  /** 👇 Added field */
-  remainingStock: number;
+  highestRemainingStock: number;
+  highestInsuranceRx: string;
+  highestBINCode: string;
+  highestBINName: string;
+  highestPCNName: string;
+  rxGroupId?: number;
+  binId?: number;
+  pcnId?: number;
+  highestRxGroupId?: number;
+  highestBinId?: number;
+  highestPcnId?: number;
 }
 
 export interface ScriptData {

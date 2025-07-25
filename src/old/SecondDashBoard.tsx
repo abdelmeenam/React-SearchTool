@@ -137,30 +137,30 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
   // Update filtered data based on filter inputs.
   useEffect(() => {
     let sortedData = [...latestScripts];
-    if (sortConfig !== null) {
-      sortedData.sort((a, b) => {
-        if (
-          a[sortConfig.key as keyof DrugTransaction] <
-          b[sortConfig.key as keyof DrugTransaction]
-        ) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (
-          a[sortConfig.key as keyof DrugTransaction] >
-          b[sortConfig.key as keyof DrugTransaction]
-        ) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
+    // if (sortConfig !== null) {
+    //   sortedData.sort((a, b) => {
+    //     if (
+    //       a[sortConfig.key as keyof DrugTransaction] <
+    //       b[sortConfig.key as keyof DrugTransaction]
+    //     ) {
+    //       return sortConfig.direction === "ascending" ? -1 : 1;
+    //     }
+    //     if (
+    //       a[sortConfig.key as keyof DrugTransaction] >
+    //       b[sortConfig.key as keyof DrugTransaction]
+    //     ) {
+    //       return sortConfig.direction === "ascending" ? 1 : -1;
+    //     }
+    //     return 0;
+    //   });
+    // }
 
     const filtered = sortedData.filter((item) => {
       const itemDate = new Date(item.date);
       const itemMonth = itemDate.toISOString().slice(0, 7); // Format YYYY-MM
       return (
         (!selectedClass || item.drugClass === selectedClass) &&
-        (!selectedInsurance || item.insurance === selectedInsurance) &&
+        (!selectedInsurance || item.insuranceRx === selectedInsurance) &&
         (!selectedPrescriber || item.prescriber === selectedPrescriber) &&
         (!selectedUser || item.user === selectedUser) &&
         (!selectedBranch || item.branchCode === selectedBranch) &&
@@ -266,7 +266,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
     const rows = filteredData.map((item) => [
       new Date(item.date).toLocaleDateString("en-US"),
       item.scriptCode,
-      item.insurance,
+      item.insuranceRx,
       item.drugClass,
       item.drugName,
       item.ndcCode,
@@ -447,7 +447,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
             />
             <datalist id="insurances">
               <option value="">All RxGroups</option>
-              {[...new Set(latestScripts.map((item) => item.insurance))]
+              {[...new Set(latestScripts.map((item) => item.insuranceRx))]
                 .sort()
                 .map((insurance) => (
                   <option key={insurance} value={insurance}>
@@ -541,7 +541,15 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   },
                   {
                     label: "Rx Group",
-                    key: "insurance" as keyof DrugTransaction,
+                    key: "insuranceRx" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "BIN",
+                    key: "binCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "PCN",
+                    key: "pcnName" as keyof DrugTransaction,
                   },
                   {
                     label: "Drug Class",
@@ -574,6 +582,10 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     key: "prescriber" as keyof DrugTransaction,
                   },
                   {
+                    label: "Quantity",
+                    key: "quantity" as keyof DrugTransaction,
+                  },
+                  {
                     label: "Net Profit Per Item",
                     key: "highestNetPerItem" as keyof DrugTransaction,
                   },
@@ -581,15 +593,15 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     label: "Total Net Profit",
                     key: "totalNetProfit" as keyof DrugTransaction,
                   },
-
-                  {
-                    label: "Total Highest Net",
-                    key: "totalHighestNet" as keyof DrugTransaction,
-                  },
                   {
                     label: "Highest Net Per Item",
                     key: "highestNetPerItem" as keyof DrugTransaction,
                   },
+                  {
+                    label: "Total Highest Net",
+                    key: "totalHighestNet" as keyof DrugTransaction,
+                  },
+
                   {
                     label: "Difference",
                     key: "difference" as keyof DrugTransaction,
@@ -611,6 +623,22 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     key: "HighestScriptCode" as keyof DrugTransaction,
                   },
                   {
+                    label: "Highest Script Quantity",
+                    key: "HighestScriptQuantity" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest Rx Group",
+                    key: "highestInsuranceRx" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest BIN",
+                    key: "highestBINCode" as keyof DrugTransaction,
+                  },
+                  {
+                    label: "Highest PCN",
+                    key: "highestPCNName" as keyof DrugTransaction,
+                  },
+                  {
                     label: "Highest Script Date",
                     key: "HighestScriptDate" as keyof DrugTransaction,
                   },
@@ -625,7 +653,7 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-400 dark:divide-gray-700">
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-400 dark:divide-gray-700 text-center">
               {currentRecords.map((item, index) => (
                 <tr
                   key={index}
@@ -645,17 +673,39 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.branchCode}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                  {/* Rx Group with Link */}
+                  <td className="px-4 py-2">
                     <a
-                      href={`/InsuranceDetails/${item.insuranceId}`}
+                      href={`/InsuranceDetails/${item.rxGroupId}`}
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
                       target="_blank"
-                      className="text-blue-700 dark:text-blue-300 hover:underline hover:text-blue-900 dark:hover:text-blue-400 transition-colors duration-150"
                     >
-                      {item.insurance === "  "
-                        ? "MARCOG"
-                        : insurance_mapping[item.insurance] || item.insurance}
+                      {item.insuranceRx || "NA"}
                     </a>
                   </td>
+
+                  {/* BIN with Link */}
+                  <td className="px-4 py-2">
+                    <a
+                      href={`/InsuranceBINDetails/${item.binId}`}
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      target="_blank"
+                    >
+                      {item.binName + " - " + item.binCode || "NA"}
+                    </a>
+                  </td>
+
+                  {/* PCN with Link */}
+                  <td className="px-4 py-2">
+                    <a
+                      href={`/InsurancePCNDetails/${item.pcnId}`}
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      target="_blank"
+                    >
+                      {item.pcnName || "NA"}
+                    </a>
+                  </td>
+
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
                     {item.drugClass}
                   </td>
@@ -695,24 +745,28 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     {normalizeName(item.prescriber)}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                    {item.netProfitPerItem}
+                    {item.quantity}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                    {item.netProfit}
+                    {item.netProfitPerItem.toFixed(3)}
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                    {item.highestNet}
+                    {item.netProfit.toFixed(3)}
                   </td>
-                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
-                    {item.highestNetProfitPerItem ?? "NA"}
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                    {item.highestNetProfitPerItem.toFixed(3) ?? "NA"}
                   </td>
+                  <td className="px-3 py-2 text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                    {item.highestNet.toFixed(3)}
+                  </td>
+
                   <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
-                    {(item.highestNet - item.netProfit).toFixed(2)}
+                    {(item.highestNet - item.netProfit).toFixed(3)}
                   </td>
                   <td className="px-3 py-2 text-sm text-red-700 dark:text-red-400 whitespace-nowrap">
                     {(
                       item.highestNetProfitPerItem - item.netProfitPerItem
-                    ).toFixed(2)}
+                    ).toFixed(3)}
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     <a
@@ -742,6 +796,52 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
                     </a>
                   </td>
                   <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
+                    {item.highestQuantity ?? "NA"}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
+                    {item.highestRxGroupId ? (
+                      <a
+                        href={`/InsuranceDetails/${item.highestRxGroupId}`}
+                        className="hover:underline"
+                        target="_blank"
+                      >
+                        {item.highestInsuranceRx}
+                      </a>
+                    ) : (
+                      item.highestInsuranceRx || "NA"
+                    )}
+                  </td>
+
+                  {/* Highest BIN with link */}
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
+                    {item.highestBinId ? (
+                      <a
+                        href={`/InsuranceBINDetails/${item.highestBinId}`}
+                        className="hover:underline"
+                        target="_blank"
+                      >
+                        {item.highestBINName + " - " + item.highestBINCode}
+                      </a>
+                    ) : (
+                      item.highestBINCode || "NA"
+                    )}
+                  </td>
+
+                  {/* Highest PCN with link */}
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
+                    {item.highestPcnId ? (
+                      <a
+                        href={`/InsurancePCNDetails/${item.highestPcnId}`}
+                        className="hover:underline"
+                        target="_blank"
+                      >
+                        {item.highestPCNName}
+                      </a>
+                    ) : (
+                      item.highestPCNName || "NA"
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-blue-700 dark:text-blue-300 font-bold whitespace-nowrap">
                     {new Date(item.highestScriptDate).toLocaleDateString(
                       "en-US"
                     )}
@@ -751,7 +851,6 @@ export const SecondDashBoard: React.FC<DashboardProps> = ({ data }) => {
             </tbody>
           </table>
         </div>
-
         {/* Pagination Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-center mt-4">
           <button
