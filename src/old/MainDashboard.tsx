@@ -30,6 +30,7 @@ export const MainDashboard: React.FC = () => {
   const [data, setData] = useState<DrugTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [matchOn, setMatchOn] = useState("BIN");
 
   // Update activeDashboard if the dashboardId URL parameter changes
   useEffect(() => {
@@ -57,7 +58,12 @@ export const MainDashboard: React.FC = () => {
           const response = await axiosInstance.get(
             "/drug/GetAllLatestScriptsPaginated",
             {
-              params: { pageNumber: page, pageSize, classVersion },
+              params: {
+                pageNumber: page,
+                pageSize,
+                classVersion,
+                matchOn,
+              },
             }
           );
           const pageData: DrugTransaction[] = response.data;
@@ -86,7 +92,7 @@ export const MainDashboard: React.FC = () => {
     };
 
     fetchData();
-  }, [classVersion, activeDashboard]);
+  }, [classVersion, activeDashboard, matchOn]);
 
   // Class Version Selector
 
@@ -118,6 +124,21 @@ export const MainDashboard: React.FC = () => {
           <h1 className="text-4xl font-bold text-blue-700">
             Pharmacy Dashboard
           </h1>
+          <div className="flex justify-center gap-4 mb-4">
+            <label htmlFor="matchOn" className="font-semibold text-blue-700">
+              Match On:
+            </label>
+            <select
+              id="matchOn"
+              value={matchOn}
+              onChange={(e) => setMatchOn(e.target.value)}
+              className="border border-blue-500 rounded px-3 py-1 text-blue-700"
+            >
+              <option value="BIN">BIN</option>
+              <option value="PCN">PCN</option>
+              <option value="RX">RxGroup</option>
+            </select>
+          </div>
         </header>
 
         {/* Class Version Selector */}
