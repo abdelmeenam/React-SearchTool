@@ -16,6 +16,8 @@ import {
   LayoutDashboard,
   LayoutPanelTop,
   LayoutPanelLeft,
+  MessageCircle,
+  Edit,
 } from "lucide-react";
 
 const SearchIcon = Search;
@@ -48,6 +50,7 @@ export type NavItem = {
   icon: React.ReactNode;
   path?: string;
   pro?: boolean;
+  onClick?: () => void; // ✅ Add this line
   subItems?: {
     name: string;
     path: string;
@@ -145,6 +148,30 @@ const othersItems: NavItem[] = [
     pro: false,
     icon: <HelpCircle />,
   },
+  {
+    name: "Feedback Form",
+    path: "/feedbackForm",
+    pro: false,
+    icon: <MessageCircle />,
+  },
+  // if the role from localStorage is admin, show the following items
+  ...(localStorage.getItem("role") === "Admin" ||
+  localStorage.getItem("role") === "SuperAdmin"
+    ? [
+        {
+          name: "Drug Details",
+          path: "",
+          pro: false,
+          icon: <Edit />,
+          onClick: () => {
+            alert(
+              "Quick Tip: This page will load a preload Drug File With Classes after load Click Apply headers "
+            );
+            window.open("https://drug-sheet-editor-pro.lovable.app/", "_blank");
+          },
+        },
+      ]
+    : []),
 ];
 
 const AppSidebar: React.FC = () => {
@@ -158,6 +185,7 @@ const AppSidebar: React.FC = () => {
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [showTip, setShowTip] = useState(false);
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -261,16 +289,24 @@ const AppSidebar: React.FC = () => {
               )}
             </button>
           ) : (
-            nav.path && (
-              <Link
-                to={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+            (nav.path || nav.onClick) && (
+              <div
+                onClick={() => {
+                  if (nav.onClick) {
+                    nav.onClick();
+                  } else if (nav.path) {
+                    window.location.href = nav.path;
+                  }
+                }}
+                className={`menu-item group cursor-pointer ${
+                  nav.path && isActive(nav.path)
+                    ? "menu-item-active"
+                    : "menu-item-inactive"
                 }`}
               >
                 <span
                   className={`menu-item-icon-size flex items-center justify-center min-w-[44px] min-h-[44px] ${
-                    isActive(nav.path)
+                    nav.path && isActive(nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
                   }`}
@@ -280,7 +316,7 @@ const AppSidebar: React.FC = () => {
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <span
                     className={`menu-item-text flex items-center justify-center min-w-[44px] min-h-[44px] ${
-                      isActive(nav.path)
+                      nav.path && isActive(nav.path)
                         ? "text-blue-700 dark:text-blue-300"
                         : "text-gray-600 dark:text-gray-300"
                     }`}
@@ -288,7 +324,7 @@ const AppSidebar: React.FC = () => {
                     {nav.name}
                   </span>
                 )}
-              </Link>
+              </div>
             )
           )}
           {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
