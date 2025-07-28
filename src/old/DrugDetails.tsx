@@ -817,6 +817,7 @@ interface AlternativesTableProps {
   sortOrder: "asc" | "desc";
   setBestNetDrug: (drug: Prescription) => void;
   selectedDrug: Prescription | null;
+  selectedRxGroup: string;
 }
 
 export const AlternativesTable: React.FC<AlternativesTableProps> = ({
@@ -836,6 +837,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   sortOrder,
   setBestNetDrug,
   selectedDrug,
+  selectedRxGroup,
 }) => {
   // State for modal
   const [showModal, setShowModal] = useState(false);
@@ -1528,6 +1530,8 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {pageItems.map((rec, idx) => {
               let rowBgClass = "";
+              const shouldHighlightRxGroup =
+                selectedInsurance === "" && rec.rxgroup === selectedRxGroup;
               const net = (
                 (rec.net / rec.quantity) *
                 (currentQuantity === "" ? 1 : Number(currentQuantity))
@@ -1565,7 +1569,13 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                           href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
                           className="text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                          {rec.drugName}
+                          <div className="flex items-center gap-1">
+                            {rec.drugName}
+                            {selectedInsurance === "" &&
+                              rec.rxgroup === selectedRxGroup && (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              )}
+                          </div>
                         </a>
                       </td>
                       <td className="px-4 py-2 font-mono">
@@ -1603,7 +1613,13 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                           href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
                           className="text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                          {rec.drugName}
+                          <div className="flex items-center gap-1">
+                            {rec.drugName}
+                            {selectedInsurance === "" &&
+                              rec.rxgroup === selectedRxGroup && (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              )}
+                          </div>
                         </a>
                       </td>
                       <td className="px-4 py-2 font-mono">
@@ -1662,7 +1678,13 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                           href={`/drug/${rec.drugId}?ndc=${rec.ndcCode}&insuranceId=${rec.rxgroupId}`}
                           className="text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                          {rec.drugName}
+                          <div className="flex items-center gap-1">
+                            {rec.drugName}
+                            {selectedInsurance === "" &&
+                              rec.rxgroup === selectedRxGroup && (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              )}
+                          </div>
                         </a>
                       </td>
                       <td className="px-4 py-2 font-mono">
@@ -3013,6 +3035,7 @@ export const DrugDetails: React.FC = () => {
                         sortOrder={alternativesSortOrder}
                         setBestNetDrug={setBestNetDrug}
                         selectedDrug={drugDetail}
+                        selectedRxGroup={drugDetail?.rxgroup || ""}
                       />
                     )}
                     {/* Other Alternatives Table */}

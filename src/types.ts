@@ -323,3 +323,21 @@ export interface OrderReadDto {
   additionalCost: number;
   orderItemReadDtos: OrderItemReadDto[];
 }
+interface Question {
+  questionId: string;
+  questionText: string;
+  type: "SingleChoice" | "MultipleChoice" | "ShortAnswer" | "Paragraph";
+  options?: string[];
+  selectedAnswers: string[];
+  textAnswer: string;
+}
+
+interface Section {
+  sectionTitle: string;
+  questions: Question[];
+}
+
+interface FeedbackFormData {
+  formTitle: string;
+  sections: Section[];
+}
