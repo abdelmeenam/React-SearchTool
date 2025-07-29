@@ -164,9 +164,6 @@ const othersItems: NavItem[] = [
           pro: false,
           icon: <Edit />,
           onClick: () => {
-            alert(
-              "Quick Tip: This page will load a preload Drug File With Classes after load Click Apply headers "
-            );
             window.open("https://drug-sheet-editor-pro.lovable.app/", "_blank");
           },
         },
