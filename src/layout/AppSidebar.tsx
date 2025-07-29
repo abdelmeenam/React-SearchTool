@@ -426,7 +426,7 @@ const AppSidebar: React.FC = () => {
 
       {/* Sidebar Content */}
       {/* Sidebar Content */}
-      <div className="flex flex-col h-full overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex flex-col h-full overflow-y-auto duration-300 ease-linear">
         <nav className="mb-6 flex-grow">
           <div className="flex flex-col gap-4">
             {/* Main Menu */}
