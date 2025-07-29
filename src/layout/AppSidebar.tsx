@@ -159,7 +159,7 @@ const othersItems: NavItem[] = [
   localStorage.getItem("role") === "SuperAdmin"
     ? [
         {
-          name: "Drug Details",
+          name: "Drug Class Edit",
           path: "",
           pro: false,
           icon: <Edit />,

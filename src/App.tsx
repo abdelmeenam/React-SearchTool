@@ -72,6 +72,7 @@ import HelpPage from "./old/HelpPage";
 import SyncData from "./old/SyncData";
 import OrderHistory from "./old/OrdersHistory";
 import FeedbackForm from "./old/FeedbackForm";
+import FeedbackViewer from "./old/FeedbackViewe";
 // PrivateRoute and PublicRoute components
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -214,7 +215,14 @@ export default function App() {
                 </PrivateRoute>
               }
             />
-
+            <Route
+              path="/feedbackViewer"
+              element={
+                <PrivateRoute>
+                  <FeedbackViewer />
+                </PrivateRoute>
+              }
+            />
             {/* Insurance Details */}
             <Route
               path="/InsuranceDetails/:insuranceName"
