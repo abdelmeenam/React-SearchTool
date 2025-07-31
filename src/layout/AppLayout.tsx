@@ -23,7 +23,7 @@ const LayoutContent: React.FC = () => {
         <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
           <Outlet />
         </div>
-        {user && <ChatWidget />}
+        {/* {user && <ChatWidget />} */}
       </div>
     </div>
   );
