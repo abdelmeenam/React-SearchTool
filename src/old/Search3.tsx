@@ -91,6 +91,7 @@ export const Search3: React.FC = () => {
         );
         data = response.data;
       }
+
       setDrugs((prevDrugs) => [...prevDrugs, ...data]);
       setCurrentPage(nextPage);
     } catch (error) {
@@ -135,7 +136,11 @@ export const Search3: React.FC = () => {
     };
     fetchRxGroups();
   }, []);
-
+  const hideAllSuggestions = () => {
+    setShowRxGroupSuggestions(false);
+    setShowDrugSuggestions(false);
+    setShowNdcSuggestions(false);
+  };
   // --- Fetch Drugs When an Rx Group is Selected ---
   useEffect(() => {
     const fetchDrugs = async () => {
@@ -169,6 +174,19 @@ export const Search3: React.FC = () => {
     fetchDrugs();
     setCurrentPage(1);
   }, [selectedRxGroup, drugSearchQuery, limitSearch]);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("input") && !target.closest("ul[role='listbox']")) {
+        hideAllSuggestions();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchDrugDetails() {
@@ -206,14 +224,17 @@ export const Search3: React.FC = () => {
 
   // --- When a drug is selected, combine NDCs from all drugs with the same name ---
   const handleDrugSelect = (drug: DrugModel) => {
+    console.log("Selected drugs:", drugs);
     const selectedDrugs = drugs.filter((d) => d.name === drug.name);
-    
+    console.log("Filtered drugs:", selectedDrugs);
     const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
+    console.log("Combined NDCs:", combinedNdcs);
     setSelectedDrug(drug);
-    
+
     setDrugSearchQuery(drug.name);
     setShowDrugSuggestions(false);
     setNdcList(combinedNdcs);
+    console.log("NDC List:", ndcList);
     if (combinedNdcs.length > 0) {
       setSelectedNdc(combinedNdcs[0]);
       setNdcSearchQuery(combinedNdcs[0]);
@@ -242,7 +263,9 @@ export const Search3: React.FC = () => {
         rg.rxGroup.toLowerCase().includes(rxGroupSearchQuery.toLowerCase())
       )
     : rxGroups;
-
+  const filterDrugNames = Array.from(
+    new Map(drugs.map((drug) => [drug.name, drug])).values()
+  );
   const handleRxGroupSelect = (rg: RxGroupModel) => {
     setSelectedRxGroup(rg);
     setRxGroupSearchQuery(rg.rxGroup);
@@ -257,15 +280,11 @@ export const Search3: React.FC = () => {
   };
 
   // --- NDC Search Input Filtering & Selection ---
-  const filteredNdcList = ndcSearchQuery
-    ? ndcList.filter((ndc) =>
-        ndc.toLowerCase().includes(ndcSearchQuery.toLowerCase())
-      )
-    : ndcList;
 
   const handleNdcSelect = (ndc: string) => {
     setSelectedNdc(ndc);
     setNdcSearchQuery(ndc);
+    setSelectedDrug(drugs.find((d) => d.ndc === ndc) || null);
     setShowNdcSuggestions(false);
   };
 
@@ -365,7 +384,10 @@ export const Search3: React.FC = () => {
                       setRxGroupSearchQuery(e.target.value);
                       // update filteredRxGroups and setShowRxGroupSuggestions(true)
                     }}
-                    onFocus={() => setShowRxGroupSuggestions(true)}
+                    onFocus={() => {
+                      hideAllSuggestions();
+                      setShowRxGroupSuggestions(true);
+                    }}
                     placeholder="Type Rx Group..."
                     aria-autocomplete="list"
                     aria-controls="rxgroup-listbox"
@@ -420,7 +442,10 @@ export const Search3: React.FC = () => {
                       type="text"
                       value={drugSearchQuery}
                       onChange={handleDrugSearchChange}
-                      onFocus={() => setShowDrugSuggestions(true)}
+                      onFocus={() => {
+                        hideAllSuggestions();
+                        setShowDrugSuggestions(true);
+                      }}
                       placeholder="Type drug name..."
                       aria-autocomplete="list"
                       aria-controls="drug-listbox"
@@ -444,12 +469,12 @@ export const Search3: React.FC = () => {
                         }}
                       >
                         {(() => {
-                          const matched = drugs.filter((drug) =>
+                          const matched = filterDrugNames.filter((drug) =>
                             drug.name
                               .toLowerCase()
                               .includes(drugSearchQuery.toLowerCase())
                           );
-                          const unmatched = drugs.filter(
+                          const unmatched = filterDrugNames.filter(
                             (drug) =>
                               !drug.name
                                 .toLowerCase()
@@ -533,19 +558,22 @@ export const Search3: React.FC = () => {
                       type="text"
                       value={ndcSearchQuery}
                       onChange={(e) => setNdcSearchQuery(e.target.value)}
-                      onFocus={() => setShowNdcSuggestions(true)}
+                      onFocus={() => {
+                        hideAllSuggestions();
+                        setShowNdcSuggestions(true);
+                      }}
                       placeholder="Type NDC..."
                       aria-autocomplete="list"
                       aria-controls="ndc-listbox"
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-xs placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                     />
-                    {showNdcSuggestions && filteredNdcList.length > 0 && (
+                    {showNdcSuggestions && ndcList.length > 0 && (
                       <ul
                         id="ndc-listbox"
                         role="listbox"
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-xs max-h-60 overflow-y-auto"
                       >
-                        {filteredNdcList.map((ndc) => (
+                        {ndcList.map((ndc) => (
                           <li
                             key={ndc}
                             id={`ndc-option-${ndc}`}
