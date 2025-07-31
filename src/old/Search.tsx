@@ -78,6 +78,11 @@ export const Search: React.FC = () => {
       }
     }
   };
+  const hideAllSuggestions = () => {
+    setShowSuggestions(false);
+    // Add more dropdown states here in the future if needed
+  };
+
   useEffect(() => {
     const dropdownElement = dropdownRef.current;
     if (dropdownElement) {
@@ -259,6 +264,19 @@ export const Search: React.FC = () => {
     }
     fetchDrugDetails();
   }, [selectedDrug, selectedNdc, selectedInsurance]);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("input") && !target.closest("#suggestion-list")) {
+        hideAllSuggestions();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <motion.div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -316,9 +334,10 @@ export const Search: React.FC = () => {
                     handleSearchChange(e);
                     setActiveSuggestionIndex(-1);
                   }}
-                  onFocus={() =>
-                    searchQuery.length >= 1 && setShowSuggestions(true)
-                  }
+                  onFocus={() => {
+                    hideAllSuggestions();
+                    if (searchQuery.length >= 1) setShowSuggestions(true);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowDown") {
                       e.preventDefault();
