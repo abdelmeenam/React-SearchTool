@@ -226,6 +226,19 @@ export const InsuranceSearch2: React.FC = () => {
       console.error("Error fetching PCNs:", error);
     }
   };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("input") && !target.closest("[role='listbox']")) {
+        hideAllSuggestions();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // --- Unified Drug Fetching Function with Overrides ---
   const fetchDrugsBasedOnSelection = async (
@@ -474,6 +487,13 @@ export const InsuranceSearch2: React.FC = () => {
     setDrugSearchQuery(classInfo.className);
     setShowDrugSuggestions(false);
   };
+  const hideAllSuggestions = () => {
+    setShowBinSuggestions(false);
+    setShowPcnSuggestions(false);
+    setShowRxGroupSuggestions(false);
+    setShowDrugSuggestions(false);
+    setShowNdcSuggestions(false);
+  };
 
   // --- Reset All / Clear Selections ---
   const clearAll = () => {
@@ -563,9 +583,10 @@ export const InsuranceSearch2: React.FC = () => {
                   type="text"
                   value={binQuery}
                   onChange={handleBinInputChange}
-                  onFocus={() =>
-                    binQuery.length > 0 && setShowBinSuggestions(true)
-                  }
+                  onFocus={() => {
+                    hideAllSuggestions();
+                    if (binQuery.length > 0) setShowBinSuggestions(true);
+                  }}
                   placeholder="e.g., 123456 or HealthCo"
                   className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 />
@@ -617,7 +638,10 @@ export const InsuranceSearch2: React.FC = () => {
                       type="text"
                       value={pcnSearchQuery}
                       onChange={handlePcnSearchChange}
-                      onFocus={() => setShowPcnSuggestions(true)}
+                      onFocus={() => {
+                        hideAllSuggestions();
+                        setShowPcnSuggestions(true);
+                      }}
                       placeholder="e.g., Your PCN..."
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     />
@@ -668,7 +692,10 @@ export const InsuranceSearch2: React.FC = () => {
                       type="text"
                       value={rxGroupSearchQuery}
                       onChange={handleRxGroupSearchChange}
-                      onFocus={() => setShowRxGroupSuggestions(true)}
+                      onFocus={() => {
+                        hideAllSuggestions();
+                        setShowRxGroupSuggestions(true);
+                      }}
                       placeholder="e.g., Your Rx Group..."
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     />
@@ -708,7 +735,10 @@ export const InsuranceSearch2: React.FC = () => {
                     type="text"
                     value={drugSearchQuery}
                     onChange={handleDrugSearchChange}
-                    onFocus={() => setShowDrugSuggestions(true)}
+                    onFocus={() => {
+                      hideAllSuggestions();
+                      setShowDrugSuggestions(true);
+                    }}
                     placeholder="e.g., Metformin"
                     className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                   />
