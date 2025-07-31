@@ -4,10 +4,9 @@ import axiosInstancePython from "../api/axiosInstancePython";
 
 interface SyncResult {
   message: string;
-  recordsFetched: number;
-  successCount: number;
-  errorCount: number;
-  elapsedTime: number;
+  itemsPosted: number;
+  actualSavedResponse: string;
+  targetEndpoint: string;
 }
 
 const SyncData: React.FC = () => {
@@ -19,16 +18,11 @@ const SyncData: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const startTime = useRef<number>(0);
 
-  const listName = "Audit Scripts Test List";
-  const drugEndpoint =
-    "http://localhost:5107/drug/GetAllLatestScriptsPaginatedv2";
-  const steps = [
-    'Getting data from DB',
-    'Filtering new data',
-    'Saving new data',
-  ];
+  const listName = "test scripts July v";
+  const sharepointLink = "https://calidermatologyinstitute.sharepoint.com/sites/CDIOperations/Lists/test%20scripts%20July%20v/AllItems.aspx?as=json";
+  const drugEndpoint = "https://store.medisearchtool.com/drug/AddScripts";
+  const steps = [`Add New Scripts at this List`, 'Transforming records', 'Sending to drug API'];
 
-  // Determine current step based on progress
   const getCurrentStep = (pct: number) => {
     if (pct < 30) return steps[0];
     if (pct < 60) return steps[1];
@@ -36,18 +30,16 @@ const SyncData: React.FC = () => {
     return 'Finalizing...';
   };
 
-  // Start fake loading bar until 90%
   const startFakeProgress = () => {
     setProgress(0);
     intervalRef.current = setInterval(() => {
       setProgress(prev => {
-        const next = prev + Math.random() * 5; // slower increments
+        const next = prev + Math.random() * 5;
         return next >= 90 ? 90 : next;
       });
     }, 500);
   };
 
-  // Stop fake progress
   const stopFakeProgress = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -68,10 +60,9 @@ const SyncData: React.FC = () => {
         list_name: listName,
         drug_endpoint: drugEndpoint
       };
-      
-      // Use the new /list/sync alias endpoint
+
       const response = await axiosInstancePython.post<SyncResult>(
-        "/list/detailed-sync",
+        "/list/sync",
         payload,
         {
           headers: {
@@ -80,7 +71,6 @@ const SyncData: React.FC = () => {
         }
       );
 
-      // Enforce minimum duration of 60 seconds
       const elapsed = Date.now() - startTime.current;
       if (elapsed < 60000) {
         await new Promise(resolve => setTimeout(resolve, 60000 - elapsed));
@@ -107,7 +97,6 @@ const SyncData: React.FC = () => {
     }
   };
 
-  // Reset progress when restarting
   useEffect(() => {
     if (!loading && status === 'idle') {
       setProgress(0);
@@ -118,11 +107,24 @@ const SyncData: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="w-full max-w-lg bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8">
         <h1 className="text-4xl font-extrabold text-center text-gray-800 dark:text-gray-100 mb-6">
-          Sync Data (Detailed)
+          Sync Data
         </h1>
-        <p className="text-center text-gray-600 dark:text-gray-300 mb-8">
-          Sync drug transactions into your SharePoint list. Missing fields will be created automatically.
+        <p className="text-center text-gray-600 dark:text-gray-300 mb-4">
+          Send drug data to your SharePoint list.
         </p>
+
+        <div className="text-sm text-center text-indigo-700 dark:text-indigo-300 mb-6">
+          You Can Add New Scripts To This List {" "}:{" "} 
+          <strong>{listName}</strong> <br />
+          <a
+            href={sharepointLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-sm hover:text-indigo-500"
+          >
+            View SharePoint List ↗
+          </a>
+        </div>
 
         <div className="relative mb-6">
           <button
@@ -132,10 +134,9 @@ const SyncData: React.FC = () => {
               ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}
               text-white`}
           >
-            {loading ? 'Syncing…' : 'Start Detailed Sync'}
+            {loading ? 'Syncing…' : 'Start Sync'}
           </button>
 
-          {/* Progress Bar */}
           {(loading || status !== 'idle') && (
             <>
               <div className="absolute left-0 right-0 bottom-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-b-lg overflow-hidden">
@@ -151,16 +152,15 @@ const SyncData: React.FC = () => {
           )}
         </div>
 
-        {/* Result / Error */}
         {status === 'success' && result && (
           <div className="flex flex-col items-center bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-6">
             <CheckCircle className="w-12 h-12 text-green-500 animate-bounce mb-4" />
-            <p className="font-medium text-green-800 dark:text-green-200 mb-2">✅ {result.message}</p>
+            <p className="font-medium text-green-800 dark:text-green-200 mb-2">
+              ✅ {result.message}
+            </p>
             <div className="text-gray-700 dark:text-gray-300 text-sm">
-              <p>Fetched: {result.recordsFetched} records</p>
-              <p>Success: {result.successCount>0?result.successCount:"All data is up to date"}</p>
-              <p>Skipped: {result.errorCount}</p>
-              <p>Time: {result.elapsedTime.toFixed(2)}s</p>
+              <p>total saved Scripts: {result.actualSavedResponse}</p>
+              <p>To: {result.targetEndpoint}</p>
             </div>
           </div>
         )}
@@ -173,7 +173,7 @@ const SyncData: React.FC = () => {
         )}
 
         <p className="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
-          <span className="font-medium">Note:</span> This may take a few minutes depending on record count.
+          <span className="font-medium">Note:</span> This process may take up to 1 minute.
         </p>
       </div>
     </div>

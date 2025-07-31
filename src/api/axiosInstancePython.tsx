@@ -2,7 +2,7 @@ import axios from 'axios';
 import BaseUrlLoader, { loadConfig } from '../BaseUrlLoader';
 
 await loadConfig(); 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = "https://store.medisearchtool.com/sharepoint";
 
 const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
