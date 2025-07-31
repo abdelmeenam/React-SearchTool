@@ -115,7 +115,13 @@ export const InsuranceSearch: React.FC = () => {
 
   // --- Dropdown state for Selected Details panel ---
   const [dropdownVisible, setDropdownVisible] = useState(false);
-
+  const hideAllSuggestions = () => {
+    setShowBinSuggestions(false);
+    setShowPcnSuggestions(false);
+    setShowRxGroupSuggestions(false);
+    setShowDrugSuggestions(false);
+    setShowNdcSuggestions(false);
+  };
   useEffect(() => {
     if (Details) {
       localStorage.setItem("searchLogDetails", JSON.stringify(Details));
@@ -238,6 +244,19 @@ export const InsuranceSearch: React.FC = () => {
     //   }
     // }
   };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("input")) {
+        hideAllSuggestions();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // --- PCN Search Input Handlers ---
   const filteredPcnList = pcnSearchQuery
@@ -323,6 +342,7 @@ export const InsuranceSearch: React.FC = () => {
   const handleNdcSelect = (ndc: string) => {
     setSelectedNdc(ndc);
     setNdcSearchQuery(ndc);
+    setSelectedDrug(drugs.find((d) => d.ndc === ndc) || null);
     setShowNdcSuggestions(false);
   };
 
@@ -451,7 +471,7 @@ export const InsuranceSearch: React.FC = () => {
   const handleDrugSelect = (drug: DrugModel) => {
     // Combine unique NDCs from drugs with the same name.
     const selectedDrugs = drugs.filter((d) => d.name === drug.name);
-    
+
     const combinedNdcs = Array.from(new Set(selectedDrugs.map((d) => d.ndc)));
     setSelectedDrug(drug);
     setDrugSearchQuery(drug.name);
@@ -486,7 +506,9 @@ export const InsuranceSearch: React.FC = () => {
     setInsurances([]);
     setSelectedInsurance(null);
   };
-
+  const filterDrugNames = Array.from(
+    new Map(drugs.map((drug) => [drug.name, drug])).values()
+  );
   return (
     <motion.div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <PageMeta
@@ -552,9 +574,10 @@ export const InsuranceSearch: React.FC = () => {
                   type="text"
                   value={binQuery}
                   onChange={handleBinInputChange}
-                  onFocus={() =>
-                    binQuery.length > 0 && setShowBinSuggestions(true)
-                  }
+                  onFocus={() => {
+                    hideAllSuggestions();
+                    if (binQuery.length > 0) setShowBinSuggestions(true);
+                  }}
                   placeholder="e.g., 123456 or HealthCo"
                   className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 />
@@ -606,7 +629,10 @@ export const InsuranceSearch: React.FC = () => {
                       type="text"
                       value={pcnSearchQuery}
                       onChange={handlePcnSearchChange}
-                      onFocus={() => setShowPcnSuggestions(true)}
+                      onFocus={() => {
+                        hideAllSuggestions();
+                        setShowPcnSuggestions(true);
+                      }}
                       placeholder="e.g., Your PCN..."
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     />
@@ -657,7 +683,10 @@ export const InsuranceSearch: React.FC = () => {
                       type="text"
                       value={rxGroupSearchQuery}
                       onChange={handleRxGroupSearchChange}
-                      onFocus={() => setShowRxGroupSuggestions(true)}
+                      onFocus={() => {
+                        hideAllSuggestions();
+                        setShowRxGroupSuggestions(true);
+                      }}
                       placeholder="e.g., Your Rx Group..."
                       className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     />
@@ -697,12 +726,15 @@ export const InsuranceSearch: React.FC = () => {
                     type="text"
                     value={drugSearchQuery}
                     onChange={handleDrugSearchChange}
-                    onFocus={() => setShowDrugSuggestions(true)}
+                    onFocus={() => {
+                      hideAllSuggestions();
+                      setShowDrugSuggestions(true);
+                    }}
                     placeholder="e.g., Metformin"
                     className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                   />
                   <AnimatePresence>
-                    {showDrugSuggestions && drugs.length > 0 && (
+                    {showDrugSuggestions && filterDrugNames.length > 0 && (
                       <motion.div
                         ref={dropdownRef}
                         layout
@@ -714,13 +746,12 @@ export const InsuranceSearch: React.FC = () => {
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-md max-h-60 overflow-y-auto drug-suggestions-box"
                       >
                         {(() => {
-                          const matched = drugs.filter((drug) =>
+                          const matched = filterDrugNames.filter((drug) =>
                             drug.name
                               .toLowerCase()
                               .includes(drugSearchQuery.toLowerCase())
-                            
                           );
-                          const unmatched = drugs.filter(
+                          const unmatched = filterDrugNames.filter(
                             (drug) =>
                               !drug.name
                                 .toLowerCase()
@@ -751,7 +782,7 @@ export const InsuranceSearch: React.FC = () => {
                               {/* 🟡 Did you mean */}
                               {unmatched.length > 0 && (
                                 <div className="px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
-                                Did You Mean?{" "}
+                                  Did You Mean?{" "}
                                 </div>
                               )}
                               {/* 🔵 Remaining Unmatched */}
@@ -801,12 +832,15 @@ export const InsuranceSearch: React.FC = () => {
                     type="text"
                     value={ndcSearchQuery}
                     onChange={handleNdcSearchChange}
-                    onFocus={() => setShowNdcSuggestions(true)}
+                    onFocus={() => {
+                      hideAllSuggestions();
+                      setShowNdcSuggestions(true);
+                    }}
                     placeholder="e.g., Your NDC..."
                     className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                   />
                   <AnimatePresence>
-                    {showNdcSuggestions && filteredNdcList.length > 0 && (
+                    {showNdcSuggestions && ndcList.length > 0 && (
                       <motion.div
                         layout
                         initial={fadeVariant.initial}
@@ -814,7 +848,7 @@ export const InsuranceSearch: React.FC = () => {
                         exit={fadeVariant.exit}
                         className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-theme-xs max-h-60 overflow-y-auto"
                       >
-                        {filteredNdcList.map((ndc, index) => (
+                        {ndcList.map((ndc, index) => (
                           <button
                             key={index}
                             onClick={() => handleNdcSelect(ndc)}
