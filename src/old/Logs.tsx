@@ -1,0 +1,823 @@
+import React, { useEffect, useState, useMemo, useRef } from "react";
+import BaseUrlLoader from "../BaseUrlLoader";
+import axios from "axios";
+import { Line, Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import axiosInstance from "../api/axiosInstance";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+interface Log {
+  id: number;
+  userName: string;
+  date: string;
+  action: string;
+  parsedDetails?: Record<string, string>; // Optional parsed details
+}
+
+const getAuthHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+});
+
+// Action mapping (moved above usage for clarity)
+const actionNameMap: Record<string, string> = {
+  GetLogs: "View Logs",
+  GetAllLatestScripts: "Latest Scripts",
+  searchByName: "Search Drug by Name",
+  getDrugNDCs: "Search Drug by NDC",
+  GetInsuranceByNdc: "Get Insurance by NDC",
+  SearchByNdc: "Search by NDC",
+  GetDetails: "View Drug Details",
+  GetClassById: "View Drug Class",
+  GetAlternativesByClassIdBranchId: "Get Drug Alternatives",
+  GetAllDrugs: "View All Drugs",
+  GetInsurancesBinsByName: "Get BINs by Insurance Name",
+  GetDrugsByBin: "Get Drugs by BIN",
+  GetAllRxGroups: "View All RxGroups",
+  GetInsuranceDetails: "View Insurance Details",
+  GetInsurancePCNDetails: "View PCN Details",
+  GetInsuranceBINDetails: "View BIN Details",
+  GetAllPCNsByBINId: "List PCNs by BIN",
+  GetAllRxGroupsByBINId: "List RxGroups by BIN",
+  GetAllRxGroupsByPcnId: "List RxGroups by PCN",
+  GetScriptByScriptCode: "Get Script by Code",
+  UserById: "View User Profile",
+  UpdateUser: "Update User Info",
+  GetInsurancesPcnByBinId: "Get PCNs by BIN",
+  GetDrugsByInsuranceName: "Get Drugs by Insurance",
+  GetInsurancesRxByPcnId: "Get RxGroups by PCN",
+  GetDrugsByPCN: "Get Drugs by PCN",
+  Login: "User Sign in",
+  Logout: "User Sign out",
+  ViewDrugDetails: "View Drug Search Log", // ✅ added
+  ViewDrugDetailsLog: "View Drug Search Log",
+};
+const parseViewDrugDetails = (action: string): Record<string, string> => {
+  const result: Record<string, string> = {};
+
+  const regex = /([A-Za-z\s\?\.]+):\s*([^\n,]+)/g;
+  let match;
+
+  while ((match = regex.exec(action)) !== null) {
+    const key = match[1].trim();
+    const value = match[2].trim();
+    result[key] = value;
+  }
+
+  return result;
+};
+
+const LogsPage: React.FC = () => {
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filter state for user, activity, and date range
+  const [filterUser, setFilterUser] = useState<string>("");
+  const [filterAction, setFilterAction] = useState<string>("");
+  const [filterFromDate, setFilterFromDate] = useState<string>("");
+  const [filterToDate, setFilterToDate] = useState<string>("");
+  const [selectedLog, setSelectedLog] = useState<Log | null>(null);
+
+  const [showUserSuggestions, setShowUserSuggestions] =
+    useState<boolean>(false);
+  const [showActionSuggestions, setShowActionSuggestions] =
+    useState<boolean>(false);
+
+  const userInputRef = useRef<HTMLDivElement>(null);
+  const actionInputRef = useRef<HTMLDivElement>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const logsPerPage = 10;
+
+  // Fetch logs on component mount
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await axiosInstance.get(`/Logs/GetLogs`, {
+          headers: getAuthHeader(),
+        });
+        const processedLogs = response.data
+          .filter(
+            (log: Log) => !log.action.toLowerCase().includes("token-test")
+          )
+          .map((log: Log) => {
+            const cleanAction = log.action.replace(/^User requested\s*/i, "");
+            const parsedDetails = cleanAction
+              .toLowerCase()
+              .startsWith("viewdrugdetails")
+              ? parseViewDrugDetails(cleanAction)
+              : undefined;
+
+            return {
+              ...log,
+              action: cleanAction,
+              parsedDetails,
+            };
+          })
+          .filter(
+            (log: Log) =>
+              Object.keys(actionNameMap).includes(log.action) ||
+              log.action.toLowerCase().startsWith("viewdrugdetails")
+          );
+
+        console.log("Processed logs:", processedLogs);
+        setLogs(processedLogs);
+        const uniqueActions = Array.from(
+          new Set(processedLogs.map((log: Log) => log.action))
+        );
+
+        console.log("🔍 Unique actions from API:", uniqueActions);
+      } catch (err: any) {
+        setError(
+          "Sorry, you don’t have access. Please contact your system administrator."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, []);
+
+  // Close suggestion dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userInputRef.current &&
+        !userInputRef.current.contains(event.target as Node)
+      ) {
+        setShowUserSuggestions(false);
+      }
+      if (
+        actionInputRef.current &&
+        !actionInputRef.current.contains(event.target as Node)
+      ) {
+        setShowActionSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Compute unique users for suggestions
+  const userSuggestions = useMemo(() => {
+    const allUsers = Array.from(new Set(logs.map((log) => log.userName)));
+    return allUsers.filter((user) =>
+      user.toLowerCase().includes(filterUser.toLowerCase())
+    );
+  }, [logs, filterUser]);
+
+  // Compute unique actions for suggestions
+  const actionSuggestions = useMemo(() => {
+    const allActions = Array.from(new Set(logs.map((log) => log.action)));
+    return allActions.filter((action) =>
+      action.toLowerCase().includes(filterAction.toLowerCase())
+    );
+  }, [logs, filterAction]);
+
+  // Filter logs based on user, activity, and date range filters
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const logDate = new Date(log.date);
+      const fromValid = filterFromDate
+        ? logDate >= new Date(filterFromDate)
+        : true;
+      const toValid = filterToDate ? logDate <= new Date(filterToDate) : true;
+      return (
+        log.userName.toLowerCase().includes(filterUser.toLowerCase()) &&
+        log.action.toLowerCase().includes(filterAction.toLowerCase()) &&
+        fromValid &&
+        toValid
+      );
+    });
+  }, [logs, filterUser, filterAction, filterFromDate, filterToDate]);
+
+  // Reset current page whenever filtered logs change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredLogs]);
+
+  // Determine logs for current page
+  const indexOfLastLog = currentPage * logsPerPage;
+  const indexOfFirstLog = indexOfLastLog - logsPerPage;
+  const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
+  const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+
+  // Group logs by day for the line chart (logs per day)
+  const chartData = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    filteredLogs.forEach((log) => {
+      const day = new Date(log.date).toLocaleDateString();
+      counts[day] = (counts[day] || 0) + 1;
+    });
+    const labels = Object.keys(counts).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
+    const data = labels.map((label) => counts[label]);
+    return { labels, data };
+  }, [filteredLogs]);
+
+  // Configuration for the line chart
+  const lineData = {
+    labels: chartData.labels,
+    datasets: [
+      {
+        label: "Number of Logs",
+        data: chartData.data,
+        fill: false,
+        borderColor: "rgba(75,192,192,1)",
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const lineOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: filterUser ? `Activity for ${filterUser}` : "Logs Per Day",
+      },
+    },
+  };
+
+  // Group logs by action for the bar chart, using only the last word of each action
+  const actionChartData = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    filteredLogs.forEach((log) => {
+      const words = log.action.trim().split(" ");
+      const lastWord = words[words.length - 1];
+      counts[lastWord] = (counts[lastWord] || 0) + 1;
+    });
+    const labels = Object.keys(counts);
+    const data = labels.map((action) => counts[action]);
+    const newLabels = labels.map((x) => actionNameMap[x] || "others");
+    console.log(newLabels);
+    return { newLabels, data };
+  }, [filteredLogs]);
+
+  const barData = {
+    labels: actionChartData.newLabels,
+    datasets: [
+      {
+        label: "Action Usage Count",
+        data: actionChartData.data,
+        backgroundColor: "rgba(75,192,192,0.6)",
+        borderColor: "rgba(75,192,192,1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const barOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: "Action Usage Overview (Last Word)",
+      },
+    },
+  };
+
+  // Compute working hours per day for the selected user based on first Login and last activity.
+  // Also, calculate extra hours if total hours exceed 8 hours.
+  const workingHoursData = useMemo(() => {
+    if (!filterUser) return [];
+    // Filter logs for the selected user (any activity)
+    const userLogs = logs.filter(
+      (log) => log.userName.toLowerCase() === filterUser.toLowerCase()
+    );
+    // Group logs by day (using local date string)
+    const groupedByDay: { [day: string]: Log[] } = userLogs.reduce(
+      (acc, log) => {
+        const day = new Date(log.date).toLocaleDateString();
+        if (!acc[day]) {
+          acc[day] = [];
+        }
+        acc[day].push(log);
+        return acc;
+      },
+      {} as { [day: string]: Log[] }
+    );
+
+    const results: {
+      day: string;
+      signIn: string;
+      lastActivity: string;
+      hours: string;
+      normalHours: string;
+      extra: string;
+    }[] = [];
+
+    Object.keys(groupedByDay).forEach((day) => {
+      const logsForDay = groupedByDay[day];
+      // Ensure there is a Login event to determine the start of the day.
+      const loginLogs = logsForDay.filter((log) => log.action === "Login");
+      if (loginLogs.length > 0) {
+        // Find the earliest login
+        const firstLogin = loginLogs.reduce((a, b) =>
+          new Date(a.date) < new Date(b.date) ? a : b
+        );
+        // Find the last activity (any action) in the day
+        const lastActivity = logsForDay.reduce((a, b) =>
+          new Date(a.date) > new Date(b.date) ? a : b
+        );
+        const diffMs =
+          new Date(lastActivity.date).getTime() -
+          new Date(firstLogin.date).getTime();
+        const diffHours = diffMs / (1000 * 60 * 60); // total hours worked
+        // Calculate normal hours (max 8) and extra hours (beyond 8)
+        const normalHours = diffHours > 8 ? 8 : diffHours;
+        const extraHours = diffHours > 8 ? diffHours - 8 : 0;
+
+        results.push({
+          day,
+          signIn: new Date(firstLogin.date).toLocaleTimeString(),
+          lastActivity: new Date(lastActivity.date).toLocaleTimeString(),
+          hours: diffHours.toFixed(2),
+          normalHours: normalHours.toFixed(2),
+          extra: extraHours.toFixed(2),
+        });
+      }
+    });
+
+    // Sort results by day (ascending)
+    results.sort(
+      (a, b) => new Date(a.day).getTime() - new Date(b.day).getTime()
+    );
+    return results;
+  }, [logs, filterUser]);
+
+  // Prepare working hours bar chart data (Normal Hours and Extra Hours)
+  const workingHoursChartData = useMemo(() => {
+    const labels = workingHoursData.map((item) => item.day);
+    const normalData = workingHoursData.map((item) =>
+      parseFloat(item.normalHours)
+    );
+    const extraData = workingHoursData.map((item) => parseFloat(item.extra));
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Normal Hours",
+          data: normalData,
+          backgroundColor: "rgba(54, 162, 235, 0.6)",
+        },
+        {
+          label: "Extra Hours",
+          data: extraData,
+          backgroundColor: "rgba(255, 99, 132, 0.6)",
+        },
+      ],
+    };
+  }, [workingHoursData]);
+
+  const workingHoursChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: "Working Hours Breakdown per Day",
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
+      },
+    },
+  };
+
+  // Function to download CSV of filtered logs
+  const downloadCSV = () => {
+    const headers = ["ID", "User Name", "Action", "Date"];
+    const csvRows = [];
+    csvRows.push(headers.join(","));
+
+    filteredLogs.forEach((log) => {
+      // Use the mapped action name if available
+      const actionText = actionNameMap[log.action] || log.action;
+      const dateFormatted = new Date(log.date).toLocaleString();
+      const row = [
+        log.id,
+        log.userName,
+        `"${actionText}"`,
+        `"${dateFormatted}"`,
+      ];
+      csvRows.push(row.join(","));
+    });
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "logs.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen dark:bg-gray-900 dark:text-white">
+        <p>Loading logs...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-2xl mx-auto mb-6"
+        role="alert"
+      >
+        <strong className="font-bold">Access Denied!</strong>
+        <span className="block sm:inline">
+          {" "}
+          Sorry, you don’t have permission to view this page.
+        </span>
+        <br />
+        <span className="block sm:inline">
+          Please contact the system administrator if you believe this is an
+          error.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4 dark:bg-gray-900 dark:text-white min-h-screen">
+      <h1 className="text-3xl font-bold mb-6">User Logs</h1>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        {/* User Filter */}
+        <div className="flex-1 relative" ref={userInputRef}>
+          <label className="block text-sm font-medium dark:text-gray-300">
+            Select User
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Enter user name"
+              value={filterUser}
+              onChange={(e) => {
+                setFilterUser(e.target.value);
+                setShowUserSuggestions(true);
+              }}
+              onFocus={() => setShowUserSuggestions(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            />
+            {filterUser && (
+              <span
+                onClick={() => setFilterUser("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-500 dark:text-gray-300"
+              >
+                &times;
+              </span>
+            )}
+          </div>
+          {showUserSuggestions && userSuggestions.length > 0 && (
+            <ul className="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 mt-1 rounded-md max-h-60 overflow-y-auto">
+              {userSuggestions.map((user, index) => (
+                <li
+                  key={index}
+                  onClick={() => {
+                    setFilterUser(user);
+                    setShowUserSuggestions(false);
+                  }}
+                  className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                >
+                  {user}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {/* Activity Filter */}
+        <div className="flex-1 relative" ref={actionInputRef}>
+          <label className="block text-sm font-medium dark:text-gray-300">
+            Filter by Activity
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Enter activity"
+              value={filterAction}
+              onChange={(e) => {
+                setFilterAction(e.target.value);
+                setShowActionSuggestions(true);
+              }}
+              onFocus={() => setShowActionSuggestions(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 bg-gray-50 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            />
+            {filterAction && (
+              <span
+                onClick={() => setFilterAction("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-500 dark:text-gray-300"
+              >
+                &times;
+              </span>
+            )}
+          </div>
+          {showActionSuggestions && actionSuggestions.length > 0 && (
+            <ul className="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 mt-1 rounded-md max-h-60 overflow-y-auto">
+              {actionSuggestions.map((action, index) => (
+                <li
+                  key={index}
+                  onClick={() => {
+                    setFilterAction(action);
+                    setShowActionSuggestions(false);
+                  }}
+                  className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                >
+                  {actionNameMap[action]}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {/* From Date Filter */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            From Date
+          </label>
+          <input
+            type="date"
+            value={filterFromDate}
+            onChange={(e) => setFilterFromDate(e.target.value)}
+            className="block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+          />
+        </div>
+        {/* To Date Filter */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            To Date
+          </label>
+          <input
+            type="date"
+            value={filterToDate}
+            onChange={(e) => setFilterToDate(e.target.value)}
+            className="block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+          />
+        </div>
+      </div>
+
+      {filterUser ? (
+        <div className="flex flex-col gap-6">
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+              <Line data={lineData} options={lineOptions} />
+            </div>
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+              <Bar data={barData} options={barOptions} />
+            </div>
+          </div>
+
+          {/* Working Hours Table */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mt-6">
+            <h2 className="text-2xl font-semibold mb-4">Daily Working Hours</h2>
+            {workingHoursData.length > 0 ? (
+              <table className="min-w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      First Sign In
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Last Activity
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Total Hours
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                      Extra Hours
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {workingHoursData.map((item, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.day}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.signIn}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.lastActivity}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.hours}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {item.extra}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+                No working hours data available for this user.
+              </div>
+            )}
+          </div>
+
+          {/* Working Hours Bar Chart */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 mt-6">
+            <h2 className="text-2xl font-semibold mb-4">
+              Working Hours Overview
+            </h2>
+            <Bar
+              data={workingHoursChartData}
+              options={workingHoursChartOptions}
+            />
+          </div>
+
+          {/* Download CSV Button */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={downloadCSV}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Download CSV
+            </button>
+          </div>
+
+          {/* Logs List Section */}
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                    User Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                    Action
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
+                    Search Log
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {currentLogs.map((log, index) => (
+                  <tr
+                    key={`${log.id}-${index}`}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                      {log.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                      {log.userName}
+                    </td>
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-xs overflow-hidden text-ellipsis"
+                      title={actionNameMap[log.action] || log.action} // show full on hover
+                    >
+                      {actionNameMap[log.action] || log.action}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                      {new Date(log.date).toLocaleString()}
+                    </td>
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 cursor-pointer"
+                      onClick={() => setSelectedLog(log)}
+                      title="Click to view full details"
+                    >
+                      <div className="max-w-xs truncate">
+                        {actionNameMap[log.action] || log.action}
+                      </div>
+                      {log.parsedDetails && (
+                        <div className="ml-2 text-xs text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                          {Object.entries(log.parsedDetails)
+                            .map(([key, value]) => `${key}: ${value}`)
+                            .join(", ")}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredLogs.length > logsPerPage && (
+              <div className="flex justify-between items-center p-4">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-700 dark:text-gray-200">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+            {filteredLogs.length === 0 && (
+              <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+                No logs match the filter criteria.
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+          Please select a user to view their activity and logs.
+        </div>
+      )}
+      {selectedLog && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full relative">
+            <button
+              onClick={() => setSelectedLog(null)}
+              className="absolute top-2 right-2 text-gray-500 dark:text-gray-300 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">Log Details</h2>
+
+            <p>
+              <strong>User:</strong> {selectedLog.userName}
+            </p>
+            <p>
+              <strong>Date:</strong>{" "}
+              {new Date(selectedLog.date).toLocaleString()}
+            </p>
+
+            {selectedLog.parsedDetails && (
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">Search Details:</h3>
+                <ul className="text-sm text-gray-700 dark:text-gray-300">
+                  {Object.entries(selectedLog.parsedDetails).map(
+                    ([key, value]) => (
+                      <li key={key}>
+                        <strong>{key}:</strong> {value}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default LogsPage;
