@@ -59,6 +59,7 @@ import {
   DrugMedi,
   OrderItem,
   Prescription,
+  ReportHistory,
   SearchLog,
 } from "../types";
 import axiosInstance from "../api/axiosInstance";
@@ -818,6 +819,7 @@ interface AlternativesTableProps {
   setBestNetDrug: (drug: Prescription) => void;
   selectedDrug: Prescription | null;
   selectedRxGroup: string;
+  onReport: Function;
 }
 
 export const AlternativesTable: React.FC<AlternativesTableProps> = ({
@@ -838,6 +840,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   setBestNetDrug,
   selectedDrug,
   selectedRxGroup,
+  onReport,
 }) => {
   // State for modal
   const [showModal, setShowModal] = useState(false);
@@ -846,7 +849,23 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
   const [activeTab, setActiveTab] = useState<
     "Drug Info" | "Pricing Info" | "Insurance Info"
   >("Drug Info");
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusDrug, setStatusDrug] = useState<Prescription | null>(null);
+  const [reportSelection, setReportSelection] = useState("");
+  const [customReportReason, setCustomReportReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submittedSummary, setSubmittedSummary] = useState<{
+    sourceNDC?: string | null;
+    targetNDC?: string | null;
+    rxGroup?: string | number | null;
+  } | null>(null);
+  const [priorAuthChoice, setPriorAuthChoice] = useState<"Yes" | "No" | null>(
+    null
+  );
 
+  const [reportHistory, setReportHistory] = useState<ReportHistory[]>([]);
   // Filter and pagination logic
   const filtered = useMemo(() => {
     const result = alternatives.filter(
@@ -857,7 +876,27 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
     );
     return result.length > 0 ? result : alternatives;
   }, [alternatives, selectedInsurance, selectedBin, selectedPcn]);
+  const dateOnly = (v?: string | Date | null) => {
+    if (!v) return "";
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  };
 
+  const statusBadge = (s?: string) => {
+    const k = (s || "").toLowerCase();
+    if (k.includes("approve"))
+      return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800";
+    if (k.includes("reject") || k.includes("deny"))
+      return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:border-rose-800";
+    if (k.includes("prior"))
+      return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800";
+    return "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700";
+  };
   // setBestNetDrug(filtered[0]);
   useEffect(() => {
     if (filtered.length > 0) {
@@ -893,7 +932,17 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
       setPrevQty(currentQuantity);
     }
   }, [currentQuantity, prevQty]);
-
+  async function handleReportHistory(
+    sourceDrugNDC: string,
+    targetDrugNDC: string,
+    insuranceRxId: number
+  ) {
+    const response = await axiosInstance.get(
+      `/Insurance/GetReportsAsyncByKey?sourceDrugNDC=${sourceDrugNDC}&targetDrugNDC=${targetDrugNDC}&insuranceRxId=${insuranceRxId}`
+    );
+    console.log("This is report history : ", response.data);
+    setReportHistory(response.data);
+  }
   return (
     <section
       className={`bg-white dark:bg-gray-800 shadow rounded-lg p-6 ${classNameStr}`}
@@ -1516,6 +1565,10 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   "Insurance",
                   "PCN",
                   "Date",
+                  "Prior Auth",
+                  "Approved",
+                  "Confidence Meter",
+                  "Status",
                   "Details",
                 ].map((col) => (
                   <th
@@ -1723,9 +1776,55 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                       <td className="px-4 py-2 text-gray-500 dark:text-gray-400">
                         {new Date(rec.date).toISOString().split("T")[0]}
                       </td>
+                      <td
+                        className={`px-4 py-2 rounded text-center ${scoringClass}`}
+                      >
+                        {rec.priorAuthorizationStatus}
+                      </td>
+                      <td
+                        className={`px-4 py-2 rounded text-center ${scoringClass}`}
+                      >
+                        {rec.approvedStatus}
+                      </td>
+                      <td
+                        className={`px-4 py-2 rounded text-center ${scoringClass}`}
+                      >
+                        {rec.score}%
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {selectedDrug?.ndcCode !== rec.ndcCode && (
+                          <button
+                            disabled={selectedDrug?.ndcCode === rec.ndcCode}
+                            className={`px-3 py-1 rounded text-sm font-medium whitespace-nowrap ${
+                              !rec.status || rec.status === "Approved"
+                                ? "bg-green-600 text-white"
+                                : rec.status === "Rejected"
+                                ? "bg-red-600 text-white"
+                                : rec.status === "Prior Auth"
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-300 text-gray-700"
+                            }`}
+                            onClick={async () => {
+                              await handleReportHistory(
+                                selectedDrug?.ndcCode ?? "",
+                                rec.ndcCode ?? "",
+                                selectedDrug?.rxgroupId ?? 0
+                              );
+                              setStatusDrug(rec);
+                              setShowStatusModal(true);
+                              setReportSelection("");
+                              setCustomReportReason("");
+                            }}
+                          >
+                            {rec.status || "Approved"}
+                          </button>
+                        )}
+                      </td>
                       <td className="px-4 py-2 text-right">
                         <button
-                          onClick={() => openModal(rec)}
+                          onClick={() => {
+                            openModal(rec);
+                          }}
                           className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                           Details
@@ -1739,6 +1838,440 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           </tbody>
         </table>
       </div>
+      {showStatusModal && statusDrug && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="statusModalTitle"
+          tabIndex={-1}
+          className="fixed inset-x-0 bottom-0 grid place-items-center p-4 sm:p-6"
+          style={{
+            top: "var(--app-header-h, 64px)",
+            height: "calc(100dvh - var(--app-header-h, 64px))",
+            zIndex: 150, // keep header above if header z-index is higher
+          }}
+        >
+          {/* Backdrop (stays under the header because of the top offset) */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => {
+              setShowStatusModal(false);
+              setSubmitMessage(null);
+              setSubmittedSummary(null);
+              setPriorAuthChoice(null); // clear Yes/No on close
+            }}
+          />
+
+          {/* Card: flex column, header/footer sticky, body scrolls */}
+          <div
+            className="relative w-full max-w-2xl origin-center rounded-2xl border border-gray-200 bg-white/95 shadow-2xl ring-1 ring-black/5 
+           dark:border-gray-700 dark:bg-gray-900/95 transition-all duration-200 ease-out
+           animate-[zoomIn_.18s_ease-out]
+           flex max-h-full flex-col overflow-hidden"
+          >
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-10 border-b border-gray-200 px-6 py-4 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-gray-700 dark:bg-gray-900/95">
+              <button
+                onClick={() => {
+                  setShowStatusModal(false);
+                  setSubmitMessage(null);
+                  setSubmittedSummary(null);
+                  setPriorAuthChoice(null); // clear Yes/No on close
+                }}
+                aria-label="Close"
+                className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full 
+               border border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800 
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
+               dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M6.225 4.811a1 1 0 0 0-1.414 1.414L10.586 12l-5.775 5.775a1 1 0 1 0 1.414 1.414L12 13.414l5.775 5.775a1 1 0 0 0 1.414-1.414L13.414 12l5.775-5.775a1 1 0 0 0-1.414-1.414L12 10.586z" />
+                </svg>
+              </button>
+
+              <div className="flex items-center justify-between gap-4">
+                <h3
+                  id="statusModalTitle"
+                  className="text-lg font-semibold text-gray-900 dark:text-white"
+                >
+                  Insurance Status
+                </h3>
+
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${statusBadge(
+                    statusDrug.status
+                  )}`}
+                  title={statusDrug.statusDescription || ""}
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-current/60" />
+                  {statusDrug.status || "Unknown"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-gray-700 dark:text-gray-300 sm:grid-cols-2">
+                <div>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">
+                    Submitted By:
+                  </span>{" "}
+                  {statusDrug.submitedUser || "—"}
+                </div>
+                <div>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">
+                    Date:
+                  </span>{" "}
+                  {dateOnly(statusDrug.statusDate)}
+                </div>
+              </div>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="grow overflow-y-auto px-6 py-5">
+              {/* Description block */}
+              {/* <div className="grid gap-3 rounded-xl border border-gray-200 p-4 text-sm dark:border-gray-700 dark:bg-gray-900/40">
+                <div className="text-gray-700 dark:text-gray-300">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    Description:
+                  </span>{" "}
+                  {statusDrug.statusDescription || "—"}
+                </div>
+                <div className="text-gray-700 dark:text-gray-300">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    Additional Info:
+                  </span>{" "}
+                  {statusDrug.additionalInfo || "—"}
+                </div>
+              </div> */}
+
+              {/* Preview */}
+              <div className="mt-5 rounded-xl border border-gray-200 p-4 text-sm shadow-sm dark:border-gray-700 dark:bg-gray-900/40">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="font-semibold text-gray-900 dark:text-gray-100">
+                    Review Before Submitting
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <span className="font-medium">Source NDC:</span>{" "}
+                    <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs dark:bg-gray-800">
+                      {selectedDrug?.ndcCode || "-"}
+                    </code>
+                  </div>
+                  <div>
+                    <span className="font-medium">Target NDC:</span>{" "}
+                    <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs dark:bg-gray-800">
+                      {statusDrug?.ndcCode || "-"}
+                    </code>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="font-medium">Insurance:</span>{" "}
+                    {selectedDrug?.rxgroup || selectedDrug?.rxgroupId || "-"}
+                    {selectedDrug?.bin && (
+                      <>
+                        {" "}
+                        · <span className="font-medium">BIN:</span>{" "}
+                        {selectedDrug.bin}
+                      </>
+                    )}
+                    {selectedDrug?.pcn && (
+                      <>
+                        {" "}
+                        · <span className="font-medium">PCN:</span>{" "}
+                        {selectedDrug.pcn}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Show the chosen PA answer in preview */}
+                  {(
+                    <div className="sm:col-span-2">
+                      <span className="font-medium">Prior Auth:</span>{" "}
+                      {statusDrug.priorAuthorizationStatus ?? "-"}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Success */}
+              {submitMessage && (
+                <div className="mt-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-700/40 dark:bg-emerald-900/30 dark:text-emerald-200">
+                  <svg
+                    className="mt-0.5 h-5 w-5 flex-none"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M9 12.75 11.25 15l3.75-3.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0" />
+                  </svg>
+                  <div>
+                    <div className="font-semibold">{submitMessage}</div>
+                    <div className="mt-1 grid gap-1 text-xs">
+                      <div>
+                        <span className="font-medium">Source NDC:</span>{" "}
+                        {submittedSummary?.sourceNDC || "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Target NDC:</span>{" "}
+                        {submittedSummary?.targetNDC || "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Rx Group:</span>{" "}
+                        {submittedSummary?.rxGroup || "-"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Report form */}
+              <div className="mt-6">
+                <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  Report this status
+                </label>
+
+                {/* Segmented radio group */}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {["Approved", "Rejected", "Prior Auth", "Other"].map(
+                    (option) => {
+                      const active = reportSelection === option;
+                      return (
+                        <label
+                          key={option}
+                          className={`group cursor-pointer rounded-lg border px-3 py-2 text-center text-sm font-medium transition-all ${
+                            active
+                              ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-100"
+                              : "border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="reportStatus"
+                            value={option}
+                            checked={active}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setReportSelection(v as typeof option);
+                              if (v !== "Prior Auth") setPriorAuthChoice(null); // clear Yes/No when leaving PA
+                            }}
+                            className="sr-only"
+                          />
+                          {option}
+                        </label>
+                      );
+                    }
+                  )}
+                </div>
+
+                {/* Prior Auth Yes/No */}
+                {reportSelection === "Prior Auth" && (
+                  <div className="mt-3">
+                    <div className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      Prior Authorization required?
+                    </div>
+                    <div
+                      className="grid grid-cols-2 gap-2 sm:max-w-xs"
+                      role="group"
+                      aria-label="Prior Authorization"
+                    >
+                      {["Yes", "No"].map((ans) => {
+                        const active = priorAuthChoice === ans;
+                        return (
+                          <label
+                            key={ans}
+                            className={`group cursor-pointer rounded-lg border px-3 py-2 text-center text-sm font-medium transition-all ${
+                              active
+                                ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-100"
+                                : "border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="priorAuthChoice"
+                              value={ans}
+                              checked={active}
+                              onChange={(e) =>
+                                setPriorAuthChoice(
+                                  e.target.value as "Yes" | "No"
+                                )
+                              }
+                              className="sr-only"
+                            />
+                            {ans}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {reportSelection === "Other" && (
+                  <textarea
+                    value={customReportReason}
+                    onChange={(e) => setCustomReportReason(e.target.value)}
+                    placeholder="Enter your custom reason"
+                    className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 
+                   placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500
+                   dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                    rows={3}
+                  />
+                )}
+              </div>
+
+              {/* Report History */}
+              <div className="mt-8">
+                <div className="mb-2 flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Report History
+                  </h4>
+                </div>
+
+                {reportHistory && reportHistory.length > 0 ? (
+                  <ol className="relative mt-2 max-h-56 overflow-auto pl-3">
+                    <span
+                      className="absolute left-3 top-0 h-full w-px bg-gray-200 dark:bg-gray-700"
+                      aria-hidden
+                    />
+                    {reportHistory.map((h) => {
+                      const dStr = dateOnly(h.statusDate);
+                      const isPA =
+                        h.status === "PriorAuthorizationYes" ||
+                        h.status === "PriorAuthorizationNo";
+                      const normalizedForBadge = isPA ? "Prior Auth" : h.status;
+                      const displayText =
+                        h.status === "PriorAuthorizationYes"
+                          ? "Prior Auth - Yes"
+                          : h.status === "PriorAuthorizationNo"
+                          ? "Prior Auth - No"
+                          : h.status;
+
+                      return (
+                        <li key={h.id} className="relative mb-4 pl-6">
+                          <span
+                            className="absolute left-0 top-1.5 h-2.5 w-2.5 -translate-x-1/2 rounded-full border border-white bg-gray-400 
+                           dark:border-gray-900 dark:bg-gray-500"
+                            aria-hidden
+                          />
+                          <div className="flex items-center justify-between gap-3">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusBadge(
+                                normalizedForBadge
+                              )}`}
+                            >
+                              {displayText}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {dStr}
+                            </span>
+                          </div>
+                          <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                            {h.userEmail || "—"}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    No reports yet.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Sticky Footer (buttons always visible) */}
+            <div className="sticky bottom-0 z-10 border-t border-gray-200 bg-white/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-gray-700 dark:bg-gray-900/95">
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowStatusModal(false);
+                    setSubmitMessage(null);
+                    setSubmittedSummary(null);
+                    setPriorAuthChoice(null); // clear Yes/No on close
+                  }}
+                  className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700
+                 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
+                 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Close
+                </button>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      // derive the status value the backend expects
+                      let statusValue: string;
+                      if (
+                        reportSelection === "Other" &&
+                        customReportReason?.trim()
+                      ) {
+                        statusValue = customReportReason.trim();
+                      } else if (reportSelection === "Prior Auth") {
+                        if (!priorAuthChoice) return; // guard
+                        statusValue =
+                          priorAuthChoice === "Yes"
+                            ? "PriorAuthorizationYes"
+                            : "PriorAuthorizationNo";
+                      } else {
+                        // "Approved" or "Rejected"
+                        statusValue = reportSelection;
+                      }
+
+                      const payload = {
+                        sourceDrugNDC: selectedDrug?.ndcCode,
+                        targetDrugNDC: statusDrug?.ndcCode,
+                        insuranceRxId: selectedDrug?.rxgroupId,
+                        status: statusValue,
+                      };
+
+                      await axiosInstance.post(
+                        "/Insurance/ReportStatus",
+                        payload
+                      );
+
+                      if (onReport) onReport(); // refresh outside
+                      setSubmittedSummary({
+                        sourceNDC: selectedDrug?.ndcCode || null,
+                        targetNDC: statusDrug?.ndcCode || null,
+                        rxGroup:
+                          selectedDrug?.rxgroup ||
+                          statusDrug?.rxgroupId ||
+                          null,
+                      });
+                      setSubmitMessage("Report submitted successfully.");
+                    } catch (err) {
+                      console.error("Error submitting report:", err);
+                      setSubmitMessage(null);
+                    }
+                  }}
+                  disabled={
+                    reportSelection === "Prior Auth" && !priorAuthChoice
+                  }
+                  aria-disabled={
+                    reportSelection === "Prior Auth" && !priorAuthChoice
+                  }
+                  title={
+                    reportSelection === "Prior Auth" && !priorAuthChoice
+                      ? "Choose Yes or No for Prior Auth"
+                      : undefined
+                  }
+                  className={`inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white 
+                 shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
+                 ${
+                   reportSelection === "Prior Auth" && !priorAuthChoice
+                     ? "opacity-50 cursor-not-allowed"
+                     : ""
+                 }`}
+                >
+                  Submit Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
@@ -2663,144 +3196,135 @@ export const DrugDetails: React.FC = () => {
   const [mediToggle, setMediToggle] = useState(false);
   const [showAlternativesTable, setShowAlternativesTable] = useState(false);
   const [showClassLoader, setShowClassLoader] = useState(false);
-  function dateRecencyBoost(dateStr: string, currentDate: Date): number {
+  function dateRecencyScore(dateStr: string, currentDate: Date): number {
     const daysDiff = Math.floor(
       (currentDate.getTime() - new Date(dateStr).getTime()) / 86400000
     );
-    if (daysDiff <= 7) return 20;
-    if (daysDiff <= 30) return 15;
-    if (daysDiff <= 90) return 8;
-    return 2;
+
+    const monthsDiff = Math.floor(daysDiff / 30);
+    if (monthsDiff >= 12) return 0;
+
+    // Each month reduces score from 20 by (20/12 ≈ 1.66)
+    const score = Math.max(0, 20 - monthsDiff * 1.66);
+    return parseFloat(score.toFixed(2));
   }
+
   function scorePrescriptionPercent(
     candidate: Prescription,
     target: Prescription,
     currentDate: Date
   ): number {
-    let score = 0;
-    const MAX_SCORE = 120;
+    let locationScore = 0;
+    let dateScore = 0;
+    let hierarchyScore = 0;
 
-    // Match hierarchy
-    if (candidate.rxgroupId === target.rxgroupId) {
-      score = 100; // highest base
-    } else if (candidate.pcnId === target.pcnId) {
-      score = 80;
-    } else if (candidate.binId === target.binId) {
-      score = 60;
-    } else {
-      score = 0; // no insurance hierarchy match
+    // 10% for location match
+    if (candidate.branchName === target.branchName) {
+      locationScore = 10;
     }
 
-    // Branch boost
-    if (candidate.branchName === target.branchName) score += 10;
+    // 20% for date recency
+    dateScore = dateRecencyScore(candidate.date, currentDate);
 
-    // Date boost
-    score += dateRecencyBoost(candidate.date, currentDate);
+    // 70% for insurance hierarchy
+    if (candidate.rxgroupId === target.rxgroupId) {
+      hierarchyScore = 70;
+    } else if (candidate.pcnId === target.pcnId) {
+      hierarchyScore = 50; // 70% of 70
+    } else if (
+      candidate.rxgroupId !== target.rxgroupId &&
+      candidate.pcnId !== target.pcnId &&
+      candidate.binId === target.binId
+    ) {
+      hierarchyScore = 28; // 40% of 70
+    } else {
+      hierarchyScore = 0;
+    }
 
-    // Normalize to 1–100%
-    return parseFloat(((score / MAX_SCORE) * 100).toFixed(2));
+    // Total raw score
+    let totalScore = locationScore + dateScore + hierarchyScore;
+
+    // Clamp final score between 40% and 90%
+    totalScore = Math.max(40, Math.min(90, totalScore));
+    if (candidate.status === "Rejected" || candidate.status === "Prior Auth")
+      totalScore = 10;
+    return parseFloat(totalScore.toFixed(2));
   }
+  // DrugDetails.tsx
+  const fetchDrugDetails = async () => {
+    try {
+      let response2;
+      let response = await axiosInstance.get(`/drug/GetDrugById?id=${drugId}`);
+      setDrug(response.data);
+      const response3 = await axiosInstance.get(
+        `/drug/GetClassesByDrugId?drugId=${response.data.id}`
+      );
+
+      const seen = new Set<string>();
+      const uniqueClasses: ClassInfo[] = response3.data
+        .filter((item: ClassInfo) => {
+          if (seen.has(item.classTypeName)) return false;
+          seen.add(item.classTypeName);
+          return true;
+        })
+        .sort((a: any, b: any) =>
+          a.classTypeName.localeCompare(b.classTypeName)
+        );
+
+      setAvailableClassVersions(uniqueClasses);
+
+      const wantedClassVersion = response3.data.filter(
+        (cls: ClassInfo) => cls.classTypeName === classVersion
+      );
+      setClassName(wantedClassVersion[0] || response3.data[0]);
+      const classInfoId = wantedClassVersion[0]?.id || response3.data[0]?.id;
+
+      if (insuranceId) {
+        response2 = await axiosInstance.get(
+          `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
+        );
+        setDrugDetail(response2.data);
+      }
+      const mediResponse = await axiosInstance.get(
+        `/drug/GetAllMediDrugs?classId=${classInfoId}`
+      );
+      setDrugmedi(mediResponse.data);
+      setDrugDeatilsMedi(
+        mediResponse.data.find((item: DrugMedi) => item.drugNDC === ndcCode)
+      );
+      const response4 = await axiosInstance.get(
+        `/drug/GetAllDrugs?classId=${classInfoId}&sourceDrugNDC=${ndcCode}`
+      );
+      console.log(response4);
+      const allDrugs = response4.data;
+      const currentDrug = response2 ? response2.data : null;
+      const currentDate = new Date();
+
+      const scoredAlternatives =
+        currentDrug != null
+          ? allDrugs
+              .map((drug: Prescription) => ({
+                ...drug,
+                score: scorePrescriptionPercent(drug, currentDrug, currentDate),
+              }))
+              .sort((a: any, b: any) => b.score - a.score)
+          : allDrugs;
+      console.log("Scored : ", scoredAlternatives);
+      setSortedAlternatives(
+        scoredAlternatives
+          .sort((a: any, b: any) => b.net / b.quantity - a.net / a.quantity)
+          .filter((alt: any) => alt.type !== "DISCN")
+      );
+    } catch (err) {
+      setError("Failed to load drug details");
+    } finally {
+      setLoading(false);
+      setShowClassLoader(false);
+    }
+  };
 
   // Fetch drug details and alternatives
   useEffect(() => {
-    const fetchDrugDetails = async () => {
-      try {
-        let response2;
-        let response = await axiosInstance.get(
-          `/drug/GetDrugById?id=${drugId}`
-        );
-        setDrug(response.data);
-        const response3 = await axiosInstance.get(
-          `/drug/GetClassesByDrugId?drugId=${response.data.id}`
-        );
-        console.log("classVersion", classVersion);
-        console.log("classes ", response3.data);
-
-        const seen = new Set<string>();
-        const uniqueClasses: ClassInfo[] = response3.data
-          .filter((item: ClassInfo) => {
-            if (seen.has(item.classTypeName)) {
-              return false;
-            }
-            seen.add(item.classTypeName);
-            return true;
-          })
-          .sort((a: any, b: any) => {
-            if (a.classTypeName < b.classTypeName) return -1;
-            if (a.classTypeName > b.classTypeName) return 1;
-            return 0;
-          });
-
-        console.log(uniqueClasses);
-        setAvailableClassVersions(uniqueClasses);
-        const wantedClassVersion = response3.data.filter(
-          (cls: ClassInfo) => cls.classTypeName === classVersion
-        );
-        setClassName(wantedClassVersion[0] || response3.data[0]);
-        const classInfoId = wantedClassVersion[0]?.id || response3.data[0]?.id;
-        console.log("classNameStr ", classNameStr);
-        console.log("classes2 ", wantedClassVersion);
-        if (insuranceId) {
-          response2 = await axiosInstance.get(
-            `/drug/GetDetails?ndc=${ndcCode}&insuranceId=${insuranceId}`
-          );
-          setDrugDetail(response2.data);
-        }
-        const response4 = await axiosInstance.get(
-          `/drug/GetAllDrugs?classId=${classInfoId}`
-        );
-        const allDrugs = response4.data;
-        const currentDrug = response2 ? response2.data : null;
-        const currentDate = new Date();
-        const scoredAlternatives =
-          currentDrug != null
-            ? allDrugs
-                .map((drug: Prescription) => ({
-                  ...drug,
-                  score: scorePrescriptionPercent(
-                    drug,
-                    currentDrug,
-                    currentDate
-                  ),
-                }))
-                .sort(
-                  (a: { score: number }, b: { score: number }) =>
-                    b.score - a.score
-                )
-            : [];
-
-        console.log("response4: ", scoredAlternatives);
-        const mediResponse = await axiosInstance.get(
-          `/drug/GetAllMediDrugs?classId=${classInfoId}`
-        );
-        setDrugmedi(mediResponse.data);
-        setDrugDeatilsMedi(
-          mediResponse.data.find((item: DrugMedi) => item.drugNDC === ndcCode)
-        );
-        const matchingAlt = scoredAlternatives.find(
-          (alt: Prescription) => alt.insuranceId.toString() === insuranceId
-        );
-        setBranchSelectedInsurance(matchingAlt?.insuranceName || "");
-        const sortedData = scoredAlternatives
-          .sort((a: Prescription, b: Prescription) => {
-            if (b.net / b.quantity !== a.net / a.quantity) {
-              return b.net / b.quantity - a.net / a.quantity;
-            }
-            return (
-              b.insurancePayment / b.quantity - a.insurancePayment / a.quantity
-            );
-          })
-          .filter((alt: Prescription) => alt.type !== "DISCN");
-        setSortedAlternatives(sortedData);
-        console.log("sortedData", sortedData);
-      } catch (err) {
-        setError("Failed to load drug details");
-      } finally {
-        setLoading(false);
-        setShowClassLoader(false); // Hide loader after fetch
-      }
-    };
-
     fetchDrugDetails();
   }, [drugId, ndcCode, insuranceId, classVersion]);
 
@@ -2820,12 +3344,7 @@ export const DrugDetails: React.FC = () => {
             " - " +
             (matchingInsurance.binFullName || "")
         );
-        setSelectedInsurance(matchingInsurance.rxgroup || "");
         setSelectedBin(matchingInsurance.bin || "");
-        setSelectedPcn(matchingInsurance.pcn || "");
-        setBranchSelectedBin(matchingInsurance.bin || "");
-        setBranchSelectedInsurance(matchingInsurance.rxgroup || "");
-        setBranchSelectedPcn(matchingInsurance.pcn || "");
       }
     }
   }, [insuranceId, sortedAlternatives]);
@@ -2895,7 +3414,6 @@ export const DrugDetails: React.FC = () => {
     (alt) => alt.binId === 0
   );
 
-  const alternativesWithoutInsuranceV2 = sortedAlternativesV2;
   const uniqueInsuranceNames: string[] = [
     ...new Set(alternativesWithInsurance.map((alt) => alt.insuranceName)),
   ].sort();
@@ -3088,6 +3606,7 @@ export const DrugDetails: React.FC = () => {
                         setBestNetDrug={setBestNetDrug}
                         selectedDrug={drugDetail}
                         selectedRxGroup={drugDetail?.rxgroup || ""}
+                        onReport={fetchDrugDetails} // <-- new
                       />
                     )}
                     {/* Other Alternatives Table */}

@@ -73,6 +73,7 @@ import SyncData from "./old/SyncData";
 import OrderHistory from "./old/OrdersHistory";
 import FeedbackForm from "./old/FeedbackForm";
 import FeedbackViewer from "./old/FeedbackViewe";
+import LogsLeaderboardPage from "./old/leaderboard";
 // PrivateRoute and PublicRoute components
 const PrivateRoute: React.FC<{
   children: React.ReactNode;
@@ -204,6 +205,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <LogsPage />
+                </PrivateRoute>
+              }
+            />  
+            <Route
+              path="/leaderboard"
+              element={
+                <PrivateRoute>
+                  <LogsLeaderboardPage/>
                 </PrivateRoute>
               }
             />  

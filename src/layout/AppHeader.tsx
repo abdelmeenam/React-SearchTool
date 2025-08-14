@@ -1,25 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-
 import { Link } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
-import NotificationDropdown from "../components/header/NotificationDropdown";
+// import NotificationDropdown from "../components/header/NotificationDropdown"; // (unused)
 import UserDropdown from "../components/header/UserDropdown";
 import { Pill, ShoppingCart } from "lucide-react";
-import { CartItem } from "../types";
+// import { CartItem } from "../types"; // (unused)
 import { Cart } from "../old/Cart";
 import { useCart } from "../context/CartContext";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
   const [isCartOpen, setCartOpen] = useState(false);
-  const { cartItems, clearCart, setCartItems } = useCart(); // or however you're managing it
+  const { cartItems, clearCart, setCartItems } = useCart();
 
-  // const [cartItems, setCartItems] = useState<any[]>(() => {
-  //   const saved = localStorage.getItem("cart");
-  //   return saved ? JSON.parse(saved) : [];
-  // });
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   const handleToggle = () => {
     if (window.innerWidth >= 991) {
@@ -29,13 +26,50 @@ const AppHeader: React.FC = () => {
     }
   };
 
-  const toggleApplicationMenu = () => {
-    setApplicationMenuOpen(!isApplicationMenuOpen);
-  };
-  const toggleCart = () => {
-    setCartOpen(!isCartOpen);
-  };
-  const inputRef = useRef<HTMLInputElement>(null);
+  const toggleApplicationMenu = () => setApplicationMenuOpen((s) => !s);
+  const toggleCart = () => setCartOpen((s) => !s);
+
+  // Keep --app-header-h updated so modals can offset from it
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const setVar = () => {
+      const h = Math.ceil(el.getBoundingClientRect().height);
+      document.documentElement.style.setProperty("--app-header-h", `${h}px`);
+    };
+
+    setVar();
+    let ro: ResizeObserver | null = null;
+
+    if ("ResizeObserver" in window) {
+      ro = new ResizeObserver(setVar);
+      ro.observe(el);
+    } else {
+      (window as Window).addEventListener("resize", setVar);
+    }
+
+    // Also update on fonts/theme changes
+    const interval = window.setInterval(setVar, 500); // lightweight safeguard; remove if not needed
+
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", setVar);
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  // Cmd/Ctrl+K focus (attach your search input to inputRef if you have one)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const updateCartItemQuantity = (id: string, newQty: number) => {
     setCartItems((prev) =>
@@ -66,7 +100,6 @@ const AppHeader: React.FC = () => {
 
   const removeCartItem = (id: string) => {
     const index = cartItems.findIndex((item) => item.id === id);
-
     setCartItems((prev) => prev.filter((_, i) => i !== index));
 
     const orderData = localStorage.getItem("orderRequestBody");
@@ -78,50 +111,26 @@ const AppHeader: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-  // const clearCart = () => {
-  //   setCartItems([]);
-  //   localStorage.removeItem("cart");
-  // };
-
   return (
     <>
       <header
+        ref={headerRef}
+        id="app-header"
         role="banner"
-        className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b"
+        className="sticky top-0 z-[200] mb-5 flex w-full bg-white lg:border-b border-gray-200 dark:border-gray-800 dark:bg-gray-900"
       >
-        <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
-          <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
+        <div className="flex grow flex-col items-center justify-between lg:flex-row lg:px-6">
+          <div className="flex w-full items-center justify-between gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
             {/* Sidebar Toggle Button */}
             <button
-              className="items-center justify-center w-10 h-10 text-gray-500 border-gray-200 rounded-lg z-99999 dark:border-gray-800 lg:flex dark:text-gray-400 lg:h-11 lg:w-11 lg:border"
+              className="lg:flex hidden items-center justify-center h-11 w-11 rounded-lg border border-gray-200 text-gray-500 dark:border-gray-800 dark:text-gray-400"
               onClick={handleToggle}
               aria-label="Toggle Sidebar"
               aria-expanded={isMobileOpen}
               aria-controls="sidebar-navigation"
             >
               {isMobileOpen ? (
-                /* Close Icon */
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path
                     fillRule="evenodd"
                     clipRule="evenodd"
@@ -130,14 +139,7 @@ const AppHeader: React.FC = () => {
                   />
                 </svg>
               ) : (
-                /* Menu Icon */
-                <svg
-                  width="16"
-                  height="12"
-                  viewBox="0 0 16 12"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
                   <path
                     fillRule="evenodd"
                     clipRule="evenodd"
@@ -148,51 +150,61 @@ const AppHeader: React.FC = () => {
               )}
             </button>
 
-            {/* Logo Link */}
+            {/* Mobile Sidebar Toggle (if you want it always visible) */}
+            <button
+              className="flex lg:hidden items-center justify-center h-10 w-10 rounded-lg text-gray-500 dark:text-gray-400"
+              onClick={handleToggle}
+              aria-label="Toggle Sidebar"
+              aria-expanded={isMobileOpen}
+              aria-controls="sidebar-navigation"
+            >
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666 1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10.5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+
+            {/* Logo */}
             <Link to="/">
               <span className="block lg:hidden">
                 <span
                   className="flex items-center text-2xl font-extrabold tracking-wide text-blue-600 dark:text-blue-400"
-                  style={{ minWidth: "44px", minHeight: "44px" }}
+                  style={{ minWidth: 44, minHeight: 44 }}
                 >
                   Medsearch
-                  <Pill
-                    className="ml-2 w-6 h-6 text-blue-600 dark:text-blue-400"
-                    style={{ minWidth: "44px", minHeight: "44px" }}
-                  />
+                  <Pill className="ml-2 h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </span>
               </span>
             </Link>
 
-            {/* Application Menu Toggle Button */}
-            {/* 🛒 Cart Button */}
+            {/* Cart */}
             <button
               onClick={toggleCart}
-              className="flex items-center justify-center w-10 h-10 text-gray-700 rounded-lg z-99999 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              className="flex items-center justify-center h-10 w-10 rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
               aria-label="Toggle Cart"
               aria-expanded={isCartOpen}
             >
               <ShoppingCart />
               {cartItems.length > 0 && (
-                <span className="ml-1 text-xs text-white bg-red-600 rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white">
                   {cartItems.length}
                 </span>
               )}
             </button>
+
+            {/* App Menu (mobile trigger) */}
             <button
               onClick={toggleApplicationMenu}
-              className="flex items-center justify-center w-10 h-10 text-gray-700 rounded-lg z-99999 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden"
+              className="flex items-center justify-center h-10 w-10 rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden"
               aria-label="Toggle Application Menu"
               aria-expanded={isApplicationMenuOpen}
               aria-controls="application-menu"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
                   fillRule="evenodd"
                   clipRule="evenodd"
@@ -203,25 +215,24 @@ const AppHeader: React.FC = () => {
             </button>
           </div>
 
-          {/* Application Menu Content */}
+          {/* App Menu Content */}
           <div
             id="application-menu"
             className={`${
               isApplicationMenuOpen ? "flex" : "hidden"
-            } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
+            } items-center justify-between w-full gap-4 px-5 py-4 lg:flex lg:justify-end lg:px-0`}
             role="navigation"
             aria-label="Application Menu"
           >
             <div className="flex items-center gap-2 2xsm:gap-3">
-              {/* Dark Mode Toggle */}
               <ThemeToggleButton />
-              {/* Notifications (if any) */}
+              {/* <NotificationDropdown /> */}
             </div>
-            {/* User Menu */}
             <UserDropdown />
           </div>
         </div>
-        {/* 🛒 Cart Sidebar Component */}
+
+        {/* Cart Sidebar */}
         {isCartOpen && (
           <Cart
             cartItems={cartItems}

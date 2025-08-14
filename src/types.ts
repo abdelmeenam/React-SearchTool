@@ -133,8 +133,29 @@ export interface Prescription {
   type: string;
   strengthUnit: string;
   score: number;
+  status?: string;
+  statusDescription?: string;
+  additionalInfo?: string | null;
+  statusDate?: string;
+  submitedUser?: string;
+  approvedStatus: string;
+  priorAuthorizationStatus: string;
 }
+export interface ReportHistory{
+  id: number;
+  sourceDrugNDC: string;
+  targetDrugNDC: string;
+  insuranceRxId: number;
 
+  status: string;
+  statusDescription: string;
+  additionalInfo: string | null;
+
+  // Usually an ISO string from the API. Parse to Date if you prefer.
+  statusDate: string | Date;
+
+  userEmail: string | null;
+}
 export interface DrugInsuranceInfo {
   insuranceId: number;
   drugId: number;

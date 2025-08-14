@@ -220,12 +220,13 @@ export const Search: React.FC = () => {
     );
 
     console.log(response);
+    const insuranceId =
+      selectedInsurance?.insuranceId ?? insurances?.[0]?.insuranceId ?? "";
+
     if (selectedDrug) {
       localStorage.setItem("selectedRx", selectedInsurance?.insurance || "");
       navigate(
-        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${
-          selectedInsurance?.insuranceId || ""
-        }`
+        `/drug/${selectedDrug.id}?ndc=${selectedNdc}&insuranceId=${insuranceId}`
       );
     }
   };
