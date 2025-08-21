@@ -861,9 +861,9 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
     targetNDC?: string | null;
     rxGroup?: string | number | null;
   } | null>(null);
-  const [priorAuthChoice, setPriorAuthChoice] = useState<"Yes" | "No" | null>(
-    null
-  );
+  const [priorAuthChoice, setPriorAuthChoice] = useState<
+    "Yes" | "No" | "Refile" | null
+  >(null);
 
   const [reportHistory, setReportHistory] = useState<ReportHistory[]>([]);
   // Filter and pagination logic
@@ -1848,21 +1848,21 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
           style={{
             top: "var(--app-header-h, 64px)",
             height: "calc(100dvh - var(--app-header-h, 64px))",
-            zIndex: 150, // keep header above if header z-index is higher
+            zIndex: 150,
           }}
         >
-          {/* Backdrop (stays under the header because of the top offset) */}
+          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => {
               setShowStatusModal(false);
               setSubmitMessage(null);
               setSubmittedSummary(null);
-              setPriorAuthChoice(null); // clear Yes/No on close
+              setPriorAuthChoice(null); // clear Yes/No/Refile on close  // CHANGED
             }}
           />
 
-          {/* Card: flex column, header/footer sticky, body scrolls */}
+          {/* Card */}
           <div
             className="relative w-full max-w-2xl origin-center rounded-2xl border border-gray-200 bg-white/95 shadow-2xl ring-1 ring-black/5 
            dark:border-gray-700 dark:bg-gray-900/95 transition-all duration-200 ease-out
@@ -1876,7 +1876,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   setShowStatusModal(false);
                   setSubmitMessage(null);
                   setSubmittedSummary(null);
-                  setPriorAuthChoice(null); // clear Yes/No on close
+                  setPriorAuthChoice(null); // clear Yes/No/Refile on close  // CHANGED
                 }}
                 aria-label="Close"
                 className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full 
@@ -1931,22 +1931,6 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
 
             {/* Scrollable Body */}
             <div className="grow overflow-y-auto px-6 py-5">
-              {/* Description block */}
-              {/* <div className="grid gap-3 rounded-xl border border-gray-200 p-4 text-sm dark:border-gray-700 dark:bg-gray-900/40">
-                <div className="text-gray-700 dark:text-gray-300">
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">
-                    Description:
-                  </span>{" "}
-                  {statusDrug.statusDescription || "—"}
-                </div>
-                <div className="text-gray-700 dark:text-gray-300">
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">
-                    Additional Info:
-                  </span>{" "}
-                  {statusDrug.additionalInfo || "—"}
-                </div>
-              </div> */}
-
               {/* Preview */}
               <div className="mt-5 rounded-xl border border-gray-200 p-4 text-sm shadow-sm dark:border-gray-700 dark:bg-gray-900/40">
                 <div className="mb-2 flex items-center justify-between">
@@ -1985,14 +1969,14 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                       </>
                     )}
                   </div>
-
-                  {/* Show the chosen PA answer in preview */}
-                  {(
-                    <div className="sm:col-span-2">
-                      <span className="font-medium">Prior Auth:</span>{" "}
-                      {statusDrug.priorAuthorizationStatus ?? "-"}
-                    </div>
-                  )}
+                  {/* Show chosen PA (falls back to current status) */}{" "}
+                  {/* CHANGED */}
+                  <div className="sm:col-span-2">
+                    <span className="font-medium">Prior Auth:</span>{" "}
+                    {reportSelection === "Prior Auth" && priorAuthChoice
+                      ? priorAuthChoice
+                      : statusDrug.priorAuthorizationStatus ?? "-"}
+                  </div>
                 </div>
               </div>
 
@@ -2031,7 +2015,6 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                 <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-gray-100">
                   Report this status
                 </label>
-
                 {/* Segmented radio group */}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {["Approved", "Rejected", "Prior Auth", "Other"].map(
@@ -2054,7 +2037,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                             onChange={(e) => {
                               const v = e.target.value;
                               setReportSelection(v as typeof option);
-                              if (v !== "Prior Auth") setPriorAuthChoice(null); // clear Yes/No when leaving PA
+                              if (v !== "Prior Auth") setPriorAuthChoice(null); // clear Yes/No/Refile when leaving PA  // CHANGED
                             }}
                             className="sr-only"
                           />
@@ -2064,19 +2047,18 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     }
                   )}
                 </div>
-
-                {/* Prior Auth Yes/No */}
+                {/* Prior Auth Yes/No/Refile */} {/* CHANGED */}
                 {reportSelection === "Prior Auth" && (
                   <div className="mt-3">
                     <div className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                       Prior Authorization required?
                     </div>
                     <div
-                      className="grid grid-cols-2 gap-2 sm:max-w-xs"
+                      className="grid grid-cols-3 gap-2 sm:max-w-md" // CHANGED (3 columns)
                       role="group"
                       aria-label="Prior Authorization"
                     >
-                      {["Yes", "No"].map((ans) => {
+                      {(["Yes", "No", "Refile"] as const).map((ans) => {
                         const active = priorAuthChoice === ans;
                         return (
                           <label
@@ -2094,7 +2076,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                               checked={active}
                               onChange={(e) =>
                                 setPriorAuthChoice(
-                                  e.target.value as "Yes" | "No"
+                                  e.target.value as "Yes" | "No" | "Refile"
                                 )
                               }
                               className="sr-only"
@@ -2106,7 +2088,6 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     </div>
                   </div>
                 )}
-
                 {reportSelection === "Other" && (
                   <textarea
                     value={customReportReason}
@@ -2138,13 +2119,18 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                       const dStr = dateOnly(h.statusDate);
                       const isPA =
                         h.status === "PriorAuthorizationYes" ||
-                        h.status === "PriorAuthorizationNo";
+                        h.status === "PriorAuthorizationNo" ||
+                        h.status === "PriorAuthorizationRefile"; // CHANGED
+
                       const normalizedForBadge = isPA ? "Prior Auth" : h.status;
+
                       const displayText =
                         h.status === "PriorAuthorizationYes"
                           ? "Prior Auth - Yes"
                           : h.status === "PriorAuthorizationNo"
                           ? "Prior Auth - No"
+                          : h.status === "PriorAuthorizationRefile" // CHANGED
+                          ? "Prior Auth - Refile"
                           : h.status;
 
                       return (
@@ -2181,7 +2167,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
               </div>
             </div>
 
-            {/* Sticky Footer (buttons always visible) */}
+            {/* Sticky Footer */}
             <div className="sticky bottom-0 z-10 border-t border-gray-200 bg-white/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-gray-700 dark:bg-gray-900/95">
               <div className="flex items-center justify-end gap-3">
                 <button
@@ -2189,7 +2175,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                     setShowStatusModal(false);
                     setSubmitMessage(null);
                     setSubmittedSummary(null);
-                    setPriorAuthChoice(null); // clear Yes/No on close
+                    setPriorAuthChoice(null); // clear Yes/No/Refile on close  // CHANGED
                   }}
                   className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700
                  hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
@@ -2213,7 +2199,9 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                         statusValue =
                           priorAuthChoice === "Yes"
                             ? "PriorAuthorizationYes"
-                            : "PriorAuthorizationNo";
+                            : priorAuthChoice === "No"
+                            ? "PriorAuthorizationNo"
+                            : "PriorAuthorizationRefile"; // CHANGED
                       } else {
                         // "Approved" or "Rejected"
                         statusValue = reportSelection;
@@ -2254,7 +2242,7 @@ export const AlternativesTable: React.FC<AlternativesTableProps> = ({
                   }
                   title={
                     reportSelection === "Prior Auth" && !priorAuthChoice
-                      ? "Choose Yes or No for Prior Auth"
+                      ? "Choose Yes, No, or Refile for Prior Auth" // CHANGED
                       : undefined
                   }
                   className={`inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white 
